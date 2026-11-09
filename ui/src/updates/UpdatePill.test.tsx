@@ -14,7 +14,7 @@ const { useUpdates, resetUpdatesForTest } = await import('./store');
 const { useAppInfo } = await import('../app/appInfo');
 const { useAppState, DEFAULT_SETTINGS } = await import('../app/state');
 
-const release: UpdateRelease = { version: '0.3.0', name: 'GitNex 0.3.0', notes: [], url: 'https://github.example/r', prerelease: false, publishedAt: null, asset: { name: 'GitNex_0.3.0_amd64.deb', size: 1000 } };
+const release: UpdateRelease = { version: '0.3.0', name: 'GitNexia 0.3.0', notes: [], url: 'https://github.example/r', prerelease: false, publishedAt: null, asset: { name: 'GitNexia_0.3.0_amd64.deb', size: 1000 } };
 const set = (state: UpdateState) => act(() => useUpdates.getState().setState(state));
 const pill = () => document.querySelector<HTMLButtonElement>('.sb-update');
 
@@ -64,9 +64,9 @@ describe('UpdatePill', () => {
     set({ state: 'downloading', release, received: 420, total: 1000 });
     const bar = screen.getByRole('progressbar');
     expect(bar).toHaveAttribute('aria-valuenow', '42');
-    expect(pill()).toHaveAccessibleName('Downloading GitNex 0.3.0, 42%');
+    expect(pill()).toHaveAccessibleName('Downloading GitNexia 0.3.0, 42%');
     fireEvent.mouseEnter(pill()!);
-    expect(screen.getByText('Downloading GitNex 0.3.0: 42%')).toBeInTheDocument();
+    expect(screen.getByText('Downloading GitNexia 0.3.0: 42%')).toBeInTheDocument();
     fireEvent.click(pill()!);
     expect(useUpdates.getState().dialogOpen).toBe(true);
   });

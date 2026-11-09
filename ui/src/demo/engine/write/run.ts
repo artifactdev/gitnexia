@@ -371,12 +371,12 @@ async function steps<O>(ctx: DemoContext, repoId: number, wt: WriteWt, expect: E
   const cx = new WriteCx({ ctx, wt, expect, before, op, repoId, lock });
   box.cx = cx;
   const early = (e: unknown): Ran<O> => failed(e, cx.journalChanged);
-  // 2b. No merge in progress: a paused one ended outside GitNex. It settles against what preflight
+  // 2b. No merge in progress: a paused one ended outside GitNexia. It settles against what preflight
   //     saw, before this write plans anything.
   if (before.inProgress === null) {
     const settled = await settlePaused(cx, null);
     if (settled.restored !== null && !intent.onlySettles) {
-      return early(gbError('Stale', `The ${settled.restored} ended outside GitNex and your changes from before it are back; check them, then try again`));
+      return early(gbError('Stale', `The ${settled.restored} ended outside GitNexia and your changes from before it are back; check them, then try again`));
     }
   }
   let plan: Plan;

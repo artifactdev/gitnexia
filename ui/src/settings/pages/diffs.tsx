@@ -50,7 +50,7 @@ const offs = [
     {
       id: 'editorFontFamily', label: 'Font family', page: 'diffs', group: 'Editor',
       keywords: 'monaco editor font face typeface monospace jetbrains mono css installed picker custom list',
-      description: 'Default: JetBrains Mono, which comes with GitNex. What a chosen font lacks draws in it or another monospace font. "Custom font list…" takes a CSS font-family list. The reading and UI fonts are under Appearance.',
+      description: 'Default: JetBrains Mono, which comes with GitNexia. What a chosen font lacks draws in it or another monospace font. "Custom font list…" takes a CSS font-family list. The reading and UI fonts are under Appearance.',
       Control: FontFamilyControl, binding: appSetting('editorFontFamily', D.editorFontFamily),
     },
     {

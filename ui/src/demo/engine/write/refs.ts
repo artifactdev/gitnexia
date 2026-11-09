@@ -28,7 +28,7 @@ export function shortRef(name: string): string {
   return name;
 }
 
-export const refMoved = (name: string): GbError => gbError('RefMoved', `${shortRef(name)} changed outside GitNex`);
+export const refMoved = (name: string): GbError => gbError('RefMoved', `${shortRef(name)} changed outside GitNexia`);
 
 /** The ref's object id (a symbolic ref followed; an annotated tag's own object), null when it doesn't exist. */
 export function readRef(demo: DemoRepo, name: string): string | null {

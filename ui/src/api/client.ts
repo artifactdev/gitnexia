@@ -298,7 +298,7 @@ export const api = {
   updateCancel: () => call<UpdateState>({ method: 'updateCancel' }),
   updateInstall: () => call<InstallOutcome>({ method: 'updateInstall' }),
   updateRestart: () => call<null>({ method: 'updateRestart' }),
-  /** Starts GitNex again and quits this one (Settings › Appearance › Title bar). */
+  /** Starts GitNexia again and quits this one (Settings › Appearance › Title bar). */
   relaunchApp: () => call<null>({ method: 'relaunchApp' }),
   pickFolder: (start: string | null) => call<string | null>({ method: 'pickFolder', params: { start } }),
   saveExport: (suggestedName: string, contents: string) => call<string | null>({ method: 'saveExport', params: { suggestedName, contents } }),
@@ -320,9 +320,9 @@ export const api = {
    * either way the first commit creates the branch. */
   initRepo: (path: string, branch: string | null, readme: boolean) => call<RepoSummary>({ method: 'initRepo', params: { path, branch, readme } }),
   suggestReposFolder: () => call<string | null>({ method: 'suggestReposFolder' }),
-  /** `git fetch --all` (spec §15), or one `remote` (a remote just added, spec #4). `background`: GitNex's own timer, which never prompts. */
+  /** `git fetch --all` (spec §15), or one `remote` (a remote just added, spec #4). `background`: GitNexia's own timer, which never prompts. */
   fetch: (repo: number, background: boolean, remote?: string, mrHead?: MrHead) => call<FetchOutcome>({ method: 'fetch', params: remote === undefined ? { repo, background } : mrHead ? { repo, background, remote, mrHead } : { repo, background, remote } }),
-  /** Deletes the MR/PR heads Compare fetched (`refs/gitnex/compare/*`): their Compare ended. */
+  /** Deletes the MR/PR heads Compare fetched (`refs/gitnexia/compare/*`): their Compare ended. */
   dropCompareRefs: (repo: number) => call<null>({ method: 'dropCompareRefs', params: { repo } }),
   // --- 4A T12 ---
   /** Every remote with its forge project, and the remote MRs/PRs target (spec #4 §3.3). */
@@ -500,7 +500,7 @@ export const api = {
   aiGenerateCommitMessage: (repo: number, worktree: string) => call<AiCommitMessage>({ method: 'aiGenerateCommitMessage', params: { repo, worktree } }),
   // --- end AI commit messages ---
   mergeAbort: (repo: number, worktree: string) => call<WriteResult<IntegrateOutcome>>({ method: 'mergeAbort', params: { repo, worktree } }),
-  /** A paused merge or rebase ended outside GitNex: close its journal entry. */
+  /** A paused merge or rebase ended outside GitNexia: close its journal entry. */
   settlePaused: (repo: number, worktree: string) => call<WriteResult<null>>({ method: 'settlePaused', params: { repo, worktree } }),
   // --- end 2D T16 ---
   // --- 2D T17 ---

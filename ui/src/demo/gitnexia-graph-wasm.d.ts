@@ -1,0 +1,17 @@
+// The wasm-bindgen glue `just demo-wasm` writes to src/demo/wasm/ (git-ignored), aliased to this
+// name in vite.config.ts; declared here so `tsc` passes before it's built. Matches
+// crates/gitnexia-graph-wasm's exports.
+declare module 'gitnexia-graph-wasm' {
+  export default function init(opts: { module_or_path: BufferSource | WebAssembly.Module }): Promise<unknown>;
+  export class GraphEngine {
+    constructor();
+    free(): void;
+    addCommits(commitsJson: string): number;
+    build(requestJson: string): string;
+    walkOrder(requestJson: string): string;
+    reveal(requestJson: string, key: string, below: boolean): string;
+    preview(requestJson: string): string;
+    hiddenOwner(requestJson: string, sha: string): string;
+    readonly size: number;
+  }
+}

@@ -1,4 +1,4 @@
-/* GitNex's own title bar (TitleBar.tsx): 30 px above the tab bar, in the tab bar's colour. Its
+/* GitNexia's own title bar (TitleBar.tsx): 30 px above the tab bar, in the tab bar's colour. Its
    own height whatever loads, so nothing below it moves. */
 .title-bar { display: flex; align-items: stretch; height: 30px; flex: none; background: var(--tab-bar-bg); color: var(--text-secondary); user-select: none; }
 .title-bar > .tab-bar-btn { width: 34px; }

@@ -62,11 +62,11 @@ describe('density presets (feedback H1)', () => {
   });
 });
 
-describe('density persistence seam (gitnex.density.v1)', () => {
+describe('density persistence seam (gitnexia.density.v1)', () => {
   beforeEach(() => localStorage.clear());
   afterEach(() => vi.restoreAllMocks());
 
-  it('saves under gitnex.density.v1 and loads it back', () => {
+  it('saves under gitnexia.density.v1 and loads it back', () => {
     densityPersistence.save('compact');
     expect(localStorage.getItem(DENSITY_STORAGE_KEY)).toBe('compact');
     expect(densityPersistence.load()).toBe('compact');

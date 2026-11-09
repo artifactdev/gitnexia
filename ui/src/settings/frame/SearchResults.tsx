@@ -17,7 +17,7 @@ function byGroup(matches: readonly SettingMatch[]): Array<[string, SettingMatch[
 
 /**
  * Settings' search: every match in place, as a live row with its words highlighted, in one card
- * per page and group headed by where it lives (`GitNex › Graph › Avatars`) and "Open page".
+ * per page and group headed by where it lives (`GitNexia › Graph › Avatars`) and "Open page".
  */
 export function SearchResults({ query, results, ctx, profileName }: { query: string; results: readonly PageMatches[]; ctx: SettingsCtx; profileName: string }) {
   const titleId = useId();

@@ -3,7 +3,7 @@ import { tabStore } from '../../app/tabStores';
 import { useForge } from '../mrStore';
 
 /**
- * An MR/PR head Compare fetched into a ref of its own (`refs/gitnex/compare/…`) lives only while
+ * An MR/PR head Compare fetched into a ref of its own (`refs/gitnexia/compare/…`) lives only while
  * that Compare needs it. Once the tab no longer compares the head (it leaves the compare or picks
  * another), the MR/PR view it was opened from closes, or the tab closes, `dropCompareRefs`
  * deletes it, and the graph stops drawing commits no branch holds (a merged MR's, its branch

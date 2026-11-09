@@ -54,7 +54,7 @@ impl AppWebview {
     })
   }
 
-  /// GitNex patch: tells the browser the pointer left the window, at `point` in the X11 host's
+  /// GitNexia patch: tells the browser the pointer left the window, at `point` in the X11 host's
   /// pixels (see `pointer.rs` for why Chromium doesn't notice on its own).
   pub(crate) fn send_mouse_leave(&self, point: PhysicalPosition<i32>, scale: f64) {
     // Not to a browser past `on_before_close` (`is_valid`), nor one without its window.

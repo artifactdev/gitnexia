@@ -1,7 +1,7 @@
 import { inTauri } from '../api/transport';
 import { runAction } from './actions';
 
-/** Must match `MENU_EVENT` in `crates/gitnex-app/src/menu.rs`. */
+/** Must match `MENU_EVENT` in `crates/gitnexia-app/src/menu.rs`. */
 export const MENU_EVENT = 'gb:menu';
 
 /**
@@ -15,9 +15,9 @@ export function installNativeMenu(): () => void {
   let dead = false;
   void import('@tauri-apps/api/event')
     .then(({ listen }) => listen<string>(MENU_EVENT, (e) => {
-      if (!runAction(e.payload)) console.warn(`[gitnex] menu item ${e.payload}: no such action, or not usable now`);
+      if (!runAction(e.payload)) console.warn(`[gitnexia] menu item ${e.payload}: no such action, or not usable now`);
     }))
     .then((unlisten) => { if (dead) unlisten(); else off = unlisten; })
-    .catch((e: unknown) => console.warn('[gitnex] menu bar events unavailable', e));
+    .catch((e: unknown) => console.warn('[gitnexia] menu bar events unavailable', e));
   return () => { dead = true; off?.(); };
 }

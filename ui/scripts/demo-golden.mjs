@@ -13,7 +13,7 @@ import { packFixture } from './pack-demo.mjs';
 const ui = join(dirname(fileURLToPath(import.meta.url)), '..');
 const repoRoot = join(ui, '..');
 const targetDir = process.env.CARGO_TARGET_DIR ? (isAbsolute(process.env.CARGO_TARGET_DIR) ? process.env.CARGO_TARGET_DIR : join(repoRoot, process.env.CARGO_TARGET_DIR)) : join(repoRoot, 'target');
-const harness = join(targetDir, 'debug', 'gitnex-harness');
+const harness = join(targetDir, 'debug', 'gitnexia-harness');
 const golden = join(ui, 'src', 'demo', 'golden');
 const requestsDir = join(golden, 'requests');
 // basic first: the manifest's active tab. A `<fixture>@<scenario>.json` is a write scenario: a
@@ -22,7 +22,7 @@ const stems = readdirSync(requestsDir).filter((f) => f.endsWith('.json')).map((f
 const fixtureOf = (stem) => stem.split('@')[0];
 const fixtures = [...new Set(stems.map(fixtureOf))].sort((a, b) => Number(b === 'basic') - Number(a === 'basic') || (a < b ? -1 : 1));
 
-const tmp = realpathSync(mkdtempSync(join(tmpdir(), 'gitnex-golden-')));
+const tmp = realpathSync(mkdtempSync(join(tmpdir(), 'gitnexia-golden-')));
 try {
   const packed = new Set();
   for (const stem of stems.sort()) {

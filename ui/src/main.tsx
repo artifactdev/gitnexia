@@ -1,5 +1,5 @@
 // First: where actions start (the confirm model), seen before the key router or React acts.
-// Also before any store reads localStorage: move GitVolt's keys to GitNex's names once.
+// Also before any store reads localStorage: move GitNex's and GitVolt's keys to GitNexia's names once.
 import './app/legacyStoreKeys';
 import './ui/arm/origin';
 import { StrictMode } from 'react';

@@ -1,6 +1,6 @@
 # Dev setup: CEF sandbox
 
-`gitnex-app` runs on the Tauri CEF runtime, which is a Chromium build. Unbundled runs (`just dev`,
+`gitnexia-app` runs on the Tauri CEF runtime, which is a Chromium build. Unbundled runs (`just dev`,
 `just build-app` / `just run-app`) need Chromium's root-owned setuid `chrome-sandbox` helper —
 Ubuntu restricts unprivileged user namespaces, so without it Chromium's sandbox can't start and
 the app either won't launch or (never do this) has to run with the sandbox disabled.
@@ -11,7 +11,7 @@ bundler writes the tar entry that way; there is no post-install script involved)
 AppImage build. The app uses `SandboxPolicy::Required` on Linux: it refuses to start rather than run unsandboxed.
 
 **Symptom:** an unbundled run without a usable setuid helper opens no window and exits with code 133.
-The only message is Chromium's `FATAL:...] No usable sandbox!`, and GitNex itself prints nothing
+The only message is Chromium's `FATAL:...] No usable sandbox!`, and GitNexia itself prints nothing
 more useful. **Fix:** install the helper once (see "Recommended" below), or fix the copy next to the
 binary (see "Fallback").
 
@@ -21,7 +21,7 @@ AppArmor `DENIED operation="userns_create"` ("failed to find unprivileged_userns
 **Cause:** with `/proc/sys/kernel/apparmor_restrict_unprivileged_userns` at 1 but Ubuntu's
 `unprivileged_userns` AppArmor profile not loaded, creating a user namespace fails with `EACCES`,
 an errno Chromium's namespace-sandbox probe aborts on instead of falling back to the setuid helper
-(where the profile is loaded, the probe fails gracefully). GitNex now passes
+(where the profile is loaded, the probe fails gracefully). GitNexia now passes
 `--disable-namespace-sandbox` whenever that restriction is on and the helper Chromium will use (next to
 the binary, else `CHROME_DEVEL_SANDBOX`, as below) is usable, so Chromium goes straight to the helper; it logs
 "AppArmor restricts unprivileged user namespaces: using the setuid sandbox helper". The sandbox
@@ -42,17 +42,17 @@ away, Chromium reads `CHROME_DEVEL_SANDBOX`; with it present, the variable is ig
 One time, after any build that has produced `target/release/chrome-sandbox` (e.g. `just build-app`):
 
 ```bash
-sudo install -D -o root -g root -m 4755 target/release/chrome-sandbox /usr/local/lib/gitnex/chrome-sandbox
+sudo install -D -o root -g root -m 4755 target/release/chrome-sandbox /usr/local/lib/gitnexia/chrome-sandbox
 ```
 
-From then on `just dev` and `just run-app` see `/usr/local/lib/gitnex/chrome-sandbox`, export
+From then on `just dev` and `just run-app` see `/usr/local/lib/gitnexia/chrome-sandbox`, export
 `CHROME_DEVEL_SANDBOX` pointing at it, and delete the build's non-setuid copy next to the binary
 before launching. The sandbox stays **on**; only the helper's location changes.
 
 - If a `just dev` run still aborts with "found, but is not configured correctly", that build just
   re-ran the CEF build script and copied a fresh helper back; run `just dev` again.
 - Re-run the `sudo install` after a CEF upgrade, so the helper matches the Chromium it serves.
-- To go back to the per-build flow below, `sudo rm /usr/local/lib/gitnex/chrome-sandbox`.
+- To go back to the per-build flow below, `sudo rm /usr/local/lib/gitnexia/chrome-sandbox`.
 
 ## Fallback: fix the helper next to the binary after every rebuild
 
@@ -63,14 +63,14 @@ just built:
 # after `just build-app` (target/release):
 sudo chown root:root target/release/chrome-sandbox && sudo chmod 4755 target/release/chrome-sandbox
 
-# after `just dev` or a plain `cargo build -p gitnex-app` (target/debug):
+# after `just dev` or a plain `cargo build -p gitnexia-app` (target/debug):
 sudo chown root:root target/debug/chrome-sandbox && sudo chmod 4755 target/debug/chrome-sandbox
 ```
 
 ## Never disable the sandbox in committed code
 
 Never set the runtime's sandbox policy to `Disabled` as a default or in committed code.
-`crates/gitnex-app/src/lib.rs` sets `SandboxPolicy::Required` on Linux, so a missing helper
+`crates/gitnexia-app/src/lib.rs` sets `SandboxPolicy::Required` on Linux, so a missing helper
 stops the app instead of silently dropping the sandbox, which `Auto` would do. If you need a one-off unsandboxed run for a specific
 measurement (e.g. reading `/proc/<pid>/smaps_rollup` for PSS, which is unreadable for a sandboxed,
 non-dumpable renderer), that's a manual, temporary override you make yourself, not something to
@@ -100,11 +100,11 @@ land in the repo.
 
 ## Dock and app-grid icon (unbundled builds)
 
-The window names itself `gitnex` (X11 `WM_CLASS`, set in `crates/gitnex-app/src/desktop.rs`)
+The window names itself `gitnexia` (X11 `WM_CLASS`, set in `crates/gitnexia-app/src/desktop.rs`)
 and carries a 256 px window icon (`_NET_WM_ICON`, Tauri's default window icon: the first PNG in
 `tauri.conf.json`'s `bundle.icon`). An X11 taskbar can show that, but **Wayland docks need the
 `.desktop` file to show the icon**: Wayland has no window-icon property, so GNOME and KDE match
-the window to a `.desktop` entry by its class/app id (`StartupWMClass=gitnex`) and show that
+the window to a `.desktop` entry by its class/app id (`StartupWMClass=gitnexia`) and show that
 entry's `Icon=`. (The CEF window runs through XWayland, where a shell may fall back to
 `_NET_WM_ICON` for an unmatched window, but pinning, the app grid and a reliable dock icon all
 need the entry.) An unbundled build has no entry until you install one.
@@ -112,13 +112,13 @@ need the entry.) An unbundled build has no entry until you install one.
 From the main checkout, after `just build-app`:
 
 ```bash
-just install-desktop     # ~/.local/share/applications/gitnex.desktop + hicolor icons
+just install-desktop     # ~/.local/share/applications/gitnexia.desktop + hicolor icons
 just uninstall-desktop   # removes them again
 ```
 
 Both honour `XDG_DATA_HOME` (default `~/.local/share`). The entry runs `just run-app` in this
 checkout. Re-run `just install-desktop` after regenerating the icons; GNOME may need you to log
-out and back in before it picks up a changed icon. The `.deb` installs its own entry (`GitNex.desktop`);
+out and back in before it picks up a changed icon. The `.deb` installs its own entry (`GitNexia.desktop`);
 run `just uninstall-desktop` before installing it so the local entry can't shadow it.
 
 ## Running `just e2e`
@@ -133,12 +133,12 @@ loaded run doesn't trip them), then `webkit`. Arguments go to Playwright:
   `ui/dist-e2e`, served by `vite preview`. The build is redone only when its inputs change
   (`ui/src`, the build config, the lockfile: `ui/e2e/build-ui.mjs`), so a one-spec run starts in
   seconds. The `e2e` mode keeps the test hooks (`window.__gb`) that the release bundle compiles
-  out. `GITNEX_E2E_DEV=1` tests the dev server instead (unminified, for debugging a spec);
-  `GITNEX_E2E_REBUILD=1` forces a fresh build.
+  out. `GITNEXIA_E2E_DEV=1` tests the dev server instead (unminified, for debugging a spec);
+  `GITNEXIA_E2E_REBUILD=1` forces a fresh build.
 - **Traces are off.** Recording one for every test (to keep the failures') took about half the
   run's CPU time. A failure still leaves a screenshot under `ui/test-results/`. To get its trace,
-  rerun the spec with `GITNEX_E2E_TRACE=1` and open it with `npx playwright show-trace`.
-- **Fixtures** are built once per run by `gitnex-harness fixture` and copied for each test that
+  rerun the spec with `GITNEXIA_E2E_TRACE=1` and open it with `npx playwright show-trace`.
+- **Fixtures** are built once per run by `gitnexia-harness fixture` and copied for each test that
   asks for a fresh one (`freshFixture` in `ui/e2e/fixtures.ts`): `cp -a`, the copy's absolute
   paths repointed, its index refreshed.
 - `expect.poll` (from `ui/e2e/test.ts`) retries every 100 ms instead of Playwright's back-off to
@@ -146,31 +146,31 @@ loaded run doesn't trip them), then `webkit`. Arguments go to Playwright:
 
 ### From parallel worktrees
 
-`just e2e` starts the `gitnex-harness` WebSocket server and the UI server on fixed ports
+`just e2e` starts the `gitnexia-harness` WebSocket server and the UI server on fixed ports
 (7433 and 1420 by default). Two `just e2e` runs on those same ports collide, so if you're running
 the suite from more than one git worktree at once, give each worktree a
-distinct `GITNEX_E2E_PORT_BASE`:
+distinct `GITNEXIA_E2E_PORT_BASE`:
 
 ```bash
 # worktree A
 just e2e
 # worktree B (concurrently)
-GITNEX_E2E_PORT_BASE=7600 just e2e
+GITNEXIA_E2E_PORT_BASE=7600 just e2e
 # worktree C (concurrently)
-GITNEX_E2E_PORT_BASE=7700 just e2e
+GITNEXIA_E2E_PORT_BASE=7700 just e2e
 ```
 
-Setting `GITNEX_E2E_PORT_BASE=N` runs the harness on port `N` and the UI on port `N+1`; leave it
+Setting `GITNEXIA_E2E_PORT_BASE=N` runs the harness on port `N` and the UI on port `N+1`; leave it
 unset to keep the defaults (7433 / 1420). Pick bases far enough apart that `N` and `N+1` don't
 overlap another worktree's pair -- e.g. 7500, 7600, 7700. This only affects `just e2e`; `just dev`
 and the packaged app are unaffected and always use 1420.
 
 ## The website demo
 
-`just demo-build` builds `ui/demo.html` into `site/dist/demo/` (`GITNEX_DEMO_DATA=<folder>` for
+`just demo-build` builds `ui/demo.html` into `site/dist/demo/` (`GITNEXIA_DEMO_DATA=<folder>` for
 other data than `site/demo-data/`); `just test-demo` runs its vitest suites, the parity suite
 included; `just e2e-demo` its Playwright smoke test (its own config, port
-`GITNEX_E2E_PORT_BASE + 2`, 1422 by default). `just demo-golden` re-records the core's answers the
+`GITNEXIA_E2E_PORT_BASE + 2`, 1422 by default). `just demo-golden` re-records the core's answers the
 parity suite compares with, after a change to them or to the `basic` and `long_history` fixtures.
 `just demo-data` rebuilds the demo's repositories into `site/demo-data/` (see docs/playground.md);
 a change to `playground/media_repos.rs` needs both `just demo-data` and `just demo-golden`.
@@ -180,7 +180,7 @@ The website itself is `site/`, its own npm project (Vite, plain TypeScript and C
 it (nothing left unfilled, the first screen's weight); `just demo-build` adds the demo under
 `site/dist/demo/`; `just site-dev` serves the page at http://localhost:1430 with the last demo
 build at `/demo/`; `just test-site` runs its unit tests and `just e2e-site` its Playwright checks
-(port `GITNEX_E2E_PORT_BASE + 3`, 1423 by default). The features and the GitKraken table are
+(port `GITNEXIA_E2E_PORT_BASE + 3`, 1423 by default). The features and the GitKraken table are
 generated from README.md and the downloads from `site/data/release.json` at build time.
 `just site-shots` retakes the screenshots in `site/shots/` from the demo build (headless Chromium,
 port base + 4; needs Pillow): on demand only, then commit them. The four review, undo,
@@ -204,7 +204,7 @@ website the way its deploy does and checks it ([docs/website.md](website.md)).
   re-optimising all of core. `just package` and `just build-app` unset `CARGO_INCREMENTAL` for
   their build so a caller's `=0` can't undo that.
 - **One harness test binary.** The harness's integration tests are modules of `tests/it/`:
-  `cargo test -p gitnex-harness --test it forge_stacks::` runs one old file's tests.
+  `cargo test -p gitnexia-harness --test it forge_stacks::` runs one old file's tests.
 - **cargo-nextest** (`cargo install --locked cargo-nextest`, or the prebuilt binary from
   nexte.st into `~/.cargo/bin`) runs the workspace's tests in under half the time of
   `cargo test` here: every test is its own process, and all the test binaries run at once instead
@@ -220,13 +220,13 @@ website the way its deploy does and checks it ([docs/website.md](website.md)).
 
 ## How the app behaves at runtime
 
-How GitNex works inside (the request API, reads and writes, askpass, the watcher, background
+How GitNexia works inside (the request API, reads and writes, askpass, the watcher, background
 fetch, where settings and logs live, the harness) is in [ARCHITECTURE.md](../ARCHITECTURE.md).
 A few things that matter while developing:
 
 - **One instance per config dir.** `just dev` or `just run-app` with your own config while an
-  installed GitNex runs only focuses that one and exits. Point `XDG_CONFIG_HOME`,
-  `XDG_CACHE_HOME` and `XDG_DATA_HOME` at throwaway dirs, or set `GITNEX_MULTI_INSTANCE=1`.
+  installed GitNexia runs only focuses that one and exits. Point `XDG_CONFIG_HOME`,
+  `XDG_CACHE_HOME` and `XDG_DATA_HOME` at throwaway dirs, or set `GITNEXIA_MULTI_INSTANCE=1`.
 - **Open Repository** (Ctrl+O, or the automatic tab of an empty profile): Recent (pinned first,
   filterable), "Your repos" (a scan of the profile's default repos folder; a banner offers to set
   one), **Open folder…** and Clone. Any folder inside a repository opens that repository; a linked
@@ -245,16 +245,16 @@ A few things that matter while developing:
 
 ## Trying the askpass flow (no real keys)
 
-Everything lives in `/tmp/gb-askpass` and runs in a **throwaway GitNex instance**. Neither the
+Everything lives in `/tmp/gb-askpass` and runs in a **throwaway GitNexia instance**. Neither the
 setup nor that instance reads your git config:
 - `GIT_CONFIG_GLOBAL=/dev/null` and `GIT_CONFIG_NOSYSTEM=1` keep out `~/.gitconfig`, so no
   `credential.helper store`, no signing and no password-manager ssh agent.
 - Throwaway `XDG_*` dirs give a fresh default profile, with no extra gitconfig and none of your
   tabs or recent repos.
 
-Nothing here touches `~/.ssh`, your ssh agent, `~/.git-credentials`, `~/.config/gitnex` or a
+Nothing here touches `~/.ssh`, your ssh agent, `~/.git-credentials`, `~/.config/gitnexia` or a
 real repository. (This holds unless your shell's startup files set `GIT_CONFIG_GLOBAL`
-themselves: GitNex runs git with your login shell's environment.)
+themselves: GitNexia runs git with your login shell's environment.)
 
 `scripts/fake-ssh` stands in for ssh. It asks for a key passphrase the way OpenSSH decides
 (through `SSH_ASKPASS`), then serves a local bare repo, so no sshd or key is needed. It needs a
@@ -267,7 +267,7 @@ your shell keeps its own directory and environment.
 (
   set -e
   export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1
-  GB=~/repos/gitnex          # your GitNex checkout
+  GB=~/repos/gitnexia          # your GitNexia checkout
   T=/tmp/gb-askpass
   id="-c user.name=gb-test -c user.email=gb-test@example.invalid"
   rm -rf $T && mkdir -p $T
@@ -285,12 +285,12 @@ your shell keeps its own directory and environment.
 )
 ```
 
-**2. Start the throwaway instance** on that repo. Your usual GitNex can stay open.
+**2. Start the throwaway instance** on that repo. Your usual GitNexia can stay open.
 
 ```sh
 env GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1 \
   XDG_CONFIG_HOME=/tmp/gb-askpass/xdg/config XDG_CACHE_HOME=/tmp/gb-askpass/xdg/cache XDG_DATA_HOME=/tmp/gb-askpass/xdg/data \
-  just --justfile ~/repos/gitnex/justfile run-app /tmp/gb-askpass/work &
+  just --justfile ~/repos/gitnexia/justfile run-app /tmp/gb-askpass/work &
 ```
 
 Its git sees no credential helper at all. To check, run this; it prints only the repo's own
@@ -314,7 +314,7 @@ GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1 git -C /tmp/gb-askpass/work co
 agent looks like to an ssh remote:
 
 ```sh
-git -C /tmp/gb-askpass/work config core.sshCommand "$HOME/repos/gitnex/scripts/fake-ssh --dead-agent"
+git -C /tmp/gb-askpass/work config core.sshCommand "$HOME/repos/gitnexia/scripts/fake-ssh --dead-agent"
 ```
 
 **Fetch** shows "Fetch failed: Authentication failed (fake: Permission denied (publickey).)". For a
@@ -327,7 +327,7 @@ shell can stop it), then point the repo at it:
 ```sh
 python3 -c 'import http.server as h
 class H(h.BaseHTTPRequestHandler):
-    def do_GET(s): s.send_response(401); s.send_header("WWW-Authenticate", "Basic realm=gitnex-test"); s.send_header("Content-Length", "0"); s.end_headers()
+    def do_GET(s): s.send_response(401); s.send_header("WWW-Authenticate", "Basic realm=gitnexia-test"); s.send_header("Content-Length", "0"); s.end_headers()
     def log_message(s, *a): pass
 h.HTTPServer(("127.0.0.1", 8765), H).serve_forever()' & echo $! > /tmp/gb-askpass/server.pid
 git -C /tmp/gb-askpass/work config --unset core.sshCommand
@@ -350,7 +350,7 @@ the public key.
 Why the throwaway instance and `GIT_CONFIG_GLOBAL=/dev/null` rather than just a repo-local
 `credential.helper ""`:
 - That reset does work against `~/.gitconfig` (git 2.53, checked).
-- But GitNex passes the active profile's extra gitconfig as `-c include.path=…`. That is read
+- But GitNexia passes the active profile's extra gitconfig as `-c include.path=…`. That is read
   after the repo's config, so a helper set there comes back.
 - With such a helper, git still calls it to `get` and, after a 401, to `erase`; `store` rewrites
   `~/.git-credentials` on erase.
@@ -363,11 +363,11 @@ Why the throwaway instance and `GIT_CONFIG_GLOBAL=/dev/null` rather than just a 
   `libgtk-3-0` the alpha CLI always adds (upstream draft: `docs/upstream/tauri-cli-cef-gtk-depends.md`).
   `scripts/check-deb.sh` verifies that, that `chrome-sandbox` is root:root 4755, and that the
   package carries the control fields, icons, desktop entry and AppStream metainfo below, and the
-  license notices and DEP-5 `copyright` file in `/usr/share/doc/gitnex/`. It needs
+  license notices and DEP-5 `copyright` file in `/usr/share/doc/gitnexia/`. It needs
   `appstreamcli` and `desktop-file-validate` (`sudo apt install appstream desktop-file-utils`).
 - `fix-deb.sh` also writes the Debian form of the version: a SemVer pre-release's `-` becomes
   `~` (`0.1.0-alpha.1` → `0.1.0~alpha.1`), which sorts before `0.1.0`.
-- `GITNEX_RELEASE_VERSION=<version> just package` builds the plain, unstamped version, as the
+- `GITNEXIA_RELEASE_VERSION=<version> just package` builds the plain, unstamped version, as the
   release workflow does; it must equal `tauri.conf.json`'s version. See
   [releasing.md](releasing.md).
 - Before building, it generates the third-party license notices (`scripts/licenses.sh`, needs
@@ -386,13 +386,13 @@ Why the throwaway instance and `GIT_CONFIG_GLOBAL=/dev/null` rather than just a 
   and what links CEF don't rebuild.
 - **Local packages are compressed fast:** zstd 3 for the `.deb`, the Arch package and the RPM
   (seconds each, about 20% larger). Installing a zstd `.deb` needs dpkg 1.21.18 or later
-  (Debian 12, Ubuntu 22.04). A release build (`GITNEX_RELEASE_VERSION` set) compresses as the
+  (Debian 12, Ubuntu 22.04). A release build (`GITNEXIA_RELEASE_VERSION` set) compresses as the
   release ships: gzip 6 for the `.deb`, zstd -19 for the other two (about 75 s each).
-  `GITNEX_PACKAGE_COMPRESSION=release` or `fast` picks one either way
+  `GITNEXIA_PACKAGE_COMPRESSION=release` or `fast` picks one either way
   (`scripts/package-compression.sh`).
-- **Forced full rebuild:** `GITNEX_REBUILD=1 just package` ignores those caches and
+- **Forced full rebuild:** `GITNEXIA_REBUILD=1 just package` ignores those caches and
   regenerates the notices, the UI and the `dpkg-shlibdeps` result (`just licenses` always
-  regenerates the notices too). `GITNEX_REBUILD=1 GITNEX_PACKAGE_COMPRESSION=release` builds
+  regenerates the notices too). `GITNEXIA_REBUILD=1 GITNEXIA_PACKAGE_COMPRESSION=release` builds
   the way the release workflow does, version stamp aside.
 - After a Rust change, a warm `just package-deb` takes 35-40 s on the dev machine and
   `just package` about 50 s (5.5 min before these caches): mostly the Rust build and link, then
@@ -415,7 +415,7 @@ package's AppStream file before it's installed:
   the license as `unknown` (`backends/apt/apt-job.cpp`, `emitPackageDetail`), and takes the app
   id from the shortest `.desktop` file name in the package (`file_to_app_get_files_cb`). An app
   without an icon then gets the generic `system-component-application`
-  (`lib/gs-plugin-job-file-to-app.c`). It shows the name as the package name, `gitnex`.
+  (`lib/gs-plugin-job-file-to-app.c`). It shows the name as the package name, `gitnexia`.
 - **Ubuntu's App Center**: PackageKit's `GetDetailsLocal` only (`lib/deb/local_deb_model.dart`):
   the package name as the title, the summary and description, `Homepage`, and the license, which
   is `unknown` there too. Its local `.deb` page has no icon at all (`AppTitleBar.fromLocalDeb`).
@@ -425,52 +425,52 @@ package's AppStream file before it's installed:
 So for that page the control fields are what count: `fix-deb.sh` adds `License: MIT` (not a
 Debian field, but GNOME Software reads it), and `tauri.conf.json` sets `Homepage` and the long
 `Description`. Once installed, the software centres read
-`/usr/share/metainfo/com.gitnex.desktop.metainfo.xml` (the id is `tauri.conf.json`'s
+`/usr/share/metainfo/com.gitnexia.desktop.metainfo.xml` (the id is `tauri.conf.json`'s
 `identifier`):
 
 - It's generated by `scripts/package-meta.py` from
-  `crates/gitnex-app/linux/com.gitnex.desktop.metainfo.xml.in`: the releases (version and date)
+  `crates/gitnexia-app/linux/com.gitnexia.desktop.metainfo.xml.in`: the releases (version and date)
   from CHANGELOG.md's dated sections, and the README screenshot by its raw GitHub URL at the
   newest release's tag.
-- Its `<pkgname>` is the package's name, `gitnex` in the `.deb`, the RPM and the Arch package
-  (`fix-deb.sh` renames Tauri's `gitnex`). App Center and Discover match an installed component to its
+- Its `<pkgname>` is the package's name, `gitnexia` in the `.deb`, the RPM and the Arch package
+  (`fix-deb.sh` renames Tauri's `gitnexia`). App Center and Discover match an installed component to its
   package by it, and GNOME Software finds the package to remove that way, since no distribution
-  catalog lists GitNex.
+  catalog lists GitNexia.
 - Its `<replaces>` names GitBolt's id, `dev.gitbolt.desktop` (the app's name before 0.7.0), so software
   centres carry the listing over.
-- The desktop entry keeps its name, `GitNex.desktop` (`linux/GitNex.desktop.hbs`), so existing
+- The desktop entry keeps its name, `GitNexia.desktop` (`linux/GitNexia.desktop.hbs`), so existing
   installs' dock pins and menu entries carry over; the metainfo's `<launchable>` names it.
-- The icons are installed under the app id too (`com.gitnex.desktop.png` at 32 to 512 px, and
-  `.svg`), which the desktop entry's `Icon=` and the metainfo name. Tauri's own `gitnex.png` set
+- The icons are installed under the app id too (`com.gitnexia.desktop.png` at 32 to 512 px, and
+  `.svg`), which the desktop entry's `Icon=` and the metainfo name. Tauri's own `gitnexia.png` set
   stays: its bundler always installs the `bundle.icon` PNGs under the binary's name.
 - `check-deb.sh` validates it (`appstreamcli validate --pedantic --no-net`) and checks it against
   the package: file name, launchable, icon, pkgname, license, and the newest release against the
   package's version.
-- The package is `gitnex` (about 146 MiB). It installs `/usr/share/GitNex/` (the binary and
-  CEF, `chrome-sandbox` root:root 4755) and `/usr/bin/gitnex` as a symlink to it.
+- The package is `gitnexia` (about 146 MiB). It installs `/usr/share/GitNexia/` (the binary and
+  CEF, `chrome-sandbox` root:root 4755) and `/usr/bin/gitnexia` as a symlink to it.
 - **Install and check:**
-  1. Quit any running GitNex that uses your config. With the single-instance guard, a running
+  1. Quit any running GitNexia that uses your config. With the single-instance guard, a running
      one would just be focused instead of the installed app starting.
   2. Run `just uninstall-desktop`, so the dev entry doesn't duplicate or shadow the `.deb`'s
-     `GitNex.desktop`.
-  3. Run `sudo apt install ./target/release/bundle/deb/GitNex_*_amd64.deb`, then launch
-     GitNex from the app menu. The file name carries a build stamp
-     (`GitNex_0.1.0+<UTC time>.<commit>_amd64.deb`, e.g. `0.1.0+202610051325.ab4dbf9e`), and
+     `GitNexia.desktop`.
+  3. Run `sudo apt install ./target/release/bundle/deb/GitNexia_*_amd64.deb`, then launch
+     GitNexia from the app menu. The file name carries a build stamp
+     (`GitNexia_0.1.0+<UTC time>.<commit>_amd64.deb`, e.g. `0.1.0+202610051325.ab4dbf9e`), and
      `just package` deletes older packages first, so the glob matches only the new one.
-  4. Run `GITNEX_PID=<browser pid> scripts/check-sandbox.sh`, which checks that every renderer has
-     seccomp and its own PID namespace. Then `GITNEX_PID=<browser pid> just bench`. The browser
-     process is the `/usr/share/GitNex/gitnex` process without a `--type=` argument.
-- **Remove it:** `sudo apt remove gitnex`. Then `just install-desktop` brings the dev entry back.
+  4. Run `GITNEXIA_PID=<browser pid> scripts/check-sandbox.sh`, which checks that every renderer has
+     seccomp and its own PID namespace. Then `GITNEXIA_PID=<browser pid> just bench`. The browser
+     process is the `/usr/share/GitNexia/gitnexia` process without a `--type=` argument.
+- **Remove it:** `sudo apt remove gitnexia`. Then `just install-desktop` brings the dev entry back.
 
 ### Arch Linux package (`just package-arch`, `just check-arch-pkg`)
 
 - `just package` ends with `just package-arch`, so one build gives both packages. It turns the
-  `.deb` into `target/release/bundle/arch/GitNex-<ver>-1-x86_64.pkg.tar.zst` without makepkg
+  `.deb` into `target/release/bundle/arch/GitNexia-<ver>-1-x86_64.pkg.tar.zst` without makepkg
   (`scripts/package-arch.sh`; the Python helpers are in `scripts/arch-pkg.py`).
   - The payload is the `.deb`'s data member, path for path and mode for mode; the script checks
     that, and that `chrome-sandbox` is root:root 4755. The one addition is
-    `/usr/share/licenses/gitnex`, a symlink to the license notices in `/usr/share/doc/gitnex`,
-    and the one change is the AppStream metainfo's `<pkgname>`, which becomes `gitnex`.
+    `/usr/share/licenses/gitnexia`, a symlink to the license notices in `/usr/share/doc/gitnexia`,
+    and the one change is the AppStream metainfo's `<pkgname>`, which becomes `gitnexia`.
   - `license` lines: MIT, then the licenses in the Rust and UI notices' summaries, CEF and
     Chromium's `BSD-3-Clause`, and the spell-check dictionary's `LicenseRef-SCOWL`
     (`arch-pkg.py licenses`).
@@ -487,26 +487,26 @@ Debian field, but GNOME Software reads it), and `tauri.conf.json` sets `Homepage
   mtree escaping, and a synthetic `.deb` through the whole script.
 - `just check-arch-pkg` installs the package in a throwaway `archlinux:latest` Docker container
   (`--rm`; it needs Docker and the network, so `just package` doesn't run it). It runs
-  `pacman -Syu`, then `pacman -U`, and checks `pacman -Qkk gitnex`, the license notices, the
+  `pacman -Syu`, then `pacman -U`, and checks `pacman -Qkk gitnexia`, the license notices, the
   setuid `chrome-sandbox`, the AppStream metainfo (`appstreamcli validate`), desktop entry and
   icons, `ldd` on the binary and the CEF libraries, and a 20 s headless launch under `xvfb-run`.
-- `packaging/arch/PKGBUILD` is a template for a future `gitnex-bin` AUR package that repackages
+- `packaging/arch/PKGBUILD` is a template for a future `gitnexia-bin` AUR package that repackages
   the release `.deb`. The build doesn't use it.
-- **Install on Arch:** `sudo pacman -U GitNex-<ver>-1-x86_64.pkg.tar.zst`. **Remove:**
-  `sudo pacman -R gitnex`.
+- **Install on Arch:** `sudo pacman -U GitNexia-<ver>-1-x86_64.pkg.tar.zst`. **Remove:**
+  `sudo pacman -R gitnexia`.
 
 ### RPM (`just package-rpm`, `just check-rpm-pkg`)
 
 - `just package` also runs `just package-rpm`, which turns the `.deb` into
-  `target/release/bundle/rpm/GitNex-<version>-1.x86_64.rpm` for Fedora and openSUSE, without
+  `target/release/bundle/rpm/GitNexia-<version>-1.x86_64.rpm` for Fedora and openSUSE, without
   rpmbuild (`scripts/package-rpm.sh`; `scripts/rpm-pkg.py` writes the package: the lead, the
   signature header with its digests, the header, and a zstd-compressed cpio payload, as rpmbuild
   does). It reads the package back and checks it against the `.deb` before keeping it.
   - The payload is the `.deb`'s, path for path and mode for mode (`chrome-sandbox` root:root
-    4755), with the Arch package's two changes (the `/usr/share/licenses/gitnex` symlink, and
-    `<pkgname>gitnex</pkgname>`), `install-kind` saying `rpm`, and without the system's
-    directories (`/usr`, `/usr/bin`, the icon theme's): the package owns only `/usr/share/GitNex`
-    and `/usr/share/doc/gitnex`. Fedora's `/usr/bin` is mode 555, and owning a directory with
+    4755), with the Arch package's two changes (the `/usr/share/licenses/gitnexia` symlink, and
+    `<pkgname>gitnexia</pkgname>`), `install-kind` saying `rpm`, and without the system's
+    directories (`/usr`, `/usr/bin`, the icon theme's): the package owns only `/usr/share/GitNexia`
+    and `/usr/share/doc/gitnexia`. Fedora's `/usr/bin` is mode 555, and owning a directory with
     another mode is a file conflict. A `.deb` directory in neither list fails the build
     (`OWNED_DIRS` and `SYSTEM_DIRS` in `rpm-pkg.py`).
   - The license notices are `%license` files: dnf installs them even with `tsflags=nodocs`.
@@ -517,12 +517,12 @@ Debian field, but GNOME Software reads it), and `tauri.conf.json` sets `Homepage
     (`DEB_TO_RPM`); another Debian name that isn't a `lib*` one fails the build.
   - `Version` is the `.deb`'s (`0.1.0~alpha.1`, `0.1.0+202610051325.ab4dbf9e`): rpm sorts `~`
     before anything, as dpkg does, and `+` as a separator. `Release` is 1. The file name keeps
-    the SemVer form of the `.deb`'s (`GitNex-0.1.0-alpha.1-1.x86_64.rpm`). Times as in the Arch
+    the SemVer form of the `.deb`'s (`GitNexia-0.1.0-alpha.1-1.x86_64.rpm`). Times as in the Arch
     package.
   - It isn't signed (rpm reports `Signature: (none)`); dnf says it skipped the OpenPGP check of a
     local file, and zypper wants `--allow-unsigned-rpm`.
 - `scripts/test-package-rpm.sh` (part of `just test`) checks the version and dependency mapping
-  and a synthetic `.deb` through the whole script; `GITNEX_TEST_DOCKER=1` adds rpm's own checks
+  and a synthetic `.deb` through the whole script; `GITNEXIA_TEST_DOCKER=1` adds rpm's own checks
   of the result in `fedora:latest`.
 - `just check-rpm-pkg` installs the package in a throwaway `fedora:latest` Docker container: `rpm
   -K`, `dnf install` (every Requires resolved from Fedora's repositories), `rpm -V`, the setuid
@@ -531,9 +531,9 @@ Debian field, but GNOME Software reads it), and `tauri.conf.json` sets `Homepage
 - The release's `Requires` come from the Ubuntu 24.04 runner's libraries (glibc 2.39), so it
   needs Fedora 40 or later; openSUSE Tumbleweed installs it too. RHEL 9 (glibc 2.34) and
   openSUSE Leap 15 can't.
-- **Install on Fedora:** `sudo dnf install ./GitNex-<version>-1.x86_64.rpm`; on openSUSE,
-  `sudo zypper install --allow-unsigned-rpm ./GitNex-<version>-1.x86_64.rpm`. **Remove:**
-  `sudo dnf remove gitnex` (`sudo zypper remove gitnex`).
+- **Install on Fedora:** `sudo dnf install ./GitNexia-<version>-1.x86_64.rpm`; on openSUSE,
+  `sudo zypper install --allow-unsigned-rpm ./GitNexia-<version>-1.x86_64.rpm`. **Remove:**
+  `sudo dnf remove gitnexia` (`sudo zypper remove gitnexia`).
 
 ## `just bench` (idle CPU and memory smoke)
 
@@ -544,15 +544,15 @@ each next to its budget (idle CPU < 1.5%, memory with 12 tabs < 650 MB). It neve
 number.
 
 ```
-# the browser process: a gitnex process without --type= (CEF's helpers re-run the same binary)
-GITNEX_PID=$(for p in $(pgrep -x gitnex); do grep -qa -- --type= /proc/$p/cmdline || echo $p; done | head -1)
-echo "$GITNEX_PID"; GITNEX_PID=$GITNEX_PID just bench
+# the browser process: a gitnexia process without --type= (CEF's helpers re-run the same binary)
+GITNEXIA_PID=$(for p in $(pgrep -x gitnexia); do grep -qa -- --type= /proc/$p/cmdline || echo $p; done | head -1)
+echo "$GITNEXIA_PID"; GITNEXIA_PID=$GITNEXIA_PID just bench
 ```
 
-`pgrep -nx gitnex` alone isn't enough: it returns the newest `gitnex` process, which is usually a
+`pgrep -nx gitnexia` alone isn't enough: it returns the newest `gitnexia` process, which is usually a
 renderer.
 
-- `GITNEX_PID` is the instance's browser (main) process; it scopes the scripts to that instance
+- `GITNEXIA_PID` is the instance's browser (main) process; it scopes the scripts to that instance
   and its CEF children. Start the instance yourself (`just run-app`, with any throwaway XDG dirs
   you like), open the tabs to measure, and leave the window focused and idle for the 60 s.
 - The other performance budgets (latencies) are asserted by `just e2e` (`menu-perf.spec`, the
@@ -568,20 +568,20 @@ Windows and Node.
 - **CEF:** `cef-dll-sys`'s build script downloads the Windows distribution into `CEF_PATH`
   (`cargo tauri` uses `%LOCALAPPDATA%\tauri-cef`) and copies its runtime files next to the binary.
 - **The UI:** `cd ui && npm ci && npm run build`.
-- **Debug build with the bundled UI:** `cargo build -p gitnex-app --features tauri/custom-protocol`
+- **Debug build with the bundled UI:** `cargo build -p gitnexia-app --features tauri/custom-protocol`
   (without the feature, a debug build loads the Vite dev server, `npm run dev`).
-- **Sandboxed:** a plain debug `gitnex.exe` runs Chromium unsandboxed, and a release one refuses
+- **Sandboxed:** a plain debug `gitnexia.exe` runs Chromium unsandboxed, and a release one refuses
   to start (SECURITY.md). The sandbox needs the app as a DLL under CEF's bootstrap, named alike:
   ```bat
-  cargo rustc -p gitnex-app --lib --crate-type cdylib --features tauri/custom-protocol
-  copy %CEF_PATH%\154.0.34\cef_windows_x86_64\bootstrapc.exe target\debug\gitnex_app.exe
-  target\debug\gitnex_app.exe
+  cargo rustc -p gitnexia-app --lib --crate-type cdylib --features tauri/custom-protocol
+  copy %CEF_PATH%\154.0.34\cef_windows_x86_64\bootstrapc.exe target\debug\gitnexia_app.exe
+  target\debug\gitnexia_app.exe
   ```
   (`bootstrapc.exe` keeps a console; `bootstrap.exe` is the windowed host.)
 - **A throwaway instance, driven from another machine:** in debug builds,
-  `GITNEX_DEV_DIRS=<absolute dir>` puts the config, cache, data and Chromium profile folders under
+  `GITNEXIA_DEV_DIRS=<absolute dir>` puts the config, cache, data and Chromium profile folders under
   that folder (Windows' Known Folders ignore the environment; set `TEMP` and `TMP` too for the
-  single-instance and askpass files), and `GITNEX_DEV_CDP_PORT=<port>` opens Chromium's DevTools
+  single-instance and askpass files), and `GITNEXIA_DEV_CDP_PORT=<port>` opens Chromium's DevTools
   protocol on `127.0.0.1:<port>`. Started over SSH, the app runs in the SSH session's own window
   station, not on the desktop; `ssh -L 9333:127.0.0.1:9333 <host>` and Playwright's
   `chromium.connectOverCDP('http://127.0.0.1:9333')` then reach its page. Release builds have
@@ -589,7 +589,7 @@ Windows and Node.
 - **The installers:** `just package-windows` (or `powershell -File scripts\package-windows.ps1`)
   builds the NSIS per-user installer and the per-machine MSI into
   `target\release\bundle\windows\`, from a release build with the sandboxed layout above
-  (`GitNex.exe` is CEF's `bootstrap.exe`, `GitNex.dll` the app). Besides the above it needs
+  (`GitNexia.exe` is CEF's `bootstrap.exe`, `GitNexia.dll` the app). Besides the above it needs
   Python 3 (`PYTHON` picks one), cargo-about 0.9.2 (`cargo install cargo-about --version 0.9.2
   --locked --features cli`) and the .NET SDK (WiX is a .NET tool); NSIS, WiX and rcedit are
   downloaded into `target\windows-tools` on first use. docs/releasing.md has the details, the
@@ -605,41 +605,41 @@ Windows and Node.
 ## macOS
 
 The app builds and runs on macOS (Apple Silicon checked, macOS 12 or later), but only as
-`GitNex.app`: CEF loads its framework and starts its helper processes from inside the bundle, so
-a bare `target/debug/GitNex` can't start. Needs Xcode's command line tools, CMake, Ninja, Node
+`GitNexia.app`: CEF loads its framework and starts its helper processes from inside the bundle, so
+a bare `target/debug/GitNexia` can't start. Needs Xcode's command line tools, CMake, Ninja, Node
 and the pinned Tauri CLI (`cargo install tauri-cli --version =3.0.0-alpha.5 --locked`).
 Install CMake and Ninja with `brew install cmake ninja` and make sure they are on `PATH` before
 building with CEF.
 
-- **A local app:** `./build-macos-app.sh` (from the repository root) builds `GitNex.app` in a
+- **A local app:** `./build-macos-app.sh` (from the repository root) builds `GitNexia.app` in a
   temporary target directory (compiling into a network volume can corrupt build artifacts),
   ad-hoc signs it, sets its minimum macOS version to 12.0 and copies it to
-  `target/release/bundle/macos/`. `--install` also replaces `/Applications/GitNex.app`
-  (`GITNEX_APP_DIR` picks another folder); a running GitNex keeps the old build until it is
+  `target/release/bundle/macos/`. `--install` also replaces `/Applications/GitNexia.app`
+  (`GITNEXIA_APP_DIR` picks another folder); a running GitNexia keeps the old build until it is
   quit and reopened. `--debug` builds the debug profile, `--keep` keeps the temporary directory.
   It clears `MACOSX_DEPLOYMENT_TARGET` for the build: this toolchain makes corrupt proc-macro
   dylibs with it set.
 - **System webview (spike):** `./build-macos-app.sh --wkwebview` builds the same bundle on
   Tauri's own runtime (WKWebView) and `--no-default-features`, so no CEF is linked or shipped.
   See [`macos-wkwebview-spike.md`](macos-wkwebview-spike.md); this isn't a release option yet.
-- **The bundle:** `cd crates/gitnex-app && cargo tauri build --debug --bundles app` (or without
-  `--debug`) makes `target/<profile>/bundle/macos/GitNex.app`, with the UI embedded. The Tauri
+- **The bundle:** `cd crates/gitnexia-app && cargo tauri build --debug --bundles app` (or without
+  `--debug`) makes `target/<profile>/bundle/macos/GitNexia.app`, with the UI embedded. The Tauri
   CLI does the whole layout (`tauri.macos.conf.json` adds to `tauri.conf.json`):
-  - `Contents/MacOS/GitNex`, the app (`mainBinaryName`, so the helpers are named after it);
+  - `Contents/MacOS/GitNexia`, the app (`mainBinaryName`, so the helpers are named after it);
   - `Contents/Frameworks/Chromium Embedded Framework.framework`, copied from the distribution
     `cef-dll-sys` downloaded into `CEF_PATH` (`~/Library/Caches/tauri-cef` by default);
-  - `Contents/Frameworks/GitNex Helper.app` and its `(GPU)`, `(Renderer)`, `(Plugin)` and
+  - `Contents/Frameworks/GitNexia Helper.app` and its `(GPU)`, `(Renderer)`, `(Plugin)` and
     `(Alerts)` siblings: one small helper executable, which the bundler compiles against the
     app's own `cef` crate (`target/tauri-cef-helper`) and copies into each, with its
     `Info.plist`;
   - `Contents/Resources/dictionaries/en-US-10-2.bdic`, the spell-check dictionary;
   - an ad-hoc signature (`signingIdentity: "-"`), inside out, with the hardened runtime and the
     entitlements CEF needs (JIT, unsigned executable memory, no library validation); `just
-    package-macos` signs with an identity instead when `GITNEX_MACOS_SIGNING_IDENTITY` names one
+    package-macos` signs with an identity instead when `GITNEXIA_MACOS_SIGNING_IDENTITY` names one
     (docs/releasing.md, "macOS signing");
   - `Info.plist` with the folder document type (`packaging/macos/Info.plist`, merged in).
 - **The package:** `just package-macos` builds the release bundle and
-  `target/release/bundle/dmg/GitNex_<version>_aarch64.dmg`, then checks both
+  `target/release/bundle/dmg/GitNexia_<version>_aarch64.dmg`, then checks both
   (`scripts/package-macos.sh`; docs/releasing.md, "macOS disk image"). It needs cargo-about too,
   for the license notices.
 - **Folders from Finder:** macOS hands folders to the app as Apple Events (Open With, a folder
@@ -649,7 +649,7 @@ building with CEF.
 - **The sandbox:** the helpers enter Chromium's Seatbelt sandbox, ad-hoc or self-signed; a
   release build asks for it outright (`SandboxPolicy::Required`, SECURITY.md).
 - **A throwaway instance driven over CDP** (debug builds only), as on Windows:
-  `GITNEX_DEV_DIRS=<absolute dir> GITNEX_DEV_CDP_PORT=9333 GitNex.app/Contents/MacOS/GitNex
+  `GITNEXIA_DEV_DIRS=<absolute dir> GITNEXIA_DEV_CDP_PORT=9333 GitNexia.app/Contents/MacOS/GitNexia
   <repo>`, then `node ui/scripts/cdp-smoke.mjs 9333 <out dir> <repo>` (Playwright's
   `connectOverCDP`) opens the graph, a commit, its diff and a fetch, with a screenshot of each.
   The single-instance and askpass sockets are in `$TMPDIR`.

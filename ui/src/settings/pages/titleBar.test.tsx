@@ -10,7 +10,7 @@ vi.mock('../../ui/ConfirmDialog', async (orig) => ({ ...(await orig<typeof impor
 
 // The app's window on Linux, as its initialization script hands it over, before any page registers.
 const LINUX = { frame: 'custom', platform: 'linux', layout: 'appmenu:close', doubleClick: 'toggle-maximize', middleClick: 'lower', rightClick: 'menu' } as const;
-window.__GITNEX_WINDOW__ = { ...LINUX };
+window.__GITNEXIA_WINDOW__ = { ...LINUX };
 await import('../feature');
 const { api } = await import('../../api/client');
 const { DEFAULT_SETTINGS, useAppState } = await import('../../app/state');
@@ -36,7 +36,7 @@ const show = () => {
   act(() => useSettingsUi.getState().show('titleBar'));
 };
 const radio = (name: string) => within(screen.getByRole('radiogroup', { name: 'Title bar' })).getByRole('radio', { name });
-const restartButton = () => screen.queryByRole('button', { name: 'Restart GitNex' });
+const restartButton = () => screen.queryByRole('button', { name: 'Restart GitNexia' });
 
 it('"Title bar" is on Appearance › Window, before Fonts, and lists what each choice is on each platform', () => {
   expect(settingDef('titleBar')).toMatchObject({ page: 'appearance', group: 'Window', label: 'Title bar' });
@@ -46,7 +46,7 @@ it('"Title bar" is on Appearance › Window, before Fonts, and lists what each c
     expect.stringMatching(/^• Separate: /),
     expect.stringMatching(/^• Combined: /),
     expect.stringMatching(/^• System: the desktop's own title bar/),
-    'Takes effect when GitNex restarts.',
+    'Takes effect when GitNexia restarts.',
   ]);
   const windows = titleBarSetting('windows').description!;
   expect(windows).toMatch(/• System: Windows' own title bar and frame/);
@@ -59,7 +59,7 @@ it('"Title bar" is on Appearance › Window, before Fonts, and lists what each c
   expect([...row.querySelectorAll('.setting-desc li')].map((li) => li.textContent)).toEqual([
     expect.stringMatching(/^Separate: /), expect.stringMatching(/^Combined: /), expect.stringMatching(/^System: /),
   ]);
-  expect([...row.querySelectorAll('.setting-desc p')].map((p) => p.textContent)).toEqual(['Takes effect when GitNex restarts.']);
+  expect([...row.querySelectorAll('.setting-desc p')].map((p) => p.textContent)).toEqual(['Takes effect when GitNexia restarts.']);
 });
 
 it('maps the two stored switches: Separate by default, Combined, System, and both on reads as System', () => {
@@ -80,7 +80,7 @@ it('maps the two stored switches: Separate by default, Combined, System, and bot
   expect(radio('System')).toBeChecked();
 });
 
-it('offers Restart GitNex once the choice isn\'t what the window was built with, and hides it when it is again', async () => {
+it('offers Restart GitNexia once the choice isn\'t what the window was built with, and hides it when it is again', async () => {
   show();
   expect(restartButton()).toBeNull();
   fireEvent.click(radio('Combined'));
@@ -99,7 +99,7 @@ it('offers Restart GitNex once the choice isn\'t what the window was built with,
   expect(restartButton()).toBeNull();
 });
 
-it('Restart GitNex with unsaved edits asks first: Cancel stays, Discard edits restarts', async () => {
+it('Restart GitNexia with unsaved edits asks first: Cancel stays, Discard edits restarts', async () => {
   useWorkingCopy.setState({ copies: { t: { key: 'k', path: 'a.txt', worktree: '/r', repo: 1, base: 'h0', dirty: true, view: 'diff' } } });
   show();
   fireEvent.click(radio('Combined'));

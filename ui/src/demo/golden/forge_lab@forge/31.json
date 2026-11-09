@@ -15,7 +15,7 @@
       "assignees": [],
       "baseSha": "2818fcd3b6933f00a5c38fdff530c9ce683b80c0",
       "deleteSourceBranch": null,
-      "description": "<!-- gitnex-stack:start -->\n**Stack** (kept up to date by GitNex)\n\n| # | MR | Title | State |\n|---|---|---|---|\n| 1 | !4 | Add the cargo hold | Open |\n| **2** | **!5** | **Give the hold a capacity** | **Open** |\n<!-- gitnex-stack:end -->",
+      "description": "<!-- gitnexia-stack:start -->\n**Stack** (kept up to date by GitNexia)\n\n| # | MR | Title | State |\n|---|---|---|---|\n| 1 | !4 | Add the cargo hold | Open |\n| **2** | **!5** | **Give the hold a capacity** | **Open** |\n<!-- gitnexia-stack:end -->",
       "mergeStatus": {
         "kind": "mergeable"
       },

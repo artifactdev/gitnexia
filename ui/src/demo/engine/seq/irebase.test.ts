@@ -53,7 +53,7 @@ describe('interactiveRebase', () => {
     expect(r.outcome).toEqual({ status: 'stopped', kind: 'rebase', files: 0 });
     const st = readInProgress(t.memfs, t.repo.gitdir);
     // main~1 is the base, so L1–L4 keep their ids and L5's base is L4.
-    expect(st).toMatchObject({ kind: 'rebase', gitnex: true, editBase: l4, editStop: expect.any(String), message: 'L5 Add more tests\n', editAdded: ['file_2.txt'] });
+    expect(st).toMatchObject({ kind: 'rebase', gitnexia: true, editBase: l4, editStop: expect.any(String), message: 'L5 Add more tests\n', editAdded: ['file_2.txt'] });
     await t.write('extra.txt', 'made at the stop\n');
     await t.stage('extra.txt');
     const aborted = await rebaseHandlers.rebaseControl({ repo: id, worktree: wt, action: 'abort' }, ctx);
@@ -123,7 +123,7 @@ describe('the interactive rebase\'s stops', () => {
     const t = await makeTestRepo();
     const { before, commit, control, journal } = await editing(t, ['L3', 'L5']);
     expect((await control('continue')).outcome).toMatchObject({ status: 'stopped' });
-    // Still GitNex's session: a Commit there is taken.
+    // Still GitNexia's session: a Commit there is taken.
     expect(journal().paused).toMatchObject({ irebase: true });
     const piece = (await commit('L5, a piece')).outcome!.oid;
     const aborted = await control('abort');
@@ -156,7 +156,7 @@ describe('the interactive rebase\'s stops', () => {
     const { ctx, id, wt } = await openForWrite(t);
     await rebaseHandlers.interactiveRebase({ repo: id, worktree: wt, branch: 'feature/c', base: 'main~1', expect: p.expect, rows, chips: p.chips.map((x) => ({ branch: x.branch, at: { kind: 'row', oid: x.at } })), confirm: { autostash: false } }, ctx);
     // pick a, exec, update-ref feature/a, edit b (stopped here), update-ref feature/b, pick c.
-    expect(readInProgress(t.memfs, t.repo.gitdir)).toMatchObject({ step: 4, total: 6, gitnex: true });
+    expect(readInProgress(t.memfs, t.repo.gitdir)).toMatchObject({ step: 4, total: 6, gitnexia: true });
   });
 
   it('deletes a chip and makes a new one once it completes', async () => {

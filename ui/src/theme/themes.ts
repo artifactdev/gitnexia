@@ -3,7 +3,7 @@ import { contrastRatio } from './contrast';
  * The built-in themes (spec §12.1): pure data. A theme sets every colour custom property in
  * COLOR_TOKENS on :root, plus the ten graph lanes (`--graph-0..9`); non-colour tokens (fonts,
  * motion, density metrics) stay in tokens.css and density.ts. `tokens.css` carries the default
- * dark theme (GitNex Dark) as the first-paint values, and themes.test.ts holds the two to each other.
+ * dark theme (GitNexia Dark) as the first-paint values, and themes.test.ts holds the two to each other.
  */
 export const THEME_IDS = ['default-dark', 'light', 'monokai', 'darcula', 'dracula', 'one-dark', 'solarized-dark', 'solarized-light', 'github-dark', 'nord', 'bearded-arc-blueberry'] as const;
 export type ThemeId = (typeof THEME_IDS)[number];
@@ -247,7 +247,7 @@ function theme(id: ThemeId, label: string, kind: 'dark' | 'light', editorTheme: 
 }
 
 /** GitHub Dark's core (the `github-dark-default` palette), shared by the built-in GitHub Dark and
- * GitNex's default dark theme, which is GitHub Dark with darker surfaces. */
+ * GitNexia's default dark theme, which is GitHub Dark with darker surfaces. */
 const GITHUB_DARK_CORE: CoreColors = {
   'app-bg0': '#0d1117', 'panel-bg0': '#161b22', 'panel-bg1': '#21262d', 'toolbar-bg0': '#010409',
   'action-bar-bg': '#21262d', 'tab-bar-bg': '#010409', 'file-bar-bg': '#161b22',
@@ -261,17 +261,17 @@ const GITHUB_DARK_CORE: CoreColors = {
 };
 const GITHUB_DARK_GRAPH = ['#58a6ff', '#bc8cff', '#3fb950', '#db6d28', '#f85149', '#d29922', '#39c5cf', '#f778ba', '#a5d6ff', '#7ee787'];
 
-/** GitNex Dark, the default: GitHub Dark with GitNex's near-black grounds and a cyan second lane. */
-const GITNEX_DARK_CORE: CoreColors = {
+/** GitNexia Dark, the default: GitHub Dark with GitNexia's near-black grounds and a cyan second lane. */
+const GITNEXIA_DARK_CORE: CoreColors = {
   ...GITHUB_DARK_CORE,
   'app-bg0': '#00020d', 'panel-bg0': '#050c18', 'panel-bg1': '#121e2e',
 };
-const GITNEX_DARK_GRAPH = ['#58a6ff', '#26dce1', '#3fb950', '#db6d28', '#f85149', '#d29922', '#39c5cf', '#f778ba', '#a5d6ff', '#7ee787'];
+const GITNEXIA_DARK_GRAPH = ['#58a6ff', '#26dce1', '#3fb950', '#db6d28', '#f85149', '#d29922', '#39c5cf', '#f778ba', '#a5d6ff', '#7ee787'];
 
 export const THEMES: Record<ThemeId, ThemeDef> = {
-  // GitNex Dark, the default: GitHub Dark's palette on near-black grounds (the user's theme
+  // GitNexia Dark, the default: GitHub Dark's palette on near-black grounds (the user's theme
   // export of 2026-11-05), every token spelled out. GitHub Dark itself keeps the official values.
-  'default-dark': theme('default-dark', 'GitNex Dark', 'dark', 'github-dark-default', GITNEX_DARK_CORE, GITNEX_DARK_GRAPH, {
+  'default-dark': theme('default-dark', 'GitNexia Dark', 'dark', 'github-dark-default', GITNEXIA_DARK_CORE, GITNEXIA_DARK_GRAPH, {
     'section-border': 'rgba(240, 246, 252, 0.1)',
   }),
   light: theme('light', 'Light', 'light', 'light-plus', {

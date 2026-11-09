@@ -1,9 +1,9 @@
-# GitNex's own title bar on Windows, checked on the runner's desktop with real input (SendInput,
+# GitNexia's own title bar on Windows, checked on the runner's desktop with real input (SendInput,
 # keybd_event): window, client and DWM frame rectangles, cursors, pixels and screenshots, into
 # <Out>/results.md and <Out>/*.png. A check that fails is logged and the next one runs; exits 1
 # if any failed. Run by .github/workflows/windows-titlebar.yml.
 #
-#   ui/scripts/win-titlebar.ps1 -App <GitNex.exe> -Out <dir>
+#   ui/scripts/win-titlebar.ps1 -App <GitNexia.exe> -Out <dir>
 #
 # The steps: the frame (the system's border at the sides and bottom, none at the top); a drag of
 # the title bar; a double click maximizes to the work area and restores; with the window clear of
@@ -146,11 +146,11 @@ public static class W {
 }
 '@
 
-# Physical pixels whatever the scale, as GitNex (per-monitor aware) has them.
+# Physical pixels whatever the scale, as GitNexia (per-monitor aware) has them.
 $aware = [W]::SetProcessDpiAwarenessContext([IntPtr]::new(-4))
 
 $results = Join-Path $Out 'results.md'
-"# GitNex title bar on $((Get-CimInstance Win32_OperatingSystem).Caption) $([Environment]::OSVersion.Version)`n" | Set-Content $results
+"# GitNexia title bar on $((Get-CimInstance Win32_OperatingSystem).Caption) $([Environment]::OSVersion.Version)`n" | Set-Content $results
 $script:failures = 0
 function Log([string]$line) { Write-Host $line; Add-Content $results $line }
 function Check([string]$name, [bool]$ok, [string]$detail) {
@@ -203,7 +203,7 @@ function BarShot([string]$name, $c, [double]$s = 1) { Shot $name ([W]::Mk($c.L -
 trap {
   $script:failures++
   Log "- **FAIL** error at line $($_.InvocationInfo.ScriptLineNumber): $($_.Exception.Message)"
-  if ($_.Exception.Message -eq 'no GitNex window') { break }
+  if ($_.Exception.Message -eq 'no GitNexia window') { break }
   continue
 }
 
@@ -225,21 +225,21 @@ function Launch {
   $hwnd = [IntPtr]::Zero
   for ($i = 0; $i -lt 90 -and $hwnd -eq [IntPtr]::Zero; $i++) {
     Wait 1000
-    foreach ($id in @(Get-Process -Name GitNex -ErrorAction SilentlyContinue | ForEach-Object Id)) {
-      foreach ($w in [W]::TopLevel([uint32]$id, '')) { if ([W]::Title($w) -like '*GitNex*') { $hwnd = $w } }
+    foreach ($id in @(Get-Process -Name GitNexia -ErrorAction SilentlyContinue | ForEach-Object Id)) {
+      foreach ($w in [W]::TopLevel([uint32]$id, '')) { if ([W]::Title($w) -like '*GitNexia*') { $hwnd = $w } }
     }
   }
   if ($hwnd -eq [IntPtr]::Zero) {
-    Log (Get-Process | Where-Object { $_.ProcessName -like '*GitNex*' } | Format-Table Id, ProcessName, MainWindowTitle | Out-String)
+    Log (Get-Process | Where-Object { $_.ProcessName -like '*GitNexia*' } | Format-Table Id, ProcessName, MainWindowTitle | Out-String)
     Shot 'no-window'
-    throw 'no GitNex window'
+    throw 'no GitNexia window'
   }
   Wait 10000 # the page loads and renders
   [W]::SetForegroundWindow($hwnd) | Out-Null; Wait 500
   @{ Process = $p; Hwnd = $hwnd }
 }
-function StopAll { Get-Process | Where-Object { $_.ProcessName -like '*GitNex*' } | Stop-Process -Force -ErrorAction SilentlyContinue; Wait 2000 }
-$settings = Join-Path $env:APPDATA 'gitnex\settings.json'
+function StopAll { Get-Process | Where-Object { $_.ProcessName -like '*GitNexia*' } | Stop-Process -Force -ErrorAction SilentlyContinue; Wait 2000 }
+$settings = Join-Path $env:APPDATA 'gitnexia\settings.json'
 function SystemTitleBar([bool]$on) {
   $s = Get-Content -Raw $settings | ConvertFrom-Json
   $s | Add-Member -Force -NotePropertyName systemTitleBar -NotePropertyValue $on
@@ -274,7 +274,7 @@ $notepad = [IntPtr]::Zero
 foreach ($w in [W]::TopLevel([uint32]$pad.Id, '')) { $notepad = $w }
 if ($notepad -eq [IntPtr]::Zero) { foreach ($w in [W]::TopLevel(0, 'Notepad')) { $notepad = $w } }
 if ($notepad -ne [IntPtr]::Zero) {
-  # Notepad in front, away from GitNex's top edge: GitNex is inactive.
+  # Notepad in front, away from GitNexia's top edge: GitNexia is inactive.
   [W]::SetWindowPos($notepad, [IntPtr]::Zero, 1100, 500, 600, 400, 0x0004) | Out-Null
   [W]::SetForegroundWindow($notepad) | Out-Null; Wait 1000
   Edges 'inactive' $c
@@ -449,10 +449,10 @@ if ($notepad -ne [IntPtr]::Zero) {
     $nr = [W]::Rect($notepad)
     Shake (Mid $nr) ($nr.T + 12) $half
     $control = [W]::IsIconic($h)
-    Log "Notepad shaken by its own title bar, $half ms a swing: GitNex minimized $control"
+    Log "Notepad shaken by its own title bar, $half ms a swing: GitNexia minimized $control"
     if ($control) {
       Shake (Mid ([W]::Rect($notepad))) ([W]::Rect($notepad).T + 12) $half
-      Log "and again: GitNex minimized $([W]::IsIconic($h))"
+      Log "and again: GitNexia minimized $([W]::IsIconic($h))"
       $speed = $half
       break
     }
@@ -465,14 +465,14 @@ if ($notepad -ne [IntPtr]::Zero) {
     Shake (Mid $c) ($c.T + 15) $speed
     $after = [W]::IsIconic($notepad)
     Shot '09-shaken'
-    Check 'shaking the title bar minimizes the other window' ((-not $before) -and $after -and -not [W]::IsIconic($h)) "Notepad minimized before $before, after $after; GitNex minimized $([W]::IsIconic($h))"
+    Check 'shaking the title bar minimizes the other window' ((-not $before) -and $after -and -not [W]::IsIconic($h)) "Notepad minimized before $before, after $after; GitNexia minimized $([W]::IsIconic($h))"
     $c = [W]::Client($h)
     Shake (Mid $c) ($c.T + 15) $speed
     $again = [W]::IsIconic($notepad)
     Shot '09-shaken-again'
     Check 'shaking it again brings the other window back' ($after -and -not $again) "Notepad minimized $again"
   } else {
-    Log "Shaking Notepad's own title bar minimized nothing: this session doesn't shake; GitNex's wasn't checked."
+    Log "Shaking Notepad's own title bar minimized nothing: this session doesn't shake; GitNexia's wasn't checked."
   }
 } else {
   Check 'Notepad opened, for the shake' $false 'no Notepad window'
@@ -488,7 +488,7 @@ Drag (Mid $c) ($c.T + 15) 900 300
 $cBefore = [W]::Client($h); $rBefore = [W]::Rect($h)
 Click ($cBefore.R - 23) ($cBefore.T + 15)
 $exited = $run.Process.WaitForExit(20000)
-Check 'the close button closes GitNex' $exited "exited=$exited"
+Check 'the close button closes GitNexia' $exited "exited=$exited"
 if (-not $exited) { Stop-Process -Id $run.Process.Id -Force }
 Wait 3000
 $run = Launch; $h = $run.Hwnd
@@ -521,7 +521,7 @@ $scale = [W]::SetScale(150)
 Log "DisplayConfigSetDeviceInfo: $scale"
 Wait 4000
 $dpi = [W]::GetDpiForWindow($h)
-Log "GitNex's window at $dpi dpi after the switch: rect $(Fmt ([W]::Rect($h))), client $(Fmt ([W]::Client($h))) (was $(Fmt $cLive)); screen $([W]::GetSystemMetrics(0))x$([W]::GetSystemMetrics(1))"
+Log "GitNexia's window at $dpi dpi after the switch: rect $(Fmt ([W]::Rect($h))), client $(Fmt ([W]::Client($h))) (was $(Fmt $cLive)); screen $([W]::GetSystemMetrics(0))x$([W]::GetSystemMetrics(1))"
 Shot '12-scaled-live'
 if ($dpi -eq 144) {
   $s = 1.5
@@ -529,7 +529,7 @@ if ($dpi -eq 144) {
   Check 'live at 150%: the border is the system frame at 144 dpi' (($c.L - $r.L) -ge 10 -and ($r.B - $c.B) -ge 10 -and $c.T -eq $r.T) "border L=$($c.L - $r.L) R=$($r.R - $c.R) B=$($r.B - $c.B) T=$($c.T - $r.T)"
   Click ($c.R - [int](23 * $s)) ($c.T + [int](15 * $s))
   $exited = $run.Process.WaitForExit(20000)
-  Check 'at 150% the close button closes GitNex' $exited "exited=$exited"
+  Check 'at 150% the close button closes GitNexia' $exited "exited=$exited"
   StopAll
   $run = Launch; $h = $run.Hwnd
   $r0 = [W]::Rect($h); $c0 = [W]::Client($h); $f0 = [W]::Frame($h)

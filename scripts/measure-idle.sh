@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-# Usage: ./measure-idle.sh [seconds] — average CPU% of gitnex and ALL its CEF processes over
+# Usage: ./measure-idle.sh [seconds] — average CPU% of gitnexia and ALL its CEF processes over
 # the window, with a per-PID breakdown (ticks + cpu%) that sums to the total. Adapted from the
 # CEF spike's measure-idle.sh (spike-cef/measure-idle.sh); only process discovery differs (see
 # proc-tree.sh). A PID that exits during the window is reported as "(exited)" with 0 ticks.
 set -euo pipefail
 . "$(dirname "$0")/proc-tree.sh"
 secs=${1:-60}
-pids=$(gitnex_pids | tr '\n' ' ')
+pids=$(gitnexia_pids | tr '\n' ' ')
 ticks_of() { [ -r "/proc/$1/stat" ] && awk '{print $14+$15}' "/proc/$1/stat" 2>/dev/null || echo ""; }
-comm_of() { gitnex_role "$1"; }
+comm_of() { gitnexia_role "$1"; }
 
 declare -A t0 name
 for p in $pids; do t0[$p]=$(ticks_of "$p"); name[$p]=$(comm_of "$p"); done

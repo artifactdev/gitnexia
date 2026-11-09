@@ -33,7 +33,7 @@ function mutate(lines: string[], r: () => number): string[] {
 
 const text = (lines: string[]) => lines.join('').replace(/end(?=.)/g, 'end\n');
 
-describe.skipIf(!process.env.GITNEX_MERGE_FUZZ)('mergeTexts against git merge-file', () => {
+describe.skipIf(!process.env.GITNEXIA_MERGE_FUZZ)('mergeTexts against git merge-file', () => {
   it('matches git on random small inputs', () => {
     const dir = mkdtempSync(join(tmpdir(), 'gb-merge-fuzz-'));
     const r = rng(20261013);

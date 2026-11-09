@@ -6,10 +6,10 @@ import { addForgeAccount, E2E_GITHUB_TOKEN, fixtures, forgeSeed, git, setForgeSe
 import { expect, test, type Page } from './test';
 
 // The README's screenshot (docs/images/screenshot.webp): opt-in, not part of the suite. Run it with
-// `just readme-screenshot`, which sets GITNEX_README_SHOT to the PNG to write and optimises it.
+// `just readme-screenshot`, which sets GITNEXIA_README_SHOT to the PNG to write and optimises it.
 // The repos are scripts/showcase-repo.sh's, built into this run's fixture root.
-const out = process.env.GITNEX_README_SHOT;
-test.skip(!out, 'the README screenshot runs with GITNEX_README_SHOT=<png> (just readme-screenshot)');
+const out = process.env.GITNEXIA_README_SHOT;
+test.skip(!out, 'the README screenshot runs with GITNEXIA_README_SHOT=<png> (just readme-screenshot)');
 test.skip(({ browserName }) => browserName !== 'chromium', 'Chromium only');
 test.use({ viewport: { width: 1600, height: 1000 }, deviceScaleFactor: 1, timezoneId: 'UTC', locale: 'en-US' });
 

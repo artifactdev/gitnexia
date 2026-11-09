@@ -39,7 +39,7 @@ describe('themes', () => {
     expect(isThemeId('solarized')).toBe(false);
   });
 
-  it('pairs each theme with the editor theme named in spec §12.1 (GitNex Dark and GitHub Dark: github-dark-default)', () => {
+  it('pairs each theme with the editor theme named in spec §12.1 (GitNexia Dark and GitHub Dark: github-dark-default)', () => {
     const pairs = Object.fromEntries(THEME_IDS.map((id) => [id, THEMES[id].editorTheme]));
     expect(pairs).toEqual({
       'default-dark': 'github-dark-default', light: 'light-plus', monokai: 'monokai', darcula: 'darcula', dracula: 'dracula',
@@ -163,11 +163,11 @@ describe('themes', () => {
     r.graph.forEach((g, i) => expect(contrastRatio(r.laneText[i], g), `initials on lane ${i} ${g}`).toBeGreaterThanOrEqual(3));
   });
 
-  it("GitNex Dark is exactly the exported default theme, every token (the user's 2026-11-05 theme)", () => {
+  it("GitNexia Dark is exactly the exported default theme, every token (the user's 2026-11-05 theme)", () => {
     // One literal copy of the whole theme, so no edit to themes.ts or tokens.css can drift the
     // default look, and no token can go unpinned.
     expect(THEMES['default-dark']).toEqual({
-      id: 'default-dark', label: 'GitNex Dark', kind: 'dark', editorTheme: 'github-dark-default',
+      id: 'default-dark', label: 'GitNexia Dark', kind: 'dark', editorTheme: 'github-dark-default',
       graph: ['#58a6ff', '#26dce1', '#3fb950', '#db6d28', '#f85149', '#d29922', '#39c5cf', '#f778ba', '#a5d6ff', '#7ee787'],
       colors: {
         'app-bg0': '#00020d',

@@ -52,7 +52,7 @@ const LOADS = {
 // <link rel> values that load their href (canonical, alternate and the like don't).
 const LINK_LOADS = new Set(['stylesheet', 'preload', 'modulepreload', 'prefetch', 'icon', 'apple-touch-icon', 'mask-icon', 'manifest', 'preconnect', 'dns-prefetch']);
 const DATA = 'demo/demo-data';
-const WASM = /(^|\/)gitnex_graph_wasm_bg\.wasm-[\w-]{6,}\.gz$/;
+const WASM = /(^|\/)gitnexia_graph_wasm_bg\.wasm-[\w-]{6,}\.gz$/;
 
 const ext = (p) => posix.extname(p).toLowerCase();
 const sha256 = (bytes, encoding) => createHash('sha256').update(bytes).digest(encoding);
@@ -266,7 +266,7 @@ export function checkSite(dist, { base = '/', root = REPO_ROOT, budgets = {} } =
     if (!built) errors.push(`${DATA}/manifest.json: its rev ${mrev} isn't in demo/assets/*.js (the build compiles it in)`);
   }
   const wasm = all.filter((p) => p.startsWith('demo/') && WASM.test(p));
-  if (!wasm.length) errors.push('demo/: no gzipped WebAssembly under a hashed name (gitnex_graph_wasm_bg.wasm-<hash>.gz)');
+  if (!wasm.length) errors.push('demo/: no gzipped WebAssembly under a hashed name (gitnexia_graph_wasm_bg.wasm-<hash>.gz)');
   for (const p of wasm) if (!isGzip(read(p))) errors.push(`${p}: not gzip`);
 
   // Sizes, and the build machine's path.

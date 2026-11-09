@@ -78,7 +78,7 @@ function useWriteText(op: OpInfo | undefined): string | undefined {
 /**
  * The status bar (spec §6.5), in the app's `statusBar` slot: zoom, a running clone or a slow fetch
  * of the user's (or the auth prompt one waits on) with Cancel, the active tab's fetch-skipped
- * warning, the update pill (`updates/`), the Keyboard Shortcuts button, git's version and GitNex's. (The notification bell is in the tab bar.)
+ * warning, the update pill (`updates/`), the Keyboard Shortcuts button, git's version and GitNexia's. (The notification bell is in the tab bar.)
  */
 export function StatusBar() {
   const zoom = useZoom((s) => s.zoom);
@@ -95,7 +95,7 @@ export function StatusBar() {
   const git = useAppInfo((s) => s.info?.gitVersion);
   const version = useAppInfo((s) => s.info?.appVersion);
   const build = useAppInfo((s) => s.info?.build);
-  useEffect(() => { void useAppInfo.getState().load().catch((e: unknown) => console.warn('[gitnex] app info', e)); }, []);
+  useEffect(() => { void useAppInfo.getState().load().catch((e: unknown) => console.warn('[gitnexia] app info', e)); }, []);
   const cancel = (op: number) => { void api.cancelOp(op).catch(() => {}); };
   return (
     <footer className="status-bar">
@@ -145,9 +145,9 @@ export function StatusBar() {
       <span className="sb-item">git {git ?? '…'}</span>
       {build ? (
         <HoverTooltip content={`Build ${build}`}>
-          <span className="sb-item sb-version">GitNex {version ?? '…'}</span>
+          <span className="sb-item sb-version">GitNexia {version ?? '…'}</span>
         </HoverTooltip>
-      ) : <span className="sb-item sb-version">GitNex {version ?? '…'}</span>}
+      ) : <span className="sb-item sb-version">GitNexia {version ?? '…'}</span>}
     </footer>
   );
 }

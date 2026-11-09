@@ -1,6 +1,6 @@
 # Azure DevOps Services
 
-GitNex connects to Azure DevOps Services organizations at `dev.azure.com` using personal
+GitNexia connects to Azure DevOps Services organizations at `dev.azure.com` using personal
 access tokens (PATs). Azure DevOps Server and Microsoft Entra sign-in are not included.
 
 ## Connect and clone
@@ -8,7 +8,7 @@ access tokens (PATs). Azure DevOps Server and Microsoft Entra sign-in are not in
 1. In your Azure DevOps organization, open **User settings > Personal access tokens**.
    Create a token scoped to that organization with **Code (Read)** permission. The token
    cannot grant repository access your user does not already have.
-2. In GitNex, open **Settings > Accounts > Add account** and select **Azure DevOps**.
+2. In GitNexia, open **Settings > Accounts > Add account** and select **Azure DevOps**.
 3. Enter your organization URL, for example `https://dev.azure.com/orbital`, not a project
    URL, clone URL or API endpoint.
 4. Paste the PAT and add the account. It is kept in the existing system keyring/token store,
@@ -20,7 +20,7 @@ Add each organization separately. Accounts and tokens are isolated by organizati
 users in the same organization can also have separate accounts. An expired, rejected or
 insufficiently scoped PAT produces an error rather than a successful connection.
 
-For matching HTTPS remotes, GitNex also uses the account's PAT for clone, fetch, pull and push,
+For matching HTTPS remotes, GitNexia also uses the account's PAT for clone, fetch, pull and push,
 including background fetch. Existing repositories use the account selected in **Settings >
 Repository > Forge account**, or the organization's first account otherwise. Push requires
 **Code (Read & write)** permission.
@@ -33,7 +33,7 @@ credentials. SSH remotes use your normal SSH keys or agent, not the PAT.
 
 ## Existing repositories
 
-GitNex recognizes current HTTPS and SSH remotes:
+GitNexia recognizes current HTTPS and SSH remotes:
 
 - `https://dev.azure.com/orbital/Space%20Tools/_git/Orbit`
 - `git@ssh.dev.azure.com:v3/orbital/Space%20Tools/Orbit`

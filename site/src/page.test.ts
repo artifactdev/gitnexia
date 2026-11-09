@@ -9,7 +9,7 @@ test('no inline styles or scripts: the CSP allows neither', () => {
 });
 
 test('links leave only for this project on GitHub; nothing loads from elsewhere', () => {
-  for (const m of html.matchAll(/\bhref="(https?:[^"]+)"/g)) expect(m[1]).toMatch(/^https:\/\/github\.com\/artifactdev\/gitnex(\/|$)/);
+  for (const m of html.matchAll(/\bhref="(https?:[^"]+)"/g)) expect(m[1]).toMatch(/^https:\/\/github\.com\/artifactdev\/gitnexia(\/|$)/);
   expect(html).not.toMatch(/\bsrc="https?:/);
 });
 

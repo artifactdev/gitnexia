@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // SPDX-License-Identifier: MIT
 
-//! GitNex patch: window-manager requests for a window that draws its own title bar.
+//! GitNexia patch: window-manager requests for a window that draws its own title bar.
 //!
 //! winit-gtk4 starts a move or resize with GDK's `begin_move` / `begin_resize`, from the last
 //! button press GTK saw. GTK never sees one here: the presses go to the CEF browsers, foreign X

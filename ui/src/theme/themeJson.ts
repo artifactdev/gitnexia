@@ -3,7 +3,7 @@ import { parseShareJson, toShareJson, uniqueName } from '../settings/share';
 import { isTokenColour, newCustomThemeId } from './custom';
 import { COLOR_TOKENS, DEFAULT_THEME_ID, isThemeId, type ThemeDef } from './themes';
 
-/** A theme as shared JSON: `{"gitnex": "theme", "version": 1, name, base, colors, graph}`. */
+/** A theme as shared JSON: `{"gitnexia": "theme", "version": 1, name, base, colors, graph}`. */
 const VERSION = 1;
 const MAX_NAME = 80;
 

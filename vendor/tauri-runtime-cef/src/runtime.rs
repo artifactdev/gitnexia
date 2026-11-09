@@ -156,7 +156,7 @@ pub enum SecretStorage {
 /// **Whatever this policy says, a plain Windows executable runs unsandboxed.** CEF wants
 /// a sandbox broker pointer that, since Chromium M138, only a binary built with
 /// Chromium's own toolchain can create; CEF supplies prebuilt `bootstrap.exe` hosts for
-/// that, and they load the application as a DLL. GitNex patch: a DLL entry point that
+/// that, and they load the application as a DLL. GitNexia patch: a DLL entry point that
 /// passes the bootstrap's pointer to [`crate::set_windows_sandbox_info`] gets the sandbox.
 /// Without it CEF sets `no_sandbox` itself, so this policy only decides whether the
 /// runtime warns about it ([`Self::Auto`]) or refuses to start ([`Self::Required`]).
@@ -1056,7 +1056,7 @@ impl Cef {
     self
   }
 
-  /// A spell-check dictionary the application ships (GitNex patch), in Chromium's own
+  /// A spell-check dictionary the application ships (GitNexia patch), in Chromium's own
   /// `.bdic` format and named as Chromium names it (`en-US-10-1.bdic`).
   ///
   /// Chromium reads dictionaries from `Dictionaries/` in [`Self::root_cache_path`] and
@@ -1746,7 +1746,7 @@ fn is_cef_helper_process() -> bool {
     .unwrap_or_default()
 }
 
-/// GitNex patch: how long a closed window waits for its browsers' native windows to go
+/// GitNexia patch: how long a closed window waits for its browsers' native windows to go
 /// ([`WinitCefApp::release_window`]); they normally go within a few event loop turns.
 const RELEASED_WINDOW_DEADLINE: Duration = Duration::from_secs(2);
 
@@ -1756,7 +1756,7 @@ pub(crate) struct AppState<T: UserEvent> {
   /// kept alive only so their native handle outlives the CEF browsers they
   /// host. See [`WinitCefApp::close_window`].
   pub(crate) closing_windows: Vec<AppWindow>,
-  /// GitNex patch: closed windows whose browsers have all closed, kept until the browsers'
+  /// GitNexia patch: closed windows whose browsers have all closed, kept until the browsers'
   /// native windows are gone from them too, or the deadline passes. See
   /// [`WinitCefApp::release_window`].
   released_windows: Vec<(Instant, AppWindow)>,
@@ -1888,7 +1888,7 @@ impl<T: UserEvent> WinitCefApp<T> {
           // The webview belonged to a window that is already closing: its
           // registry entries went with `close_window`, and the native window is
           // only being held open for CEF. This acknowledgement is what releases
-          // it (GitNex patch: `release_window`), once it is the last browser the
+          // it (GitNexia patch: `release_window`), once it is the last browser the
           // window was hosting.
           for appwindow in &mut self.state.closing_windows {
             appwindow
@@ -2203,7 +2203,7 @@ impl<T: UserEvent> WinitCefApp<T> {
 
     if appwindow.children.is_empty() {
       // Nothing is left to close, so the native window goes as soon as no
-      // browser window is left in it (GitNex patch: `release_window`).
+      // browser window is left in it (GitNexia patch: `release_window`).
       self.release_window(appwindow, event_loop);
     } else {
       // `close_browser` only *starts* the close: CEF still has to tear down the
@@ -2224,7 +2224,7 @@ impl<T: UserEvent> WinitCefApp<T> {
     self.exit_if_done(event_loop);
   }
 
-  /// GitNex patch: drops `appwindow`, whose browsers have all closed, once their native windows
+  /// GitNexia patch: drops `appwindow`, whose browsers have all closed, once their native windows
   /// are gone from it as well.
   ///
   /// `on_before_close` is not the end of a browser: on Linux, Chromium destroys the browser's X
@@ -2246,7 +2246,7 @@ impl<T: UserEvent> WinitCefApp<T> {
     self.reap_released_windows(event_loop);
   }
 
-  /// GitNex patch: drops the released windows that no longer hold a browser window, or whose
+  /// GitNexia patch: drops the released windows that no longer hold a browser window, or whose
   /// deadline passed; the event loop wakes for the next deadline (Chromium destroying a browser
   /// window wakes it too, on Linux through the host's `SubstructureNotify`). Whether any went.
   fn reap_released_windows(&mut self, event_loop: &dyn ActiveEventLoop) -> bool {
@@ -3275,7 +3275,7 @@ impl<T: UserEvent> CefRuntime<T> {
       let decision = crate::sandbox::resolve_sandbox_decision(sandbox_policy);
       match decision {
         crate::sandbox::SandboxDecision::Keep => false,
-        // GitNex patch: browser-only, as the probe it skips runs in the browser's zygote
+        // GitNexia patch: browser-only, as the probe it skips runs in the browser's zygote
         // host, and appended before the application's switches like every runtime default.
         crate::sandbox::SandboxDecision::KeepSetuidOnly => {
           log::info!(
@@ -3413,7 +3413,7 @@ impl<T: UserEvent> CefRuntime<T> {
     // becomes of such a profile, is the `downgrade` module; it must run before the first
     // CEF call that opens anything in the directory, which is `cef::initialize` below.
     crate::downgrade::prepare_root_cache_path(&cache_path, downgrade_policy);
-    // GitNex patch: after the downgrade handling above (which may move the profile aside)
+    // GitNexia patch: after the downgrade handling above (which may move the profile aside)
     // and before `cef::initialize`, which starts the spell checker.
     for dictionary in &bundled_dictionaries {
       let dir = cache_path.join(crate::dictionaries::DIR);
@@ -3705,8 +3705,8 @@ impl<T: UserEvent> CefRuntime<T> {
       // Diagnostic-only visibility for the CEF #3002 workaround: a plain eprintln!, so it shows
       // even when the application has no logger installed (or filters this crate out). Browser
       // process only: helper processes return from `cef_entry_point` long before this code.
-      // Documented in vendor/tauri-runtime-cef/GITNEX-PATCH.md.
-      if std::env::var_os("GITNEX_PUMP_LOG").is_some() {
+      // Documented in vendor/tauri-runtime-cef/GITNEXIA-PATCH.md.
+      if std::env::var_os("GITNEXIA_PUMP_LOG").is_some() {
         eprintln!("[tauri-runtime-cef patch] destroyed {destroyed} Chromium GLib work source(s) (CEF #3002)");
       }
     }
@@ -4020,7 +4020,7 @@ mod configuration_tests {
 
   #[test]
   fn bundled_dictionaries_are_kept_in_order() {
-    // GitNex patch: copied into `<root cache path>/Dictionaries` at startup (dictionaries.rs).
+    // GitNexia patch: copied into `<root cache path>/Dictionaries` at startup (dictionaries.rs).
     assert!(Cef::default().bundled_dictionaries.is_empty());
     let cef = Cef::default()
       .bundled_dictionary("/opt/app/dictionaries/en-US-10-1.bdic")
@@ -4037,7 +4037,7 @@ mod configuration_tests {
 
   #[test]
   fn disabling_component_updates_appends_the_switch() {
-    // K31: GitNex is a git client with no route to `update.googleapis.com` that matters to
+    // K31: GitNexia is a git client with no route to `update.googleapis.com` that matters to
     // it; left on, the component updater (cert revocation sets, the CT log list, download
     // file-type policies) tries to memory-map a temp file every run and, under a
     // restrictive sandbox, fails loudly (`puffin/src/puffpatch.cc`). The switch is only

@@ -46,7 +46,7 @@ export interface MergeDraft {
   at?: number;
 }
 
-const STORAGE = 'gitnex.mergeDrafts';
+const STORAGE = 'gitnexia.mergeDrafts';
 
 function loadStored(): Record<string, MergeDraft> {
   try {

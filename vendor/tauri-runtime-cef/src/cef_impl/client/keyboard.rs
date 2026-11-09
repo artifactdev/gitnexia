@@ -11,7 +11,7 @@ type CefOsEvent<'a> = *mut u8;
 #[cfg(windows)]
 type CefOsEvent<'a> = Option<&'a mut cef::sys::MSG>;
 
-/// GitNex patch: the Chrome *reserved* chords GitNex binds (plan 1C's tabs), which
+/// GitNexia patch: the Chrome *reserved* chords GitNexia binds (plan 1C's tabs), which
 /// must reach the page. Chrome runs reserved accelerators before the renderer, so
 /// without this the page never sees their keydown, even though `command.rs` blocks
 /// the command: Ctrl+W / Ctrl+F4 (close tab; closes the open file today), Ctrl+Tab /
@@ -23,7 +23,7 @@ type CefOsEvent<'a> = Option<&'a mut cef::sys::MSG>;
 /// is a real Chrome window, whose reserved keys stay Chrome's.
 ///
 /// `key` is the event's `windows_key_code` (a `VKEY_*` value).
-fn gitnex_passes_to_page(owned: bool, key: i32, ctrl: bool, alt: bool, shift: bool) -> bool {
+fn gitnexia_passes_to_page(owned: bool, key: i32, ctrl: bool, alt: bool, shift: bool) -> bool {
   owned
     && ctrl
     && !alt
@@ -38,7 +38,7 @@ fn gitnex_passes_to_page(owned: bool, key: i32, ctrl: bool, alt: bool, shift: bo
 wrap_keyboard_handler! {
   pub struct TauriCefKeyboardHandler {
     devtools_enabled: bool,
-    // GitNex patch: identifies the app's own browser, as `command.rs`'s `owns()` does.
+    // GitNexia patch: identifies the app's own browser, as `command.rs`'s `owns()` does.
     frame_navigation_state: crate::FrameNavigationState,
   }
 
@@ -50,17 +50,17 @@ wrap_keyboard_handler! {
       _os_event: CefOsEvent<'_>,
       _is_keyboard_shortcut: Option<&mut ::std::os::raw::c_int>,
     ) -> ::std::os::raw::c_int {
-      // GitNex patch: opt-in key diagnostic (`GITNEX_KEY_LOG`, see `command.rs`).
-      if super::command::gitnex_key_log() {
+      // GitNexia patch: opt-in key diagnostic (`GITNEXIA_KEY_LOG`, see `command.rs`).
+      if super::command::gitnexia_key_log() {
         if let Some(event) = event {
           eprintln!(
-            "[gitnex-keys] pre-key type {:?} key {} modifiers {:#x}",
+            "[gitnexia-keys] pre-key type {:?} key {} modifiers {:#x}",
             event.type_, event.windows_key_code, event.modifiers
           );
         }
       }
 
-      // GitNex patch: the reserved chords GitNex binds go to the page first. Per the
+      // GitNexia patch: the reserved chords GitNexia binds go to the page first. Per the
       // `OnPreKeyEvent` contract, `is_keyboard_shortcut = 1` and return 0: CEF then
       // skips Chrome's reserved-key pre-processing and sends the event to the renderer;
       // one the page leaves unhandled reaches the accelerator, whose command
@@ -79,7 +79,7 @@ wrap_keyboard_handler! {
           .as_ref()
           .is_some_and(|b| self.frame_navigation_state.has_browser_id(b.identifier()));
         if event.type_ == keydown_type
-          && gitnex_passes_to_page(
+          && gitnexia_passes_to_page(
             owned,
             event.windows_key_code,
             flag(cef_event_flags_t::EVENTFLAG_CONTROL_DOWN),
@@ -159,7 +159,7 @@ wrap_keyboard_handler! {
 
 #[cfg(test)]
 mod tests {
-  use super::gitnex_passes_to_page;
+  use super::gitnexia_passes_to_page;
 
   const W: i32 = 0x57;
   const T: i32 = 0x54;
@@ -169,10 +169,10 @@ mod tests {
   const PGDN: i32 = 0x22;
 
   #[test]
-  fn the_reserved_tab_and_close_chords_gitnex_binds_reach_the_page() {
+  fn the_reserved_tab_and_close_chords_gitnexia_binds_reach_the_page() {
     // (key, shift): Ctrl+W, Ctrl+F4, Ctrl+Tab, Ctrl+Shift+Tab, Ctrl+PgUp, Ctrl+PgDn, Ctrl+Shift+T.
     for (key, shift) in [(W, false), (F4, false), (TAB, false), (TAB, true), (PGUP, false), (PGDN, false), (T, true)] {
-      assert!(gitnex_passes_to_page(true, key, true, false, shift), "key {key:#x} shift {shift}");
+      assert!(gitnexia_passes_to_page(true, key, true, false, shift), "key {key:#x} shift {shift}");
     }
   }
 
@@ -180,7 +180,7 @@ mod tests {
   fn only_for_the_apps_own_browser() {
     // DevTools and popups keep Chrome's reserved-key handling.
     for (key, shift) in [(W, false), (TAB, false), (T, true)] {
-      assert!(!gitnex_passes_to_page(false, key, true, false, shift), "key {key:#x}");
+      assert!(!gitnexia_passes_to_page(false, key, true, false, shift), "key {key:#x}");
     }
   }
 
@@ -188,17 +188,17 @@ mod tests {
   fn shifted_close_and_page_chords_take_the_normal_path() {
     // Ctrl+Shift+W (close window), Ctrl+Shift+F4, Ctrl+Shift+PgUp/PgDn (move tab): not bound.
     for key in [W, F4, PGUP, PGDN] {
-      assert!(!gitnex_passes_to_page(true, key, true, false, true), "Ctrl+Shift+{key:#x}");
+      assert!(!gitnexia_passes_to_page(true, key, true, false, true), "Ctrl+Shift+{key:#x}");
     }
   }
 
   #[test]
   fn everything_else_takes_the_normal_path() {
-    assert!(!gitnex_passes_to_page(true, W, false, false, false), "plain W");
-    assert!(!gitnex_passes_to_page(true, W, true, true, false), "Ctrl+Alt+W");
-    assert!(!gitnex_passes_to_page(true, T, true, false, false), "Ctrl+T (new tab) stays blocked as a command");
-    assert!(!gitnex_passes_to_page(true, 0x4E, true, false, true), "Ctrl+Shift+N");
-    assert!(!gitnex_passes_to_page(true, 0x76, false, false, false), "F7 is not reserved");
-    assert!(!gitnex_passes_to_page(true, 0x43, true, false, false), "Ctrl+C");
+    assert!(!gitnexia_passes_to_page(true, W, false, false, false), "plain W");
+    assert!(!gitnexia_passes_to_page(true, W, true, true, false), "Ctrl+Alt+W");
+    assert!(!gitnexia_passes_to_page(true, T, true, false, false), "Ctrl+T (new tab) stays blocked as a command");
+    assert!(!gitnexia_passes_to_page(true, 0x4E, true, false, true), "Ctrl+Shift+N");
+    assert!(!gitnexia_passes_to_page(true, 0x76, false, false, false), "F7 is not reserved");
+    assert!(!gitnexia_passes_to_page(true, 0x43, true, false, false), "Ctrl+C");
   }
 }

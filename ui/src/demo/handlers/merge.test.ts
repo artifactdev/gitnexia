@@ -206,7 +206,7 @@ describe('merge', () => {
     expect(t.memfs.readFileSync(`${t.dir}/e`, 'utf8')).toBe('e\n');
   });
 
-  it('settles a merge that ended outside GitNex before the next write', async () => {
+  it('settles a merge that ended outside GitNexia before the next write', async () => {
     const { t, main, ctx, wt } = await repo(true);
     await merge(ctx, t.dir, 'feature');
     for (const f of ['MERGE_HEAD', 'MERGE_MSG', 'MERGE_MODE']) t.memfs.unlinkSync(`${t.repo.gitdir}/${f}`);
@@ -215,7 +215,7 @@ describe('merge', () => {
     expect([r.journal.paused, ctx.writes.journal(t.dir).paused()]).toEqual([null, null]);
   });
 
-  it('settles a merge committed outside GitNex as completed, with the refs that moved into its history', async () => {
+  it('settles a merge committed outside GitNexia as completed, with the refs that moved into its history', async () => {
     const { t, base, feature, main, ctx, wt } = await repo(true);
     await t.branch('stacked', main);
     await t.branch('away', main);

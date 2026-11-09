@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // SPDX-License-Identifier: MIT
 
-//! GitNex patch: the pointer leaving the window takes the page's hover with it.
+//! GitNexia patch: the pointer leaving the window takes the page's hover with it.
 //!
 //! With GPU compositing, Chromium's GPU process renders into a child window of the browser's X
 //! window (`NativeViewGLSurfaceEGLX11GLES2`, or ANGLE's GLX backend), and that child covers the

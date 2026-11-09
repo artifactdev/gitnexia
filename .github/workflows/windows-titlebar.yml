@@ -1,4 +1,4 @@
-# Windows: GitNex's own title bar with real input (ui/scripts/win-titlebar.ps1), on the release
+# Windows: GitNexia's own title bar with real input (ui/scripts/win-titlebar.ps1), on the release
 # app as release.yml builds it, on Windows Server 2025 (Windows 11's shell) and 2022 (Windows 10's).
 # On demand only: run it from the Actions tab (workflow_dispatch), or label a pull request
 # `windows` (each time the label is added). With `reuse-run`, the drive takes that run's build
@@ -108,8 +108,8 @@ jobs:
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: gitnex-app
-          path: target/release/windows/GitNex/
+          name: gitnexia-app
+          path: target/release/windows/GitNexia/
           if-no-files-found: error
           retention-days: 3
 
@@ -140,13 +140,13 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           RUN: ${{ inputs.reuse-run || github.run_id }}
         run: |
-          gh run download $env:RUN --repo $env:GITHUB_REPOSITORY -n gitnex-app -D app
+          gh run download $env:RUN --repo $env:GITHUB_REPOSITORY -n gitnexia-app -D app
           if ($LASTEXITCODE) { throw "no build in run $env:RUN" }
 
       # The window, its frame, moves, resizes, buttons, menu, snapping, shake, restarts, the
       # system title bar setting, and 150% scaling where the session can switch to it.
       - name: Drive the title bar
-        run: ./ui/scripts/win-titlebar.ps1 -App "$PWD/app/GitNex.exe" -Out "$PWD/titlebar"
+        run: ./ui/scripts/win-titlebar.ps1 -App "$PWD/app/GitNexia.exe" -Out "$PWD/titlebar"
 
       - name: Summary
         if: always()

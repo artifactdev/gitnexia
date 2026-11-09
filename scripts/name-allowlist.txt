@@ -1,18 +1,59 @@
-# Files that keep the old name on purpose (the rename script skips them): negative tests that the
-# old names are refused, and the docs of the move. Task 12 adds the rest.
-crates/gitnex-core/src/updates/install.rs
-crates/gitnex-core/src/updates/tests.rs
-crates/gitnex-forge/src/updates.rs
-crates/gitnex-harness/tests/it/updates.rs
-docs/releasing.md
+# Files that keep an old name on purpose: the compatibility code that reads what older versions
+# wrote, the negative tests that refuse the old names, the ids kept (the MSI's UpgradeCode, the
+# metainfo's <replaces>), and the docs of the moves. test-name.sh checks every other tracked file.
+# GitNex was the name until 1.6.0; GitVolt (GitBolt before 0.7.0) before it.
+
+# The compatibility code: paths, keyring, stack markers, compare refs, rebase notes, update names.
+crates/gitnexia-core/src/paths.rs
+crates/gitnexia-core/src/forge/mod.rs
+crates/gitnexia-core/src/forge/provider.rs
+crates/gitnexia-core/src/forge/stack.rs
+crates/gitnexia-core/src/forge/types.rs
+crates/gitnexia-core/src/in_progress.rs
+crates/gitnexia-core/src/updates/mod.rs
+crates/gitnexia-core/src/updates/release.rs
+crates/gitnexia-forge/src/tokens.rs
+crates/gitnexia-forge/src/updates.rs
+ui/src/app/legacyStoreKeys.ts
+ui/src/app/legacyStoreKeys.test.ts
+ui/src/settings/share.ts
+ui/src/settings/share.test.ts
+.gitleaks.toml
+
+# The tests that refuse the old names (GitVolt and GitBolt included).
+crates/gitnexia-core/src/updates/install.rs
+crates/gitnexia-core/src/updates/tests.rs
+crates/gitnexia-harness/tests/it/updates.rs
+
+# The installers' kept ids and legacy uninstall checks.
+crates/gitnexia-app/linux/com.gitnexia.desktop.metainfo.xml.in
+crates/gitnexia-app/src/lib.rs
+packaging/windows/gitnexia.wxs
+packaging/windows/gitnexia.nsi
+packaging/arch/PKGBUILD
+scripts/check-deb.sh
+scripts/test-check-deb.sh
+scripts/test-fix-deb.sh
+scripts/test-package-arch.sh
+scripts/test-package-rpm.sh
+scripts/test-windows-installers.sh
+scripts/fix-deb.sh
+scripts/package-arch.sh
+scripts/rpm-pkg.py
+.github/workflows/release.yml
+
+# A comment beside the localStorage migration.
+ui/src/main.tsx
+
+# The published 1.5.3 release's real (pre-rename) asset names; site-release.py rewrites it.
+site/data/release.json
+
+# The rename's notes.
+site/index.html
+README.md
 PRIVACY.md
 SECURITY.md
 CHANGELOG.md
-README.md
+docs/releasing.md
 docs/dev-setup.md
-crates/gitnex-app/linux/com.gitnex.desktop.metainfo.xml.in
-scripts/check-deb.sh
-scripts/test-check-deb.sh
-scripts/test-windows-installers.sh
 scripts/test-name.sh
-packaging/windows/gitnex.wxs

@@ -3,16 +3,16 @@
 #
 # Prints the version a package build gets. Local builds: tauri.conf.json's version with a build
 # stamp, <version>+<UTC YYYYMMDDHHMM>.<short commit>, so each build is newer than the last and
-# `apt install` replaces the installed one. Release builds set GITNEX_RELEASE_VERSION, which must
+# `apt install` replaces the installed one. Release builds set GITNEXIA_RELEASE_VERSION, which must
 # be a valid release version (scripts/version.py) equal to tauri.conf.json's: the plain version.
 set -euo pipefail
 here=$(cd "$(dirname "$0")" && pwd)
 conf=${1:?usage: package-version.sh <tauri.conf.json>}
 v=$(jq -er .version "$conf")
-if [ -n "${GITNEX_RELEASE_VERSION:-}" ]; then
-  python3 "$here/version.py" check "$GITNEX_RELEASE_VERSION" || exit 1
-  [ "$GITNEX_RELEASE_VERSION" = "$v" ] || {
-    echo "package-version: GITNEX_RELEASE_VERSION=$GITNEX_RELEASE_VERSION doesn't match tauri.conf.json's $v" >&2
+if [ -n "${GITNEXIA_RELEASE_VERSION:-}" ]; then
+  python3 "$here/version.py" check "$GITNEXIA_RELEASE_VERSION" || exit 1
+  [ "$GITNEXIA_RELEASE_VERSION" = "$v" ] || {
+    echo "package-version: GITNEXIA_RELEASE_VERSION=$GITNEXIA_RELEASE_VERSION doesn't match tauri.conf.json's $v" >&2
     exit 1
   }
   echo "$v"

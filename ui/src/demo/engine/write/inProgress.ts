@@ -124,17 +124,17 @@ export function readInProgress(fs: MemFs, gitdir: string, headMessage: string | 
     case 'am':
       return { kind: 'other', what: 'am' };
     case 'rebase': {
-      // Plan 4 (the rebase plan) fills GitNex's own Edit-stop notes; git's files are read here.
+      // Plan 4 (the rebase plan) fills GitNexia's own Edit-stop notes; git's files are read here.
       const merge = isDir(fs, gitdir, 'rebase-merge');
       const dir = `${gitdir}/${merge ? 'rebase-merge' : 'rebase-apply'}`;
       const num = (f: string) => Number(text(fs, `${dir}/${f}`) ?? 0) || 0;
       const editStop = merge ? text(fs, `${dir}/amend`) : null;
       const last = merge ? lastDone(fs, gitdir) : null;
-      const messageFailed = last === null ? null : stopNote(fs, gitdir, 'rebase-merge/gitnex-message-failed', last);
+      const messageFailed = last === null ? null : stopNote(fs, gitdir, 'rebase-merge/gitnexia-message-failed', last);
       let msg = editStop !== null ? (headMessage ?? '').replace(/\r\n/g, '\n').replace(/\r/g, '\n') : message(fs, `${dir}/${merge ? 'message' : 'final-commit'}`);
       // The refused message prefills the box.
       if (messageFailed !== null && last !== null) {
-        const refused = stopNote(fs, gitdir, 'rebase-merge/gitnex-refused', last);
+        const refused = stopNote(fs, gitdir, 'rebase-merge/gitnexia-refused', last);
         if (refused !== null) {
           const m = refused.slice(refused.indexOf('\n') + 1);
           msg = `${(refused.includes('\n') ? m : '').replace(/\r\n/g, '\n').replace(/\r/g, '\n').trimEnd()}\n`;
@@ -153,7 +153,7 @@ export function readInProgress(fs: MemFs, gitdir: string, headMessage: string | 
         editChanged: false,
         editConflict: editStop === null && last !== null && ['edit', 'e'].includes(last.split(/\s+/)[0]),
         messageFailed,
-        gitnex: false,
+        gitnexia: false,
         conflicted: n,
         message: msg,
       };

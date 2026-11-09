@@ -23,8 +23,8 @@ test.describe('tabs', () => {
     await test.step('the About dialog shows the app and git version', async () => {
       await page.getByRole('button', { name: 'Menu' }).click();
       await page.getByRole('menuitem', { name: 'Help' }).hover();
-      await page.getByRole('menuitem', { name: 'About GitNex' }).click();
-      const dialog = page.getByRole('dialog', { name: 'About GitNex' });
+      await page.getByRole('menuitem', { name: 'About GitNexia' }).click();
+      const dialog = page.getByRole('dialog', { name: 'About GitNexia' });
       await expect(dialog).toBeVisible();
       await expect(dialog).toContainText('git');
       await page.keyboard.press('Escape');
@@ -32,19 +32,19 @@ test.describe('tabs', () => {
     });
     await test.step('an update: Check for updates finds it, the pill downloads it, then the dialog offers the install', async () => {
       const bar = page.locator('.status-bar');
-      await expect(bar).toContainText(/git [\d.]+GitNex \d+\.\d+\.\d+/);
+      await expect(bar).toContainText(/git [\d.]+GitNexia \d+\.\d+\.\d+/);
       // The fake GitHub's release (never the real one), served slowly enough to see the download.
       const seed = await forgeSeed(request);
       const github = seed.github as Record<string, unknown>;
       // 16 chunks of 64 KiB, 30 ms apart: about half a second of progress.
-      github.releases = [{ tagName: 'v90.0.0', name: 'GitNex 90.0.0', body: '## Added\n\n- Updates from GitHub', assets: [{ name: 'GitNex_90.0.0_amd64.deb', size: 1024 * 1024 }, { name: 'SHA256SUMS', size: 0 }] }];
+      github.releases = [{ tagName: 'v90.0.0', name: 'GitNexia 90.0.0', body: '## Added\n\n- Updates from GitHub', assets: [{ name: 'GitNexia_90.0.0_amd64.deb', size: 1024 * 1024 }, { name: 'SHA256SUMS', size: 0 }] }];
       github.downloadChunkDelayMs = 30;
       await setForgeSeed(request, seed);
       await page.getByRole('button', { name: 'Menu' }).click();
       await page.getByRole('menuitem', { name: 'Help' }).hover();
       await page.getByRole('menuitem', { name: 'Check for updates' }).click();
-      const about = page.getByRole('dialog', { name: 'About GitNex' });
-      await expect(about.getByRole('status')).toHaveText('GitNex 90.0.0 is available.');
+      const about = page.getByRole('dialog', { name: 'About GitNexia' });
+      await expect(about.getByRole('status')).toHaveText('GitNexia 90.0.0 is available.');
       await page.keyboard.press('Escape');
       const pill = bar.locator('.sb-update');
       await expect(pill).toHaveText('Update to 90.0.0');
@@ -52,9 +52,9 @@ test.describe('tabs', () => {
       await expect(pill.getByRole('progressbar')).toBeVisible();
       await expect(pill).toHaveText('Install 90.0.0', { timeout: 15_000 });
       await pill.click();
-      const dialog = page.getByRole('dialog', { name: 'Update to GitNex 90.0.0' });
+      const dialog = page.getByRole('dialog', { name: 'Update to GitNexia 90.0.0' });
       await expect(dialog.getByRole('heading', { name: 'Added' })).toBeVisible();
-      await expect(dialog).toContainText('GitNex_90.0.0_amd64.deb · 1.0 MB');
+      await expect(dialog).toContainText('GitNexia_90.0.0_amd64.deb · 1.0 MB');
       await expect(dialog.getByRole('button', { name: 'Install 90.0.0' })).toBeVisible();
       await expect(dialog.getByRole('button', { name: 'View on GitHub' })).toBeVisible();
       await page.keyboard.press('Escape');
@@ -280,7 +280,7 @@ test.describe('tabs', () => {
   // tab's graph rows are on screen by then. Load only ever slows a sample, so the bound is checked
   // against the best of several switches (as in menu-perf.spec.ts): a regression slows every one.
   test('switching to a loaded tab paints in under 50 ms (best of several switches)', { tag: '@budget' }, async ({ page, browserName }) => {
-    test.skip(browserName !== 'chromium', 'budget measured on the engine GitNex ships (CEF = Chromium)');
+    test.skip(browserName !== 'chromium', 'budget measured on the engine GitNexia ships (CEF = Chromium)');
     const a = freshFixture('basic');
     const b = freshFixture('long_labels');
     await page.goto(openBoth(a, b));

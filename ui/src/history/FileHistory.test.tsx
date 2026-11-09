@@ -244,7 +244,7 @@ describe('File History (spec #3 §4.2)', () => {
     const sep = screen.getByRole('separator', { name: 'Resize commit list' });
     fireEvent.keyDown(sep, { key: 'ArrowRight' });
     expect(sep).toHaveAttribute('aria-valuenow', '376');
-    expect(localStorage.getItem('gitnex.historyListWidth.v1')).toBe('376');
+    expect(localStorage.getItem('gitnexia.historyListWidth.v1')).toBe('376');
     expect(screen.getByRole('region', { name: 'File history' }).style.getPropertyValue('--fh-list')).toBe('376px');
     fireEvent.keyDown(sep, { key: 'End' });
     expect(sep).toHaveAttribute('aria-valuenow', '640');

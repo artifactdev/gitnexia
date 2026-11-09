@@ -1,6 +1,6 @@
 # The website
 
-[gitnex.com](https://gitnex.com/) is static files on GitHub
+[artifactdev.github.io/gitnexia](https://artifactdev.github.io/gitnexia/) is static files on GitHub
 Pages: the landing page (`site/`), the live demo (`ui/demo.html`, built with
 `vite build --mode demo` over the committed bundles in `site/demo-data/`) and a 404 page. Two
 workflows publish it; nothing else does. It loads nothing from other hosts
@@ -10,10 +10,10 @@ workflows publish it; nothing else does. It loads nothing from other hosts
 
 - **Site** (`.github/workflows/site.yml`) runs on a push to main that changes one of:
   `site/`, `ui/src/demo/`, `ui/demo.html`, `ui/build/`, `ui/scripts/check-site.mjs`,
-  `ui/vite.config.ts`, `crates/gitnex-graph/`, `crates/gitnex-graph-wasm/`,
+  `ui/vite.config.ts`, `crates/gitnexia-graph/`, `crates/gitnexia-graph-wasm/`,
   `scripts/site-pages.sh`, `.github/workflows/site.yml`, `README.md` (the features),
   `about.toml` (the font license check), `justfile`, `ui/src/security/csp.ts` and
-  `crates/gitnex-app/tauri.conf.json` (the demo page's CSP). It also runs by hand: Actions, Site,
+  `crates/gitnexia-app/tauri.conf.json` (the demo page's CSP). It also runs by hand: Actions, Site,
   Run workflow.
 - **Jobs:** build (`contents: read`) builds the graph's WebAssembly (`just demo-wasm`), the
   landing page and the demo, and checks them (`just site-pages`, below), then uploads the
@@ -60,15 +60,15 @@ The format, `schema` 1 (`release` is `null` while there's no published release):
     "tag": "v0.7.3",
     "prerelease": false,
     "published": "2026-10-13T03:04:03Z",
-    "url": "https://github.com/artifactdev/gitnex/releases/tag/v0.7.3",
-    "sums": "https://github.com/artifactdev/gitnex/releases/download/v0.7.3/SHA256SUMS",
+    "url": "https://github.com/artifactdev/gitnexia/releases/tag/v0.7.3",
+    "sums": "https://github.com/artifactdev/gitnexia/releases/download/v0.7.3/SHA256SUMS",
     "downloads": [
       {
         "os": "linux",
         "kind": "deb",
         "arch": "x86_64",
-        "file": "GitNex_0.7.3_amd64.deb",
-        "url": "https://github.com/artifactdev/gitnex/releases/download/v0.7.3/GitNex_0.7.3_amd64.deb",
+        "file": "GitNexia_0.7.3_amd64.deb",
+        "url": "https://github.com/artifactdev/gitnexia/releases/download/v0.7.3/GitNexia_0.7.3_amd64.deb",
         "bytes": 165800042,
         "sha256": "264c81a9…"
       }
@@ -99,13 +99,13 @@ GitHub Pages sends every file with `Cache-Control: max-age=600` and has no setti
 - **The page's own checks** (`just site-build`, `site/build/check.ts`): nothing left unfilled, the
   first screen's weight, a placeholder screenshot only while its scene waits on a demo method
   still pending (`ui/src/demo/coverage.ts`), and `og:image` and `twitter:image` there, absolute
-  and a file of the build under `GITNEX_SITE_BASE`.
+  and a file of the build under `GITNEXIA_SITE_BASE`.
 - **Pages:** `index.html`, `404.html`, `demo/demo.html` and the demo's manifest are there; no
   dotfile (the upload leaves them out) and no source map.
 - **No third-party requests:** every script, stylesheet, image, frame, font and icon a page or
   stylesheet loads is on the site. Links to other sites are fine.
 - **Links:** internal links and `#fragments` resolve. The 404 page's links follow
-  `GITNEX_SITE_BASE` (`/` by default; `scripts/site-pages.sh` rewrites them), since Pages
+  `GITNEXIA_SITE_BASE` (`/` by default; `scripts/site-pages.sh` rewrites them), since Pages
   serves it at any missing path.
 - **CSP:** every page has a Content-Security-Policy `<meta>` with no host or scheme source (only
   `'self'`, `'none'`, hashes, nonces, `data:`, `blob:`, `'unsafe-inline'`, `'wasm-unsafe-eval'`),
@@ -139,8 +139,8 @@ The page's `og:` and `twitter:` tags give link previews (chat apps, social sites
 description and an image. Scrapers need absolute URLs, so the build writes `og:url`, `og:image`
 and `twitter:image` from two settings (`site/build/social.ts`):
 
-- **`GITNEX_SITE_ORIGIN`:** the scheme and host, `https://gitnex.com` by default.
-- **`GITNEX_SITE_BASE`:** the path under it, `/` by default (see The domain).
+- **`GITNEXIA_SITE_ORIGIN`:** the scheme and host, `https://artifactdev.github.io` by default.
+- **`GITNEXIA_SITE_BASE`:** the path under it, `/gitnexia/` by default (see The domain).
 
 **The image** is `site/public/og.jpg`, 1200x630, served unhashed at the site's root. It's drawn
 from `site/og/og.html` (the page's tokens, fonts and lane art, and a slice of the hero
@@ -170,18 +170,14 @@ headline in the middle 630 px, since some previews crop to near-square.
 4. Optional check: Actions, Site downloads, Run workflow on main, tag empty. It reports
    "release.json is up to date" when the committed file already matches the newest release: no
    commit, no redeploy.
-5. Set the domain as under **The domain**, then run Site again: its last step checks the deployed address.
+5. Run Site again: its last step checks the deployed address.
 
 ## The domain
 
-The site is at https://artifactdev.github.io/gitnex/: Settings, Pages, Custom domain, with Enforce HTTPS (a
-deploy from Actions needs no `CNAME` file). The organization's Settings, Pages, Verified domains
-holds gitnex.com, so no other account can claim it. DNS at the registrar: `A` records
-185.199.108.153, 185.199.109.153, 185.199.110.153 and 185.199.111.153; `AAAA` records
-2606:50c0:8000::153, 2606:50c0:8001::153, 2606:50c0:8002::153 and 2606:50c0:8003::153; `www` a
-`CNAME` to artifactdev.github.io. artifactdev.github.io/gitnex/ redirects to the domain.
+The site is a GitHub Pages project site at https://artifactdev.github.io/gitnexia/: Settings,
+Pages, Build and deployment, Source: GitHub Actions. A deploy from Actions needs no `CNAME` file,
+and there's no custom domain: the project's path is the address.
 
-`GITNEX_SITE_BASE` is the path the site is served under: `/`, the default. To serve it under a
-path instead (Pages without the domain: `/gitnex/`), set it as an `env:` entry on the build job
-in `.github/workflows/site.yml`, with `GITNEX_SITE_ORIGIN` (`https://artifactdev.github.io`) for
-the link previews' URLs.
+`GITNEXIA_SITE_ORIGIN` and `GITNEXIA_SITE_BASE` are set on the build job in
+`.github/workflows/site.yml` (`https://artifactdev.github.io` and `/gitnexia/`), for the link
+previews' URLs and for the pages built under that path. `just site-pages` uses the same defaults.

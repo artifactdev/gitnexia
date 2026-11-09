@@ -100,7 +100,7 @@ export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1
 export GIT_AUTHOR_NAME='Release Test' GIT_AUTHOR_EMAIL=release-test@example.com
 export GIT_COMMITTER_NAME='Release Test' GIT_COMMITTER_EMAIL=release-test@example.com
 repo="$work/repo"
-files=(CHANGELOG.md Cargo.toml Cargo.lock justfile crates/gitnex-app/tauri.conf.json ui/package.json ui/package-lock.json
+files=(CHANGELOG.md Cargo.toml Cargo.lock justfile crates/gitnexia-app/tauri.conf.json ui/package.json ui/package-lock.json
        scripts/version.py scripts/changelog.py scripts/set-version.py scripts/release.sh scripts/package-version.sh)
 for f in "${files[@]}"; do mkdir -p "$repo/$(dirname "$f")"; cp "$root/$f" "$repo/$f"; done
 for m in $(python3 -c 'import tomllib,sys; print(" ".join(tomllib.load(open(sys.argv[1],"rb"))["workspace"]["members"]))' "$root/Cargo.toml"); do
@@ -126,7 +126,7 @@ git -C "$repo" remote add origin "$work/origin.git"
 git -C "$repo" push -q origin main
 git -C "$repo" fetch -q origin
 base=$(git -C "$repo" rev-parse HEAD)
-old=$(jq -r .version "$repo/crates/gitnex-app/tauri.conf.json")
+old=$(jq -r .version "$repo/crates/gitnexia-app/tauri.conf.json")
 
 release() { # runs `just release` when just is installed, else the script it calls
   if command -v just >/dev/null; then (cd "$repo" && just release "$@"); else (cd "$repo" && scripts/release.sh "$@"); fi
@@ -190,11 +190,11 @@ eq subject "$(git -C "$repo" log -1 --format=%s)" "Release 0.1.0-alpha.1"
 eq parent "$(git -C "$repo" rev-parse HEAD~1)" "$base"
 eq tag-type "$(git -C "$repo" cat-file -t v0.1.0-alpha.1)" tag
 eq tag-target "$(git -C "$repo" rev-parse 'v0.1.0-alpha.1^{commit}')" "$(git -C "$repo" rev-parse HEAD)"
-eq tag-message "$(git -C "$repo" tag -l --format='%(contents:subject)' v0.1.0-alpha.1)" "GitNex 0.1.0-alpha.1"
+eq tag-message "$(git -C "$repo" tag -l --format='%(contents:subject)' v0.1.0-alpha.1)" "GitNexia 0.1.0-alpha.1"
 eq committed-files "$(git -C "$repo" diff --name-only HEAD~1 HEAD | tr '\n' ' ')" \
-  'CHANGELOG.md Cargo.lock Cargo.toml crates/gitnex-app/tauri.conf.json ui/package-lock.json ui/package.json '
+  'CHANGELOG.md Cargo.lock Cargo.toml crates/gitnexia-app/tauri.conf.json ui/package-lock.json ui/package.json '
 eq status-after "$(git -C "$repo" status --porcelain)" '?? untracked.txt'
-eq tauri-conf "$(jq -r .version "$repo/crates/gitnex-app/tauri.conf.json")" 0.1.0-alpha.1
+eq tauri-conf "$(jq -r .version "$repo/crates/gitnexia-app/tauri.conf.json")" 0.1.0-alpha.1
 eq workspace "$(python3 -c 'import tomllib,sys; print(tomllib.load(open(sys.argv[1],"rb"))["workspace"]["package"]["version"])' "$repo/Cargo.toml")" 0.1.0-alpha.1
 eq ui-package "$(jq -r .version "$repo/ui/package.json")" 0.1.0-alpha.1
 eq ui-lock "$(jq -r '.version + " " + .packages[""].version' "$repo/ui/package-lock.json")" '0.1.0-alpha.1 0.1.0-alpha.1'
@@ -202,11 +202,11 @@ eq ui-lock "$(jq -r '.version + " " + .packages[""].version' "$repo/ui/package-l
 lockdiff=$(git -C "$repo" diff -U0 HEAD~1 HEAD -- Cargo.lock | grep -E '^[-+][^-+]' | sort | uniq -c | sed 's/^ *//')
 members=$(python3 -c 'import tomllib,sys; print(len(tomllib.load(open(sys.argv[1],"rb"))["workspace"]["members"]))' "$repo/Cargo.toml")
 eq cargo-lock "$lockdiff" "$(printf '%s +version = "0.1.0-alpha.1"\n%s -version = "%s"' "$members" "$members" "$old")"
-for m in gitnex-app gitnex-core gitnex-forge gitnex-graph gitnex-graph-wasm gitnex-harness; do
+for m in gitnexia-app gitnexia-core gitnexia-forge gitnexia-graph gitnexia-graph-wasm gitnexia-harness; do
   grep -A1 -xF "name = \"$m\"" "$repo/Cargo.lock" | grep -qxF 'version = "0.1.0-alpha.1"' || fail "Cargo.lock: $m not bumped"
 done
 # Each JSON/TOML edit changed only the version line.
-for f in Cargo.toml crates/gitnex-app/tauri.conf.json ui/package.json; do
+for f in Cargo.toml crates/gitnexia-app/tauri.conf.json ui/package.json; do
   eq "$f diff" "$(git -C "$repo" diff -U0 HEAD~1 HEAD -- "$f" | grep -cE '^[-+][^-+]')" 2
 done
 eq ui-lock-diff "$(git -C "$repo" diff -U0 HEAD~1 HEAD -- ui/package-lock.json | grep -cE '^[-+][^-+]')" 4
@@ -235,13 +235,13 @@ release 0.1.0-beta.1 >/dev/null || fail "the second release failed"
 eq second-tag "$(git -C "$repo" tag -l | tr '\n' ' ')" 'v0.1.0-alpha.1 v0.1.0-beta.1 '
 
 # --- package-version.sh -------------------------------------------------------------------------
-pv() { (cd "$repo" && scripts/package-version.sh crates/gitnex-app/tauri.conf.json); }
-stamped=$(env -u GITNEX_RELEASE_VERSION bash -c "cd '$repo' && scripts/package-version.sh crates/gitnex-app/tauri.conf.json")
+pv() { (cd "$repo" && scripts/package-version.sh crates/gitnexia-app/tauri.conf.json); }
+stamped=$(env -u GITNEXIA_RELEASE_VERSION bash -c "cd '$repo' && scripts/package-version.sh crates/gitnexia-app/tauri.conf.json")
 [[ $stamped =~ ^0\.1\.0-beta\.1\+[0-9]{12}\.[0-9a-f]{7,}$ ]] || fail "local builds aren't stamped: $stamped"
 [[ $stamped == *".$(git -C "$repo" rev-parse --short HEAD)" ]] || fail "the stamp lacks the commit: $stamped"
-eq release-version "$(GITNEX_RELEASE_VERSION=0.1.0-beta.1 pv)" 0.1.0-beta.1
-err=$(GITNEX_RELEASE_VERSION=0.1.0-beta.2 pv 2>&1) && fail "a release version unlike tauri.conf.json was accepted"
+eq release-version "$(GITNEXIA_RELEASE_VERSION=0.1.0-beta.1 pv)" 0.1.0-beta.1
+err=$(GITNEXIA_RELEASE_VERSION=0.1.0-beta.2 pv 2>&1) && fail "a release version unlike tauri.conf.json was accepted"
 grep -q "doesn't match tauri.conf.json" <<<"$err" || fail "unclear mismatch message: $err"
-GITNEX_RELEASE_VERSION=0.1 pv >/dev/null 2>&1 && fail "an invalid release version was accepted"
+GITNEXIA_RELEASE_VERSION=0.1 pv >/dev/null 2>&1 && fail "an invalid release version was accepted"
 
 echo "test-release: OK"

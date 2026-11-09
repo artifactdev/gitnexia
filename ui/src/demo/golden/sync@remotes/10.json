@@ -6,7 +6,7 @@
           "id": 7,
           "kind": "undo",
           "label": "undo pull diverged",
-          "op": 7
+          "op": 11
         }
       ],
       "repo": 1,
@@ -21,7 +21,7 @@
         "id": 7,
         "kind": "undo",
         "label": "undo pull diverged",
-        "op": 7
+        "op": 11
       },
       "stopped": null,
       "type": "queueChanged"
@@ -30,7 +30,7 @@
       "interactive": true,
       "kind": "undo",
       "label": "undo pull diverged",
-      "op": 7,
+      "op": 11,
       "repo": 1,
       "type": "opStarted"
     },
@@ -86,7 +86,7 @@
       "command": null,
       "kind": "undo",
       "message": null,
-      "op": 7,
+      "op": 11,
       "outcome": "ok",
       "repo": 1,
       "type": "opFinished"

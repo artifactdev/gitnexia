@@ -24,7 +24,7 @@ const messageOf = (f: () => void): string | null => {
   }
 };
 
-// Ports of the tests in crates/gitnex-core/src/forge/review.rs.
+// Ports of the tests in crates/gitnexia-core/src/forge/review.rs.
 describe('review rules', () => {
   it('every line of every hunk takes a comment, numbered as GitLab does', () => {
     const diff = '@@ -1,4 +1,5 @@\n a\n-b\n+B\n+C\n d\n e\n@@ -20,2 +21,3 @@\n t\n+u\n v\n';

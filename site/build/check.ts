@@ -74,7 +74,7 @@ const WIDEST_CTA = 'for Windows';
 export interface PageOptions {
   /** Shots allowed to still be placeholders; any other placeholder is an error, not a warning. */
   expected?: Set<ShotId>;
-  /** The path the site is served under (GITNEX_SITE_BASE), to find og:image's file in the build. */
+  /** The path the site is served under (GITNEXIA_SITE_BASE), to find og:image's file in the build. */
   base?: string;
 }
 

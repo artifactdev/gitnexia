@@ -79,7 +79,7 @@ export function BranchPresetsPage({ ctx }: { ctx: SettingsCtx }) {
   const paste = (text: string) => {
     const id = newPresetId();
     const got = importInto(doc, text, id);
-    if (!got) { toast("That isn't a GitNex branch preset"); return; }
+    if (!got) { toast("That isn't a GitNexia branch preset"); return; }
     apply(got.doc);
     select(got.id);
     toast(`Added ${got.name}`);

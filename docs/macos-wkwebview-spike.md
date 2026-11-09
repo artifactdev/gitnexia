@@ -21,18 +21,18 @@ the script (minimum macOS version, ad-hoc signing, `/Applications` swap) is unch
 ./build-macos-app.sh --wkwebview --debug --install
 ```
 
-The underlying Cargo feature is `macos-wkwebview` in `crates/gitnex-app`:
+The underlying Cargo feature is `macos-wkwebview` in `crates/gitnexia-app`:
 
 ```sh
-cd crates/gitnex-app
+cd crates/gitnexia-app
 cargo tauri build --debug --no-bundle --features macos-wkwebview -- --no-default-features
 ```
 
-With wry the app also runs as a bare binary (no `GitNex.app`, no helper processes). A throwaway
+With wry the app also runs as a bare binary (no `GitNexia.app`, no helper processes). A throwaway
 profile keeps the real one alone:
 
 ```sh
-GITNEX_DEV_DIRS=$(mktemp -d) ./target/debug/GitNex /path/to/repo
+GITNEXIA_DEV_DIRS=$(mktemp -d) ./target/debug/GitNexia /path/to/repo
 ```
 
 `--no-default-features` is what drops CEF from the binary; a plain
@@ -64,14 +64,14 @@ bundler to see `--no-default-features` (or use a CEF-free manifest) instead.
    styling differ. Check the commit box, Open screen, tabs and scrollbars on macOS 12, 14 and 26.
 4. **Storage.** The CEF profile's `localStorage` (theme mirror, WIP drafts, list preferences)
    is not shared with WKWebView. Decide between a one-time export/import and accepting the loss.
-5. **Idle cost.** `GITNEX_PID=<browser pid> just bench` still measures the process tree; the
+5. **Idle cost.** `GITNEXIA_PID=<browser pid> just bench` still measures the process tree; the
    budget stays idle CPU < 1.5% and < 650 MB with 12 tabs.
 6. **Packaging.** Size of the `.app`/`.dmg`, signing (no JIT entitlements needed), and the
    absence of CEF's helper apps and `chrome-sandbox` story.
 
 ## Known gaps in this spike
 
-- The macOS CI jobs drive the app over Chromium's DevTools protocol (`GITNEX_DEV_CDP_PORT`).
+- The macOS CI jobs drive the app over Chromium's DevTools protocol (`GITNEXIA_DEV_CDP_PORT`).
   WKWebView has no CDP; those checks need WebDriver or another driver.
 - CEF-specific behaviour has no equivalent: `--host-resolver-rules`, component updates, the
   bundled offline en-US dictionary, `SandboxPolicy::Required`, and the vendored runtime patches.

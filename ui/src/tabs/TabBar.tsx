@@ -165,7 +165,7 @@ function groupPlan(p: Profile, id: string, update: (fn: (p: Profile) => Profile)
 
 /** Spec §6.2: hamburger, the Open Repository folder icon, tabs (drag, rename, middle-click,
  * right-click menu) and their groups (chips), the profile switcher. The app shell's `header`
- * slot. Under GitNex's own title bar, ☰ is up there instead, and the strip's empty space moves
+ * slot. Under GitNexia's own title bar, ☰ is up there instead, and the strip's empty space moves
  * the window too. In compact mode (`useCompactTitleBar`) it is the title bar, the same on every
  * platform: macOS's traffic lights' slot or the window buttons the desktop puts on the left, an
  * empty space that moves the window (as Firefox's), ☰,
@@ -264,7 +264,7 @@ export function TabBar() {
           if (compact) void runTitleBarAction(useWindowChrome.getState().info?.doubleClick ?? 'toggle-maximize');
           else runAction('file.openRepo');
         }}
-        // Empty space only, under GitNex's own title bar: dragging it moves the window.
+        // Empty space only, under GitNexia's own title bar: dragging it moves the window.
         onMouseDown={customTitleBar ? (e) => { if (e.target === e.currentTarget) beginWindowDrag(e); } : undefined}
       >
         {items.map((item) => {

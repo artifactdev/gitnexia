@@ -68,7 +68,7 @@ describe('plain rebase', () => {
     const { r } = await rebase(t, 'main');
     expect(r.outcome).toEqual({ status: 'stopped', kind: 'rebase', files: 1 });
     expect(r.journal.paused).toMatchObject({ kind: 'rebase', target: 'main' });
-    expect(readInProgress(t.memfs, t.repo.gitdir)).toMatchObject({ kind: 'rebase', gitnex: false, step: 2, total: 6 });
+    expect(readInProgress(t.memfs, t.repo.gitdir)).toMatchObject({ kind: 'rebase', gitnexia: false, step: 2, total: 6 });
   });
 
   // git 2.53's `msgnum`/`end` at the same stops: update-ref lines count, and with merges the

@@ -27,7 +27,7 @@ export function UpdatePill() {
   switch (state.state) {
     case 'available':
       return (
-        <HoverTooltip content={viaDialog ? `GitNex ${v} is available` : `Download GitNex ${v}`}>
+        <HoverTooltip content={viaDialog ? `GitNexia ${v} is available` : `Download GitNexia ${v}`}>
           <button type="button" className="sb-update" data-state="available" onClick={() => (viaDialog ? openDialog() : void download())}>
             <ArrowDownToLine size={11} aria-hidden />Update to {v}
           </button>
@@ -36,8 +36,8 @@ export function UpdatePill() {
     case 'downloading': {
       const pct = percentOf(state);
       return (
-        <HoverTooltip content={`Downloading GitNex ${v}: ${pct}%`}>
-          <button type="button" className="sb-update" data-state="downloading" aria-label={`Downloading GitNex ${v}, ${pct}%`} onClick={openDialog}>
+        <HoverTooltip content={`Downloading GitNexia ${v}: ${pct}%`}>
+          <button type="button" className="sb-update" data-state="downloading" aria-label={`Downloading GitNexia ${v}, ${pct}%`} onClick={openDialog}>
             <span className="sb-update-bar" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct}><span style={{ width: `${pct}%` }} /></span>
           </button>
         </HoverTooltip>

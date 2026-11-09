@@ -49,8 +49,8 @@ const sameFolder = (a: string, b: string) => a.replace(/\/+$/, '') === b.replace
  *  and layout, one list (the default) or a list under each directory; both remembered. */
 type Order = 'recent' | 'alpha';
 type Layout = 'merged' | 'grouped';
-const ORDER_KEY = 'gitnex.yourReposOrder.v1';
-const LAYOUT_KEY = 'gitnex.yourReposLayout.v1';
+const ORDER_KEY = 'gitnexia.yourReposOrder.v1';
+const LAYOUT_KEY = 'gitnexia.yourReposLayout.v1';
 function loadPref<T extends string>(key: string, other: T, fallback: T): T {
   try {
     return localStorage.getItem(key) === other ? other : fallback;

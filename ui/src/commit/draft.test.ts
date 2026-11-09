@@ -49,13 +49,13 @@ describe('the WIP draft (spec #2 §8.2)', () => {
     vi.useRealTimers();
   });
 
-  it('migrates the v1 summary and gitnex.wipBody.v1, then drops the old keys', () => {
-    localStorage.setItem('gitnex.wipDraft.v1:/r\u0000/r', 'Old summary');
-    localStorage.setItem('gitnex.wipBody.v1:/r\u0000/r', '\r\nOld body');
+  it('migrates the v1 summary and gitnexia.wipBody.v1, then drops the old keys', () => {
+    localStorage.setItem('gitnexia.wipDraft.v1:/r\u0000/r', 'Old summary');
+    localStorage.setItem('gitnexia.wipBody.v1:/r\u0000/r', '\r\nOld body');
     reloadDrafts();
     expect(readWipDraft('/r', '/r')).toEqual({ summary: 'Old summary', description: 'Old body' });
-    expect(localStorage.getItem('gitnex.wipDraft.v1:/r\u0000/r')).toBeNull();
-    expect(localStorage.getItem('gitnex.wipBody.v1:/r\u0000/r')).toBeNull();
+    expect(localStorage.getItem('gitnexia.wipDraft.v1:/r\u0000/r')).toBeNull();
+    expect(localStorage.getItem('gitnexia.wipBody.v1:/r\u0000/r')).toBeNull();
   });
 
   it('prunes the drafts of worktrees that no longer exist, for that repo only', () => {
@@ -85,11 +85,11 @@ describe('the WIP draft (spec #2 §8.2)', () => {
   });
 
   it('keeps the v1 keys when the v2 write fails', () => {
-    localStorage.setItem('gitnex.wipDraft.v1:/r\u0000/r', 'Old');
+    localStorage.setItem('gitnexia.wipDraft.v1:/r\u0000/r', 'Old');
     const spy = vi.spyOn(localStorage, 'setItem').mockImplementation(() => { throw new Error('quota'); });
     reloadDrafts();
     spy.mockRestore();
-    expect(localStorage.getItem('gitnex.wipDraft.v1:/r\u0000/r')).toBe('Old');
+    expect(localStorage.getItem('gitnexia.wipDraft.v1:/r\u0000/r')).toBe('Old');
   });
 
   it('does not prune with an empty list, and never drops the main worktree', () => {

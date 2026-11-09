@@ -3,7 +3,7 @@ import { registerActions, type Action } from '../app/actions';
 import { useWindowChrome, windowOps } from './windowChrome';
 
 /** Alt+Space: the window menu, as Windows opens it for a captioned window. The keys go to the page
- * (Chromium's window has no menu of its own), so GitNex's title bar asks for it. Only on Windows
+ * (Chromium's window has no menu of its own), so GitNexia's title bar asks for it. Only on Windows
  * under that title bar: on Linux the window manager takes Alt+Space itself. */
 export const WINDOW_MENU: Action = {
   id: 'window.menu', label: 'Window menu', group: 'View', icon: AppWindow,

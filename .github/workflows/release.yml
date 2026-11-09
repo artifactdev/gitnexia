@@ -1,7 +1,7 @@
 # Release: `just release <version>` commits the version bump and tags it v<version>; pushing them
-# together (git push origin main v<version>, or GitNex's Push with "Push tags with branches")
+# together (git push origin main v<version>, or GitNexia's Push with "Push tags with branches")
 # runs one build, on main: it builds the .deb, the Arch package and the RPM on Linux, the two Windows
-# installers (NSIS and MSI, unsigned for now) and the macOS .dmg (Apple Silicon, signed with GitNex's self-signed certificate),
+# installers (NSIS and MSI, unsigned for now) and the macOS .dmg (Apple Silicon, signed with GitNexia's self-signed certificate),
 # checks them, and publishes them with SHA256SUMS as a GitHub release. Building on main matters for speed: only
 # main's runs save caches (a tag's run can restore main's but not another tag's), so each release
 # warms the next one, while GitHub keeps the caches (7 days unused).
@@ -151,7 +151,7 @@ jobs:
         env:
           TAG: ${{ needs.plan.outputs.tag }}
         run: |
-          conf=$(jq -er .version crates/gitnex-app/tauri.conf.json)
+          conf=$(jq -er .version crates/gitnexia-app/tauri.conf.json)
           if [ -n "$TAG" ]; then
             v=${TAG#v}
             if [ "$v" != "$conf" ]; then
@@ -275,13 +275,13 @@ jobs:
       # about.toml's allow-list), cargo tauri build (the UI build and its notices first),
       # fix-deb.sh, check-deb.sh (Depends, the setuid chrome-sandbox, icons, desktop entry and
       # the license notices), package-arch.sh and package-rpm.sh, with the plain version for a
-      # release. Nothing from an earlier build's caches (GITNEX_REBUILD), and the compression the
+      # release. Nothing from an earlier build's caches (GITNEXIA_REBUILD), and the compression the
       # packages have always shipped with (scripts/package-compression.sh), not a local build's.
       - name: Build the packages
         env:
-          GITNEX_RELEASE_VERSION: ${{ steps.version.outputs.version }}
-          GITNEX_REBUILD: '1'
-          GITNEX_PACKAGE_COMPRESSION: release
+          GITNEXIA_RELEASE_VERSION: ${{ steps.version.outputs.version }}
+          GITNEXIA_REBUILD: '1'
+          GITNEXIA_PACKAGE_COMPRESSION: release
         run: CARGO_BUILD_JOBS=$(nproc) just package
 
       - name: Save the CEF archive
@@ -292,7 +292,7 @@ jobs:
           key: ${{ steps.cef.outputs.cache-primary-key }}
 
       # Installs it in archlinux:latest: dependencies, pacman -Qkk, chrome-sandbox, the license
-      # notices in /usr/share/licenses/gitnex, ldd and a headless launch.
+      # notices in /usr/share/licenses/gitnexia, ldd and a headless launch.
       - name: Check the Arch package
         run: just check-arch-pkg
 
@@ -305,19 +305,27 @@ jobs:
         env:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
-          deb=(target/release/bundle/deb/GitNex_*_amd64.deb)
-          pkg=(target/release/bundle/arch/GitNex-*-x86_64.pkg.tar.zst)
-          rpm=(target/release/bundle/rpm/GitNex-*.x86_64.rpm)
+          deb=(target/release/bundle/deb/GitNexia_*_amd64.deb)
+          pkg=(target/release/bundle/arch/GitNexia-*-x86_64.pkg.tar.zst)
+          rpm=(target/release/bundle/rpm/GitNexia-*.x86_64.rpm)
           [ ${#deb[@]} = 1 ] && [ ${#pkg[@]} = 1 ] && [ ${#rpm[@]} = 1 ] || { echo "::error::Expected one .deb, one Arch package and one RPM: ${deb[*]} ${pkg[*]} ${rpm[*]}"; exit 1; }
-          [ "${deb[0]}" = "target/release/bundle/deb/GitNex_${VERSION}_amd64.deb" ] || { echo "::error::Unexpected .deb name ${deb[0]}"; exit 1; }
-          [ "${rpm[0]}" = "target/release/bundle/rpm/GitNex-${VERSION}-1.x86_64.rpm" ] || { echo "::error::Unexpected RPM name ${rpm[0]}"; exit 1; }
+          [ "${deb[0]}" = "target/release/bundle/deb/GitNexia_${VERSION}_amd64.deb" ] || { echo "::error::Unexpected .deb name ${deb[0]}"; exit 1; }
+          [ "${rpm[0]}" = "target/release/bundle/rpm/GitNexia-${VERSION}-1.x86_64.rpm" ] || { echo "::error::Unexpected RPM name ${rpm[0]}"; exit 1; }
           echo "deb version: $(dpkg-deb -f "${deb[0]}" Version); Arch package: $(basename "${pkg[0]}"); RPM: $(basename "${rpm[0]}")"
           cp "${deb[0]}" "${pkg[0]}" "${rpm[0]}" dist/
+          # 1.6.0 also carries the pre-rename GitNex_* names, so an installed 1.5.x finds its
+          # package (docs/releasing.md, "Asset names are an API").
+          for f in dist/*; do
+            name=$(basename "$f")
+            case "$name" in
+              GitNexia*) cp "$f" "dist/GitNex${name#GitNexia}" ;;
+            esac
+          done
           (cd dist && sha256sum -- *.deb *.pkg.tar.zst *.rpm > SHA256SUMS && cat SHA256SUMS)
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: gitnex-${{ steps.version.outputs.version }}
+          name: gitnexia-${{ steps.version.outputs.version }}
           path: dist/
           if-no-files-found: error
           retention-days: 3
@@ -347,14 +355,14 @@ jobs:
           persist-credentials: false
 
       # The tag's version, or tauri.conf.json's for a dry run: package-windows.ps1 checks that
-      # GITNEX_RELEASE_VERSION is a release version equal to tauri.conf.json's. The CEF version
+      # GITNEXIA_RELEASE_VERSION is a release version equal to tauri.conf.json's. The CEF version
       # keys its cache.
       - name: Version
         id: version
         env:
           TAG: ${{ needs.plan.outputs.tag }}
         run: |
-          $conf = (Get-Content -Raw crates/gitnex-app/tauri.conf.json | ConvertFrom-Json).version
+          $conf = (Get-Content -Raw crates/gitnexia-app/tauri.conf.json | ConvertFrom-Json).version
           $v = if ($env:TAG) { $env:TAG -replace '^v', '' } else { $conf }
           $lock = Get-Content -Raw Cargo.lock
           if ($lock -notmatch 'name = "cef"\r?\nversion = "[^+"]*\+([^"]+)"') { throw 'No CEF version in Cargo.lock' }
@@ -421,12 +429,12 @@ jobs:
         working-directory: ui
         run: npm ci
 
-      # `just package-windows`: the notices, the UI, gitnex-app as a DLL, the staged layout
-      # (CEF's bootstrap as GitNex.exe, checked against the CEF build), then the NSIS installer
+      # `just package-windows`: the notices, the UI, gitnexia-app as a DLL, the staged layout
+      # (CEF's bootstrap as GitNexia.exe, checked against the CEF build), then the NSIS installer
       # and the MSI, ICE-validated.
       #
-      # Signing (none yet): set GITNEX_SIGN_COMMAND here, e.g. from a secret, to a command that
-      # signs the path appended to it in place. The script then signs GitNex.exe and GitNex.dll
+      # Signing (none yet): set GITNEXIA_SIGN_COMMAND here, e.g. from a secret, to a command that
+      # signs the path appended to it in place. The script then signs GitNexia.exe and GitNexia.dll
       # with the same certificate (the bootstrap requires it), the NSIS uninstaller and installer,
       # and the MSI. See docs/releasing.md.
       # Windows PowerShell, not the job's pwsh: package-windows runs powershell.exe, which can't load
@@ -434,7 +442,7 @@ jobs:
       - name: Build the installers
         shell: powershell
         env:
-          GITNEX_RELEASE_VERSION: ${{ steps.version.outputs.version }}
+          GITNEXIA_RELEASE_VERSION: ${{ steps.version.outputs.version }}
         run: |
           $env:CARGO_BUILD_JOBS = "$env:NUMBER_OF_PROCESSORS"
           just package-windows
@@ -453,20 +461,22 @@ jobs:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
           $out = 'target/release/bundle/windows'
-          $files = @("GitNex_${env:VERSION}_x64-setup.exe", "GitNex_${env:VERSION}_x64.msi")
+          $files = @("GitNexia_${env:VERSION}_x64-setup.exe", "GitNexia_${env:VERSION}_x64.msi")
           New-Item -ItemType Directory -Force dist-windows | Out-Null
           foreach ($f in $files) {
             if (-not (Test-Path "$out/$f")) { throw "Missing $f in ${out}: $((Get-ChildItem $out).Name -join ', ')" }
             Copy-Item "$out/$f" dist-windows/
+            # 1.6.0 also carries the pre-rename GitNex_* names (docs/releasing.md).
+            Copy-Item "$out/$f" "dist-windows/$($f -replace '^GitNexia', 'GitNex')"
           }
           # sha256sum's format, so the release job checks and merges it with the Linux one.
-          $sums = foreach ($f in $files) { "{0}  {1}" -f (Get-FileHash -Algorithm SHA256 "dist-windows/$f").Hash.ToLower(), $f }
+          $sums = foreach ($f in (Get-ChildItem dist-windows -File | Select-Object -ExpandProperty Name | Where-Object { $_ -ne 'SHA256SUMS' })) { "{0}  {1}" -f (Get-FileHash -Algorithm SHA256 "dist-windows/$f").Hash.ToLower(), $f }
           [IO.File]::WriteAllText("$PWD/dist-windows/SHA256SUMS", ($sums -join "`n") + "`n")
           Get-Content dist-windows/SHA256SUMS
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: gitnex-${{ steps.version.outputs.version }}-windows
+          name: gitnexia-${{ steps.version.outputs.version }}-windows
           path: dist-windows/
           if-no-files-found: error
           retention-days: 3
@@ -492,14 +502,14 @@ jobs:
           persist-credentials: false
 
       # The tag's version, or tauri.conf.json's for a dry run: package-version.sh checks that
-      # GITNEX_RELEASE_VERSION is a release version equal to tauri.conf.json's. The CEF version
+      # GITNEXIA_RELEASE_VERSION is a release version equal to tauri.conf.json's. The CEF version
       # keys its cache.
       - name: Version
         id: version
         env:
           TAG: ${{ needs.plan.outputs.tag }}
         run: |
-          conf=$(jq -er .version crates/gitnex-app/tauri.conf.json)
+          conf=$(jq -er .version crates/gitnexia-app/tauri.conf.json)
           v=${TAG#v}
           [ -n "$v" ] || v=$conf
           cef=$(awk '$0 == "name = \"cef\"" { getline; print }' Cargo.lock | sed -n 's/^version = "[^+"]*+\([^"]*\)"$/\1/p')
@@ -567,25 +577,25 @@ jobs:
         working-directory: ui
         run: npm ci
 
-      # GitNex's self-signed code-signing certificate, from the repository's secrets, into a
-      # throwaway keychain; it sets GITNEX_MACOS_SIGNING_IDENTITY for the build. A run on
-      # artifactdev/gitnex must have it; a fork's builds ad-hoc. See docs/releasing.md, "macOS
+      # GitNexia's self-signed code-signing certificate, from the repository's secrets, into a
+      # throwaway keychain; it sets GITNEXIA_MACOS_SIGNING_IDENTITY for the build. A run on
+      # artifactdev/gitnexia must have it; a fork's builds ad-hoc. See docs/releasing.md, "macOS
       # signing".
       - name: Signing keychain
         env:
           MACOS_CERTIFICATE_P12: ${{ secrets.MACOS_CERTIFICATE_P12 }}
           MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
-          GITNEX_MACOS_SIGNING_REQUIRED: ${{ github.repository == 'artifactdev/gitnex' }}
+          GITNEXIA_MACOS_SIGNING_REQUIRED: ${{ github.repository == 'artifactdev/gitnexia' }}
         run: scripts/macos-keychain.sh import
 
-      # `just package-macos`: the notices, the release GitNex.app (signed with that identity,
+      # `just package-macos`: the notices, the release GitNexia.app (signed with that identity,
       # inside out, with the install-kind marker and the notices in Contents/Resources) and the
       # .dmg, then their checks: the signature and its designated requirement, inside the mounted
       # image too, and the Applications link. Not notarized (no Apple Developer ID).
       - name: Build the disk image
         env:
-          GITNEX_RELEASE_VERSION: ${{ steps.version.outputs.version }}
-          GITNEX_REBUILD: '1' # the UI build afresh (ui/scripts/build-if-changed.mjs)
+          GITNEXIA_RELEASE_VERSION: ${{ steps.version.outputs.version }}
+          GITNEXIA_REBUILD: '1' # the UI build afresh (ui/scripts/build-if-changed.mjs)
         run: CARGO_BUILD_JOBS=$(sysctl -n hw.ncpu) just package-macos
 
       - name: Delete the signing keychain
@@ -603,16 +613,19 @@ jobs:
         env:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
-          dmg=target/release/bundle/dmg/GitNex_${VERSION}_aarch64.dmg
+          dmg=target/release/bundle/dmg/GitNexia_${VERSION}_aarch64.dmg
           [ -f "$dmg" ] || { echo "::error::Missing $dmg: $(ls target/release/bundle/dmg)"; exit 1; }
           mkdir -p dist-macos
           cp "$dmg" dist-macos/
+          # 1.6.0 also carries the pre-rename GitNex_* name (docs/releasing.md).
+          name=$(basename "$dmg")
+          cp "$dmg" "dist-macos/GitNex_${name#GitNexia_}"
           # sha256sum's format, so the release job checks and merges it with the others.
           (cd dist-macos && shasum -a 256 -- *.dmg > SHA256SUMS && cat SHA256SUMS)
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: gitnex-${{ steps.version.outputs.version }}-macos
+          name: gitnexia-${{ steps.version.outputs.version }}-macos
           path: dist-macos/
           if-no-files-found: error
           retention-days: 3
@@ -632,15 +645,15 @@ jobs:
     steps:
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          name: gitnex-${{ needs.build.outputs.version }}
+          name: gitnexia-${{ needs.build.outputs.version }}
           path: dist
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          name: gitnex-${{ needs.build.outputs.version }}-windows
+          name: gitnexia-${{ needs.build.outputs.version }}-windows
           path: dist-windows
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          name: gitnex-${{ needs.build.outputs.version }}-macos
+          name: gitnexia-${{ needs.build.outputs.version }}-macos
           path: dist-macos
 
       # Each job's checksums, then one SHA256SUMS for all the packages.
@@ -654,10 +667,10 @@ jobs:
           (cd dist && sha256sum -c SHA256SUMS && cat SHA256SUMS)
 
       # Artifact attestations need a public repository, or GitHub Enterprise Cloud for a private
-      # one: while the repository is private this is skipped unless the GITNEX_ATTEST variable is
+      # one: while the repository is private this is skipped unless the GITNEXIA_ATTEST variable is
       # 'true'.
       - name: Build provenance
-        if: ${{ !github.event.repository.private || vars.GITNEX_ATTEST == 'true' }}
+        if: ${{ !github.event.repository.private || vars.GITNEXIA_ATTEST == 'true' }}
         uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
           subject-path: |
@@ -684,10 +697,10 @@ jobs:
               echo "::error::The release $TAG is already published; not replacing its assets."
               exit 1
             fi
-            gh release edit "$TAG" --draft --title "GitNex $VERSION" --notes-file dist/release-notes.md --prerelease="$PRERELEASE"
+            gh release edit "$TAG" --draft --title "GitNexia $VERSION" --notes-file dist/release-notes.md --prerelease="$PRERELEASE"
             gh release upload "$TAG" "${assets[@]}" --clobber
           else
-            gh release create "$TAG" --draft --verify-tag --title "GitNex $VERSION" \
+            gh release create "$TAG" --draft --verify-tag --title "GitNexia $VERSION" \
               --notes-file dist/release-notes.md --prerelease="$PRERELEASE" "${assets[@]}"
           fi
           gh release edit "$TAG" --draft=false

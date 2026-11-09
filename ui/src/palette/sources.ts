@@ -46,7 +46,7 @@ export async function fileEntries(tabId: string): Promise<PaletteEntry[]> {
   return paths.map((p): PaletteEntry => ({ id: `file:${p}`, group: 'file', label: p, detail: 'Shift+Enter: file history', run: () => void openFileView(tabId, head, p), alt: () => void openFileHistory(tabId, { path: p, rev: head }, false) }));
 }
 
-/** Every registered setting, with where it lives (`GitNex › Fetch and push › Fetch`); a
+/** Every registered setting, with where it lives (`GitNexia › Fetch and push › Fetch`); a
  * repository's only while one is shown. */
 export function settingEntries(): PaletteEntry[] {
   const { profile } = useAppState.getState();

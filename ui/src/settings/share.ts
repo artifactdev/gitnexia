@@ -7,11 +7,11 @@ export type ShareKind = 'theme' | 'branch-preset' | 'file-colours';
 export const MAX_SHARE_BYTES = 65_536;
 
 export function toShareJson(kind: ShareKind, version: number, body: Record<string, unknown>): string {
-  const { gitnex: _k, version: _v, ...rest } = body;
-  return JSON.stringify({ gitnex: kind, version, ...rest }, null, 2);
+  const { gitnexia: _k, version: _v, ...rest } = body;
+  return JSON.stringify({ gitnexia: kind, version, ...rest }, null, 2);
 }
 
-/** The envelope's body (everything but `gitnex` and `version`), or `ok: false` for anything that isn't one. */
+/** The envelope's body (everything but `gitnexia` and `version`), or `ok: false` for anything that isn't one. */
 export function parseShareJson(
   text: string,
   kind: ShareKind,
@@ -23,8 +23,9 @@ export function parseShareJson(
   let parsed: unknown;
   try { parsed = JSON.parse(raw); } catch { return { ok: false }; }
   if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return { ok: false };
-  const { gitnex, version, ...body } = parsed as Record<string, unknown>;
-  if (gitnex !== kind) return { ok: false };
+  const { gitnexia, gitnex, version, ...body } = parsed as Record<string, unknown>;
+  // `gitnex` is the marker versions before the GitNexia rename wrote; a pasted old export still works.
+  if ((gitnexia ?? gitnex) !== kind) return { ok: false };
   if (typeof version !== 'number' || !Number.isInteger(version) || version < 1 || version > maxVersion) return { ok: false };
   return { ok: true, body, version };
 }
@@ -40,8 +41,8 @@ export function uniqueName(name: string, taken: Iterable<string>): string {
   }
 }
 
-/** `"<slug>.gitnex-<kind>.json"`. */
+/** `"<slug>.gitnexia-<kind>.json"`. */
 export function exportFileName(name: string, kind: ShareKind): string {
   const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-  return `${slug || kind}.gitnex-${kind}.json`;
+  return `${slug || kind}.gitnexia-${kind}.json`;
 }

@@ -18,7 +18,7 @@ import { forgeName } from './labels';
 import { effectiveKind } from './urls';
 import './accounts.css';
 
-export const FILE_WARNING = 'Stored in a file, not the system keyring: install or start a Secret Service (GNOME Keyring, KWallet), then restart GitNex to secure it.';
+export const FILE_WARNING = 'Stored in a file, not the system keyring: install or start a Secret Service (GNOME Keyring, KWallet), then restart GitNexia to secure it.';
 const KINDS: Array<[ForgeKind, string]> = [['gitlab', 'GitLab'], ['github', 'GitHub'], ['forgejo', 'Forgejo'], ['bitbucket', 'Bitbucket'], ['azuredevops', 'Azure DevOps']];
 
 /** What an account's last requests said, in plain words; `null` when all is well. */
@@ -48,7 +48,7 @@ export function statusChip(v: ForgeAccountView): { tone: 'ok' | 'warn' | 'err'; 
 type Panel = { mode: 'add' } | { mode: 'replace'; account: ForgeAccount };
 const TOKEN_HELP: Record<ForgeKind, string> = {
   gitlab: 'Opens your profile\'s token page with the api scope selected. Copy the token, then paste it here.',
-  github: 'Opens GitHub\'s fine-grained token page with the permissions GitNex needs selected. Some organizations cap these tokens\' lifetime (e.g. 90 days); use a classic token for those.',
+  github: 'Opens GitHub\'s fine-grained token page with the permissions GitNexia needs selected. Some organizations cap these tokens\' lifetime (e.g. 90 days); use a classic token for those.',
   forgejo: 'Opens the new-token form in your Applications settings. Generate a token with the read:user, write:repository and write:issue scopes, then paste it here.',
   bitbucket: 'Use a personal access token (user HTTP access token) from Manage account › HTTP access tokens, with repository read/write permissions for the actions you need. Merges open in your browser. Bitbucket Cloud is not supported.',
   azuredevops: 'Enter https://dev.azure.com/your-organization and use a personal access token with Code (Read) access. Browse projects and repositories in Clone. Pull request workflows and Azure DevOps Server are not supported.',

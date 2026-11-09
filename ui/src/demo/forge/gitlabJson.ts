@@ -1,4 +1,4 @@
-// The forge crate's GitLab mapping (`crates/gitnex-forge/src/gitlab.rs` `pub mod json`, GitLab's
+// The forge crate's GitLab mapping (`crates/gitnexia-forge/src/gitlab.rs` `pub mod json`, GitLab's
 // JSON to the normalized types), ported function for function for the demo: the fake GitLab
 // (fakeGitlab.ts) answers as the harness's does, and this makes of it what the core makes of those
 // answers. Each function names its Rust one; keep them twins. Fields the Rust leaves `None` (and
@@ -71,8 +71,8 @@ export function parseRfc3339(s: string): number | null {
 const time = (v: unknown): number | null => (typeof v === 'string' ? parseRfc3339(v) : null);
 
 // --- types.rs / stack.rs helpers the module uses ---
-export const MARK_START = '<!-- gitnex-stack:start -->';
-export const MARK_END = '<!-- gitnex-stack:end -->';
+export const MARK_START = '<!-- gitnexia-stack:start -->';
+export const MARK_END = '<!-- gitnexia-stack:end -->';
 
 /** `stack::carries_stack_table`: a start marker with an end marker after it. */
 export function carriesStackTable(description: string): boolean {

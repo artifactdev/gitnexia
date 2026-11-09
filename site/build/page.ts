@@ -17,5 +17,5 @@ export function fillMarkers(html: string, markers: Record<string, Marker>): stri
 }
 
 export function page(markers: Record<string, Marker>): Plugin {
-  return { name: 'gitnex-site-page', transformIndexHtml: { order: 'pre', handler: (html) => fillMarkers(html, markers) } };
+  return { name: 'gitnexia-site-page', transformIndexHtml: { order: 'pre', handler: (html) => fillMarkers(html, markers) } };
 }

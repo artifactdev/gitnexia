@@ -33,7 +33,7 @@ export function advanceHead(cx: WriteCx, from: string | null, to: string): void 
 
 /** UX L: Amend at the "about to commit" Edit stop before any piece is committed (the core's). */
 export const AMEND_AT_EDIT_STOP = "Nothing to amend yet: this commit's changes are staged. Commit them, or Continue.";
-/** An Edit stop of a rebase GitNex's interactive rebase doesn't own (the core's `NOT_OURS`). */
+/** An Edit stop of a rebase GitNexia's interactive rebase doesn't own (the core's `NOT_OURS`). */
 const NOT_OURS = 'Finish this rebase where you started it.';
 
 function commit(summary: string, description: string, amend: boolean, stageAll: boolean): WriteIntent<CommitOutcome> {
@@ -56,7 +56,7 @@ function commit(summary: string, description: string, amend: boolean, stageAll: 
       const editBase = editStop && st?.kind === 'rebase' ? st.editBase : null;
       // At the "about to commit" stop, HEAD is the commit's parent: an amend would fold the commit into it.
       if (amend && editBase !== null && pre.before.head.oid === editBase) fail('InvalidInput', AMEND_AT_EDIT_STOP);
-      // Only GitNex's own interactive rebase, whose pause records the commits made there.
+      // Only GitNexia's own interactive rebase, whose pause records the commits made there.
       if (editStop && !pre.ctx.writes.journal(pre.wt.root).paused()?.paused?.irebase) fail('InvalidInput', NOT_OURS);
       if (ip !== null && ip !== 'merge' && !editStop) fail('InProgress', `A ${ip} is in progress`);
       paused = editStop;

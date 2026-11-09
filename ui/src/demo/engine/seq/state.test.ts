@@ -28,7 +28,7 @@ describe('the sequencer state', () => {
     const s = state({});
     await writeSeq(t.repo, t.repo.gitdir, s);
     expect(t.memfs.existsSync(`${t.repo.gitdir}/${SEQ_FILE}`)).toBe(true);
-    expect(SEQ_FILE).toBe('gitnex-demo-seq.json');
+    expect(SEQ_FILE).toBe('gitnexia-demo-seq.json');
     expect(await readSeq(t.repo, t.repo.gitdir)).toEqual(s);
     await clearSeq(t.repo, t.repo.gitdir);
     expect(await readSeq(t.repo, t.repo.gitdir)).toBeNull();
@@ -49,7 +49,7 @@ describe('the sequencer state', () => {
     await writeSeq(t.repo, t.repo.gitdir, state({ stop: { reason: 'conflict', at: C, message: 'L2 Reword line two\n' }, todo: [], done: [{ op: 'pick', oid: D, parent: null }, stopped] }));
     const want = {
       kind: 'rebase', onto: 'b'.repeat(40), headName: 'refs/heads/lab', step: 2, total: 2, stoppedAt: C,
-      editStop: null, editBase: null, editAdded: [], editChanged: false, editConflict: false, messageFailed: null, gitnex: true, conflicted: 0, message: 'L2 Reword line two\n',
+      editStop: null, editBase: null, editAdded: [], editChanged: false, editConflict: false, messageFailed: null, gitnexia: true, conflicted: 0, message: 'L2 Reword line two\n',
     };
     expect(seqInProgress(t.memfs, t.repo.gitdir)).toEqual(want);
     expect(readInProgress(t.memfs, t.repo.gitdir)).toEqual(want);
@@ -68,7 +68,7 @@ describe('the sequencer state', () => {
     const stop = { reason: 'conflict' as const, at: C, message: 'M multi\r\n', conflicts: ['b.txt', 'z.txt'] };
     await writeSeq(t.repo, t.repo.gitdir, state({ interactive: false, headName: null, stop, done: [{ op: 'pick', oid: C, parent: null }] }));
     const r = seqInProgress(t.memfs, t.repo.gitdir) as Rebase;
-    expect([r.headName, r.gitnex, r.step, r.conflicted, r.message]).toEqual(['detached HEAD', false, 1, 2, 'M multi\n\n# Conflicts:\n#\tb.txt\n#\tz.txt\n']);
+    expect([r.headName, r.gitnexia, r.step, r.conflicted, r.message]).toEqual(['detached HEAD', false, 1, 2, 'M multi\n\n# Conflicts:\n#\tb.txt\n#\tz.txt\n']);
     // A merge step's conflict has no such block (git's own message file).
     await writeSeq(t.repo, t.repo.gitdir, state({ stop: { ...stop, message: 'Merge side\n' }, done: [{ op: 'merge', oid: C, parents: [D] }] }));
     expect((seqInProgress(t.memfs, t.repo.gitdir) as Rebase).message).toBe('Merge side\n');

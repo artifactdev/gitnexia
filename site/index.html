@@ -5,11 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="dark" />
     <meta name="darkreader-lock" />
-    <title>GitNex, a desktop Git client</title>
+    <title>GitNexia, a desktop Git client</title>
     <meta name="description" content="A fast, keyboard-friendly desktop Git client with a commit graph at its heart. Free and MIT licensed; Linux, Windows and macOS." />
     <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="GitNex" />
-    <meta property="og:title" content="GitNex, a desktop Git client" />
+    <meta property="og:site_name" content="GitNexia" />
+    <meta property="og:title" content="GitNexia, a desktop Git client" />
     <meta property="og:description" content="A fast, keyboard-friendly desktop Git client with a commit graph at its heart. Free and MIT licensed; Linux, Windows and macOS." />
     <meta name="twitter:card" content="summary_large_image" />
     <!--social:meta-->
@@ -18,10 +18,10 @@
   </head>
   <body id="top">
     <header class="top"><div class="wrap"><nav class="glass bar" aria-label="Main">
-      <a class="brand" href="#top"><img src="./src/art/icon.svg" alt="" width="34" height="34" />GitNex</a>
+      <a class="brand" href="#top"><img src="./src/art/icon.svg" alt="" width="34" height="34" />GitNexia</a>
       <div class="links"><a href="#features">Features</a><a href="#compare">Compare</a><a href="#privacy">Privacy</a><a href="#downloads">Downloads</a></div>
       <span class="spacer"></span>
-      <a class="gh" href="https://github.com/artifactdev/gitnex" aria-label="Source on GitHub"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 .5a11.5 11.5 0 0 0-3.6 22.4c.6.1.8-.3.8-.6v-2c-3.2.7-3.9-1.5-3.9-1.5-.5-1.3-1.3-1.7-1.3-1.7-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.2 1.2a11 11 0 0 1 5.8 0c2.2-1.5 3.2-1.2 3.2-1.2.6 1.6.2 2.8.1 3.1.7.8 1.2 1.9 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A11.5 11.5 0 0 0 12 .5Z"/></svg></a>
+      <a class="gh" href="https://github.com/artifactdev/gitnexia" aria-label="Source on GitHub"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 .5a11.5 11.5 0 0 0-3.6 22.4c.6.1.8-.3.8-.6v-2c-3.2.7-3.9-1.5-3.9-1.5-.5-1.3-1.3-1.7-1.3-1.7-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.2 1.2a11 11 0 0 1 5.8 0c2.2-1.5 3.2-1.2 3.2-1.2.6 1.6.2 2.8.1 3.1.7.8 1.2 1.9 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A11.5 11.5 0 0 0 12 .5Z"/></svg></a>
       <a class="cta" href="#downloads"><span class="cta-in">Download <small class="cta-os"></small></span><span class="cta-size" aria-hidden="true">Download <small>for Windows</small></span></a>
     </nav></div></header>
 
@@ -34,7 +34,7 @@
           <div class="hero-demo" data-state="still">
             <a class="skip" href="#features">Skip the live demo</a>
             <div class="window"><div class="window-in">
-              <div class="chrome"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="title" aria-hidden="true">GitNex · orbital</span><span class="demo-badge" role="status">Screenshot</span></div>
+              <div class="chrome"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="title" aria-hidden="true">GitNexia · orbital</span><span class="demo-badge" role="status">Screenshot</span></div>
               <div class="stage">
                 <!--hero:still-->
               </div>
@@ -42,7 +42,7 @@
             <div class="demo-bar desk">
               <button type="button" class="btn" data-action="reset"><span class="btn-stack"><span class="when-idle">Reset demo</span><span class="when-armed">Reset and lose your changes</span></span></button>
               <button type="button" class="btn" data-action="fullscreen">Full screen</button>
-              <span>This is GitNex itself, running in your browser against a made-up repository. It resets when you reload.</span>
+              <span>This is GitNexia itself, running in your browser against a made-up repository. It resets when you reload.</span>
             </div>
             <p class="demo-bar desk-only">Try the live demo on a desktop.</p>
             <noscript><p class="demo-bar">The live demo needs JavaScript.</p></noscript>
@@ -57,7 +57,7 @@
           <div class="head"><p class="eyebrow">Features</p>
             <h2 id="features-title"><span class="grad">Highlights</span></h2>
             <p class="lede">A Rust core reads with gitoxide and writes through the <code>git</code> command line. Every action is in the command palette (<kbd>Ctrl</kbd>+<kbd>P</kbd>), and every shortcut is listed in Help (<kbd>Ctrl</kbd>+<kbd>/</kbd>).</p>
-            <p class="lede"><strong>Built on GitVolt (and GitBolt before it).</strong> GitNex started as a rename and continuation of GitVolt, and it builds on that codebase while adding features of its own: several accounts per forge, AI-written commit messages, a two-column Open screen with Clone and Create, stash of selected files, and profile commit identities.</p></div>
+            <p class="lede"><strong>Built on GitNex (and GitVolt before it).</strong> GitNexia started as a rename and continuation of GitNex, and it builds on that codebase while adding features of its own: several accounts per forge, AI-written commit messages, a two-column Open screen with Clone and Create, stash of selected files, and profile commit identities.</p></div>
           <!--readme:highlights-->
           <h3 class="eyebrow sub-head">Everything else</h3>
           <div class="groups"><!--readme:groups--></div>
@@ -68,7 +68,7 @@
         <section class="block" id="compare" aria-labelledby="compare-title"><div class="wrap">
           <div class="head"><p class="eyebrow">Compare</p>
             <h2 id="compare-title">Compared with GitKraken</h2>
-            <p class="lede">If you've used GitKraken, GitNex will feel familiar: the lane graph down the middle, the branch and remote sidebar, the commit details on the right. GitNex is an independent project, not affiliated with or endorsed by GitKraken / Axosoft.</p></div>
+            <p class="lede">If you've used GitKraken, GitNexia will feel familiar: the lane graph down the middle, the branch and remote sidebar, the commit details on the right. GitNexia is an independent project, not affiliated with or endorsed by GitKraken / Axosoft.</p></div>
           <!--readme:compare-->
           <p class="legend">GitKraken is a trademark of Axosoft, LLC, mentioned only to compare features.</p>
         </div></section>
@@ -80,7 +80,7 @@
             <h2 id="privacy-title">No account. <span class="grad">No telemetry.</span></h2>
             <p class="lede">Your repositories and tokens stay on your machine. The webview can't reach the network on its own; the Rust core makes every request.</p></div>
           <div class="pgrid">
-            <div class="pcard glass l-cyan"><svg viewBox="0 0 40 40" aria-hidden="true"><path class="ln" d="M8 34 V22 C8 14 20 14 20 6"/><path class="ln faint" d="M32 34 V6"/><circle class="node" cx="8" cy="26" r="4.5"/><circle class="node" cx="20" cy="8" r="4.5"/></svg><h3>No account, no telemetry</h3><p>No analytics or crash reporting. The update check is the only request GitNex makes on its own that isn't about your repositories or accounts.</p></div>
+            <div class="pcard glass l-cyan"><svg viewBox="0 0 40 40" aria-hidden="true"><path class="ln" d="M8 34 V22 C8 14 20 14 20 6"/><path class="ln faint" d="M32 34 V6"/><circle class="node" cx="8" cy="26" r="4.5"/><circle class="node" cx="20" cy="8" r="4.5"/></svg><h3>No account, no telemetry</h3><p>No analytics or crash reporting. The update check is the only request GitNexia makes on its own that isn't about your repositories or accounts.</p></div>
             <div class="pcard glass l-blue"><svg viewBox="0 0 40 40" aria-hidden="true"><path class="ln" d="M8 34 V22 C8 14 20 14 20 6"/><path class="ln faint" d="M32 34 V6"/><circle class="node" cx="8" cy="26" r="4.5"/><circle class="node" cx="20" cy="8" r="4.5"/></svg><h3>Locked-down webview</h3><p>A strict Content Security Policy, and Chromium can't resolve any host name but localhost: the Rust core makes every network request.</p></div>
             <div class="pcard glass l-violet"><svg viewBox="0 0 40 40" aria-hidden="true"><path class="ln" d="M8 34 V22 C8 14 20 14 20 6"/><path class="ln faint" d="M32 34 V6"/><circle class="node" cx="8" cy="26" r="4.5"/><circle class="node" cx="20" cy="8" r="4.5"/></svg><h3>Click-to-load images</h3><p>Images from hosts other than your forge load only after you click them.</p></div>
             <div class="pcard glass l-magenta"><svg viewBox="0 0 40 40" aria-hidden="true"><path class="ln" d="M8 34 V22 C8 14 20 14 20 6"/><path class="ln faint" d="M32 34 V6"/><circle class="node" cx="8" cy="26" r="4.5"/><circle class="node" cx="20" cy="8" r="4.5"/></svg><h3>Tokens in the keyring</h3><p>Forge tokens stay in the system keyring, never in a file or a log.</p></div>
@@ -93,7 +93,7 @@
 
         <section class="block" id="downloads" aria-labelledby="downloads-title"><div class="wrap">
           <div class="head"><p class="eyebrow">Downloads</p>
-            <h2 id="downloads-title">Download GitNex <span class="grad"><!--release:version--></span></h2>
+            <h2 id="downloads-title">Download GitNexia <span class="grad"><!--release:version--></span></h2>
             <p class="lede">Free and MIT licensed, private repos included.</p></div>
           <!--release:downloads-->
         </div></section>
@@ -102,10 +102,10 @@
 
     <footer>
       <div class="field" aria-hidden="true"><div class="blob"></div></div>
-      <p class="word" aria-hidden="true">GitNex</p>
+      <p class="word" aria-hidden="true">GitNexia</p>
       <div class="wrap"><div class="glass fbar">
-        <a class="brand" href="#top"><img src="./src/art/icon.svg" alt="" width="26" height="26" />GitNex</a>
-        <nav aria-label="Project"><a href="https://github.com/artifactdev/gitnex">Source on GitHub</a><a href="https://github.com/artifactdev/gitnex/blob/main/CHANGELOG.md">Changelog</a><a href="https://github.com/artifactdev/gitnex/blob/main/LICENSE">MIT license</a><a href="https://github.com/artifactdev/gitnex/blob/main/PRIVACY.md">Privacy</a><a href="https://github.com/artifactdev/gitnex/blob/main/SECURITY.md">Security</a><a href="./licenses/fonts.txt">Font licenses</a></nav>
+        <a class="brand" href="#top"><img src="./src/art/icon.svg" alt="" width="26" height="26" />GitNexia</a>
+        <nav aria-label="Project"><a href="https://github.com/artifactdev/gitnexia">Source on GitHub</a><a href="https://github.com/artifactdev/gitnexia/blob/main/CHANGELOG.md">Changelog</a><a href="https://github.com/artifactdev/gitnexia/blob/main/LICENSE">MIT license</a><a href="https://github.com/artifactdev/gitnexia/blob/main/PRIVACY.md">Privacy</a><a href="https://github.com/artifactdev/gitnexia/blob/main/SECURITY.md">Security</a><a href="./licenses/fonts.txt">Font licenses</a></nav>
         <p>An independent project. GitKraken is a trademark of Axosoft, LLC.</p>
       </div></div>
     </footer>

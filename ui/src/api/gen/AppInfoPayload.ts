@@ -11,7 +11,7 @@ appVersion: string,
  */
 build: string | null, gitVersion: string, 
 /**
- * How this GitNex was installed: what the update dialog offers.
+ * How this GitNexia was installed: what the update dialog offers.
  */
 installKind: InstallKind, 
 /**

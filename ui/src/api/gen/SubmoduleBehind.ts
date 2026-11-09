@@ -2,7 +2,7 @@
 
 /**
  * A submodule side taken (review M-b) while the submodule is checked out at another commit: a
- * stage-all would stage that commit back. The UI warns; GitNex never moves the submodule.
+ * stage-all would stage that commit back. The UI warns; GitNexia never moves the submodule.
  */
 export type SubmoduleBehind = { path: string, 
 /**

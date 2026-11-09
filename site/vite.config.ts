@@ -16,7 +16,7 @@ const here = (p: string) => fileURLToPath(new URL(p, import.meta.url));
 // The website (spec §6): one static page, relative URLs (served under any path), no asset inlined
 // as a data: URI (the CSP allows none), and dist/demo/ left to the demo's own build. The page's
 // generated parts come from README.md, data/release.json and shots/ (build/page.ts), and its link
-// previews' absolute URLs from GITNEX_SITE_ORIGIN and GITNEX_SITE_BASE (build/social.ts).
+// previews' absolute URLs from GITNEXIA_SITE_ORIGIN and GITNEXIA_SITE_BASE (build/social.ts).
 export default defineConfig({
   base: './',
   plugins: [
@@ -26,7 +26,7 @@ export default defineConfig({
       readme: readmeMarker(here('../README.md'), here('shots')),
       release: releaseMarker(here('data/release.json')),
       hero: heroMarker(here('shots')),
-      social: socialMarker(process.env.GITNEX_SITE_ORIGIN, process.env.GITNEX_SITE_BASE),
+      social: socialMarker(process.env.GITNEXIA_SITE_ORIGIN, process.env.GITNEXIA_SITE_BASE),
     }),
     fonts(here('.'), here('../about.toml')),
     sitePolicy(),

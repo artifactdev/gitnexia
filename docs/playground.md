@@ -1,15 +1,15 @@
 # Playground and showcase repositories
 
-`just playground` builds ten throwaway repositories for trying GitNex, in `~/gitnex-playground`
-(or the folder you pass: `just playground DIR`). Add that folder in GitNex ("Add a folder") and
+`just playground` builds ten throwaway repositories for trying GitNexia, in `~/gitnexia-playground`
+(or the folder you pass: `just playground DIR`). Add that folder in GitNexia ("Add a folder") and
 every repo in it is listed. Each repo is a direct child of the folder; the bare remotes live in
 `.remotes/`, linked worktrees in `.worktrees/`, both hidden from the folder scan. Re-running the
-recipe resets the folder, but only if it is empty or carries the `.gitnex-playground` marker.
+recipe resets the folder, but only if it is empty or carries the `.gitnexia-playground` marker.
 
 ## What it builds
 
 - **orbital**: a 2D space-trading game in Rust, over a thousand commits by six people over two years.
-  Every file type GitNex previews is in its history: sprites, the HUD font, sounds, the design
+  Every file type GitNexia previews is in its history: sprites, the HUD font, sounds, the design
   PDF, the press kit, tables and a save file. One branch (`balance/fuel-rework`) that conflicts with
   `main`, an interactive-rebase candidate stacked on a second branch, branches ahead, behind and diverged from origin, two stashes and staged and unstaged
   changes on `main`, and a linked worktree on `release/1.2` with changes of its own. A teammate's push is not fetched yet: `git -C .remotes/orbital-origin.git
@@ -41,14 +41,14 @@ recipe resets the folder, but only if it is empty or carries the `.gitnex-playgr
   shows both. `libs/shaders` is recorded but not initialised. The palette (Ctrl+P) has the
   Submodules actions.
 - **lfs**: the title art through Git LFS, with no git-lfs needed to build it. Its two versions
-  diff as images; `art/ships.psd` was never downloaded (Download needs git-lfs). Initialising it clones from a local folder, which git refuses unless `protocol.file.allow` is `always` in your global config (git 2.38.1 and later); GitNex runs git as a terminal would, so the same applies.
+  diff as images; `art/ships.psd` was never downloaded (Download needs git-lfs). Initialising it clones from a local folder, which git refuses unless `protocol.file.allow` is `always` in your global config (git 2.38.1 and later); GitNexia runs git as a terminal would, so the same applies.
 
 ## Showcase or fixture
 
-`gitnex-harness showcase <name> <dir>` builds one of the ten above on its own. `<dir>` must be
+`gitnexia-harness showcase <name> <dir>` builds one of the ten above on its own. `<dir>` must be
 empty, missing, or a folder a previous run made. The names match the core's test fixtures, but
 the content does not: the test fixtures back the Rust and e2e tests and must keep their exact
-contents. `gitnex-harness fixture <name> <dir>` builds the test fixture for `basic`, `sync`,
+contents. `gitnexia-harness fixture <name> <dir>` builds the test fixture for `basic`, `sync`,
 `conflicts`, `stack`, `wip_staging` and `rebase_lab`. For `orbital`, `previews`, `submodules` and
 `lfs` it builds the showcase content, so `fixture` accepts every showcase name.
 
@@ -71,10 +71,10 @@ worktree paths to match.
 
 ## How Orbital is made
 
-Everything is generated from `orbital::SEED` (`crates/gitnex-harness/src/orbital/mod.rs`), so a
+Everything is generated from `orbital::SEED` (`crates/gitnexia-harness/src/orbital/mod.rs`), so a
 build gives the same commit ids on the same platform.
 
-- **Corpus** (`crates/gitnex-harness/src/orbital/corpus/`): the text of the game. Rust items,
+- **Corpus** (`crates/gitnexia-harness/src/orbital/corpus/`): the text of the game. Rust items,
   shaders, docs, tables and devlog entries, each block versioned and tagged with the feature that
   introduces it. The file format is described at the top of `orbital/corpus.rs`.
 - **Story** (`orbital/story.rs`): turns the corpus and `corpus/features.txt` into steps. Each
@@ -89,14 +89,14 @@ build gives the same commit ids on the same platform.
   (`orbital/forge.rs`).
 
 The art is drawn by the harness's own code (`orbital/art.rs`, `scenes.rs`, `glyphs.rs`,
-`design_doc.rs`, `data.rs`), not taken from anywhere. `gitnex-harness media preview <dir>` writes
+`design_doc.rs`, `data.rs`), not taken from anywhere. `gitnexia-harness media preview <dir>` writes
 every sprite scaled up to `<dir>`, with a `contact.png` sheet and an `index.html` to open.
 
 ## Encoded media
 
 Four files are encoded with ffmpeg, once, from frames and samples the harness makes:
 `trailer-v1.webm`, `trailer-v2.webm`, `menu-loop.ogg` and `docking-chime.opus`, in
-`crates/gitnex-harness/src/fixture_data/`. They're committed, so building never needs ffmpeg.
+`crates/gitnexia-harness/src/fixture_data/`. They're committed, so building never needs ffmpeg.
 `scripts/gen-fixture-media.sh HARNESS` re-encodes them; run it only to change them.
 
 ## Website data

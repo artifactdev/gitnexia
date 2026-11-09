@@ -144,7 +144,7 @@ describe('the editable working copy (spec #2 §7.5)', () => {
     expect(go).toHaveBeenCalledTimes(2);
   });
 
-  it('before GitNex goes (close, Restart): unsaved edits ask; Cancel keeps it, Discard edits lets it go', async () => {
+  it('before GitNexia goes (close, Restart): unsaved edits ask; Cancel keeps it, Discard edits lets it go', async () => {
     choose.mockResolvedValueOnce(null);
     expect(await confirmDiscardUnsaved()).toBe(false);
     expect(choose).toHaveBeenCalledWith(expect.objectContaining({ title: 'Discard unsaved changes?' }));

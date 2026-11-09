@@ -3,7 +3,7 @@ import type { PausedKind } from "./PausedKind";
 
 export type PausedInfo = { entry: number, kind: PausedKind, label: string, target: string, 
 /**
- * UX N fix round 1: GitNex's interactive rebase (the pause carries its session): its Abort
+ * UX N fix round 1: GitNexia's interactive rebase (the pause carries its session): its Abort
  * keeps the work done at the stop.
  */
 irebase: boolean, };

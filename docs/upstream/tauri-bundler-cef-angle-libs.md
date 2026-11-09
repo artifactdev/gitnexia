@@ -1,6 +1,6 @@
 # Upstream report draft: tauri-bundler can't bundle a .deb or .rpm with CEF 154
 
-Not filed; filing is the user's call. GitNex works around it with `scripts/cef-bundler-dist.sh`
+Not filed; filing is the user's call. GitNexia works around it with `scripts/cef-bundler-dist.sh`
 (`just package`).
 
 ---
@@ -19,7 +19,7 @@ copies them unconditionally (`src/bundle/linux/debian.rs`, the `cef_files` list,
 list in `rpm.rs` and `appimage/sharun_cef.rs`), so `cargo tauri build --bundles deb` fails after
 the build with:
 
-    Bundling GitNex_…_amd64.deb (…)
+    Bundling GitNexia_…_amd64.deb (…)
        Error failed to bundle project: `No such file or directory (os error 2)`
 
 ### Expected

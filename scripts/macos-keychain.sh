@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # Usage: scripts/macos-keychain.sh import|delete   (the macOS jobs of release.yml and mac-port.yml)
 #
-# import: GitNex's self-signed code-signing certificate and its key, from MACOS_CERTIFICATE_P12
+# import: GitNexia's self-signed code-signing certificate and its key, from MACOS_CERTIFICATE_P12
 # (the .p12, base64) and MACOS_CERTIFICATE_PASSWORD, into a throwaway keychain in $RUNNER_TEMP:
 # unlocked for the whole build, in the search list, its key usable by codesign without a prompt.
-# Then a test signature, and GITNEX_MACOS_SIGNING_IDENTITY (the certificate's SHA-1, which
+# Then a test signature, and GITNEXIA_MACOS_SIGNING_IDENTITY (the certificate's SHA-1, which
 # scripts/package-macos.sh signs with) into $GITHUB_ENV. Without the secrets (a fork's run) it
-# does nothing and the app is ad-hoc signed, unless GITNEX_MACOS_SIGNING_REQUIRED is `true`.
+# does nothing and the app is ad-hoc signed, unless GITNEXIA_MACOS_SIGNING_REQUIRED is `true`.
 # delete: deletes that keychain (run it with `if: always()`).
 #
 # The certificate isn't trusted on the runner and needn't be: codesign signs with it by its hash,
@@ -16,12 +16,12 @@
 set -euo pipefail
 fail() { echo "macos-keychain: $*" >&2; exit 1; }
 [ "$(uname -s)" = Darwin ] || fail "runs on macOS only"
-keychain=${RUNNER_TEMP:-${TMPDIR:-/tmp}}/gitnex-signing.keychain-db
+keychain=${RUNNER_TEMP:-${TMPDIR:-/tmp}}/gitnexia-signing.keychain-db
 
 case ${1:-} in
   import)
     if [ -z "${MACOS_CERTIFICATE_P12:-}" ] || [ -z "${MACOS_CERTIFICATE_PASSWORD:-}" ]; then
-      [ "${GITNEX_MACOS_SIGNING_REQUIRED:-}" != true ] || fail "no MACOS_CERTIFICATE_P12 or MACOS_CERTIFICATE_PASSWORD secret"
+      [ "${GITNEXIA_MACOS_SIGNING_REQUIRED:-}" != true ] || fail "no MACOS_CERTIFICATE_P12 or MACOS_CERTIFICATE_PASSWORD secret"
       echo "macos-keychain: no signing certificate; the app will be ad-hoc signed"
       exit 0
     fi
@@ -56,9 +56,9 @@ case ${1:-} in
     codesign --force --sign "$hash" "$dir/probe" || fail "codesign can't sign with $hash"
     codesign --verify --strict "$dir/probe" || fail "a signature by $hash doesn't verify"
     if [ -n "${GITHUB_ENV:-}" ]; then
-      echo "GITNEX_MACOS_SIGNING_IDENTITY=$hash" >> "$GITHUB_ENV"
+      echo "GITNEXIA_MACOS_SIGNING_IDENTITY=$hash" >> "$GITHUB_ENV"
     else
-      echo "export GITNEX_MACOS_SIGNING_IDENTITY=$hash"
+      echo "export GITNEXIA_MACOS_SIGNING_IDENTITY=$hash"
     fi
     ;;
   delete)

@@ -215,7 +215,7 @@ export function CommitBox({ inMerge: forced = false }: { inMerge?: boolean }) {
   const integrating = useIntegrating(repoId);
   const head = useWorktreeHead(ctx?.worktree ?? null);
   // --- 3C T13, UX L: an Edit stop (spec #3 §3.5) ---
-  // GitNex's own stop is "about to commit" (UX L, `editBase`): the commit's changes staged, its
+  // GitNexia's own stop is "about to commit" (UX L, `editBase`): the commit's changes staged, its
   // message the box's. The box commits normally (pieces, the rebase stays stopped), and Continue
   // under it commits what's staged with the box's message, then goes on.
   // git's own stop (no `editBase`) HEAD has left: the box commits normally, and Continue waits
@@ -488,7 +488,7 @@ function StillWorking({ repoId }: { repoId: number }) {
       <span>Still working…</span>
       {op && (
         <HoverTooltip content="Stop it: nothing is lost, and a rebase stays paused where it was">
-          <button type="button" className="commit-still-cancel" onClick={() => void api.cancelOp(op.op).catch((e: unknown) => console.warn('[gitnex] cancel', e))}>Cancel</button>
+          <button type="button" className="commit-still-cancel" onClick={() => void api.cancelOp(op.op).catch((e: unknown) => console.warn('[gitnexia] cancel', e))}>Cancel</button>
         </HoverTooltip>
       )}
     </div>

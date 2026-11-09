@@ -22,7 +22,7 @@
         "editChanged": false,
         "editConflict": false,
         "editStop": null,
-        "gitnex": true,
+        "gitnexia": true,
         "headName": "refs/heads/lab",
         "kind": "rebase",
         "message": "L4 Refine four\n\n# Conflicts:\n#\tnotes.txt\n",

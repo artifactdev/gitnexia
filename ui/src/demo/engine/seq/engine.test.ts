@@ -81,7 +81,7 @@ describe('the step runner', () => {
     const end = await linear(t, 'main', rows, { interactive: true });
     // Stop.conflicts lists the paths (git's `# Conflicts:` block); the message stays raw.
     expect(end).toMatchObject({ status: 'stopped', stop: { reason: 'conflict', at: rows[1], message: 'L2 Reword line two\n', conflicts: ['notes.txt'] }, files: 1 });
-    expect(readInProgress(t.memfs, t.repo.gitdir)).toMatchObject({ kind: 'rebase', stoppedAt: rows[1], conflicted: 1, step: 2, total: 6, gitnex: true });
+    expect(readInProgress(t.memfs, t.repo.gitdir)).toMatchObject({ kind: 'rebase', stoppedAt: rows[1], conflicted: 1, step: 2, total: 6, gitnexia: true });
     // Continue before resolving: the stop stands (the core reports it stopped again).
     expect(await inWrite(t, (cx) => continueSeq(cx, undefined, 'rebase'))).toMatchObject({ status: 'stopped', files: 1 });
     await t.write('notes.txt', 'one\ntwo, both\nthree\n');
@@ -345,9 +345,9 @@ describe('the step runner', () => {
     expect(r.branch).toBeNull();
     // The core's keep_edits: its plain message, HEAD's tree with only the new content, its banner.
     const stash = await readCommit(t.repo, r.stash!);
-    expect(stash.summary).toBe('GitNex: work from the aborted rebase of lab');
+    expect(stash.summary).toBe('GitNexia: work from the aborted rebase of lab');
     expect((await readCommit(t.repo, stash.parents[1])).summary).toBe('index on lab');
-    expect(ctx.writes.journal(t.dir).state(null).banners).toMatchObject([{ kind: 'abortedWork', stash: r.stash, stashMessage: 'GitNex: work from the aborted rebase of lab', label: 'abort the rebase of lab', target: null, canDrop: false }]);
+    expect(ctx.writes.journal(t.dir).state(null).banners).toMatchObject([{ kind: 'abortedWork', stash: r.stash, stashMessage: 'GitNexia: work from the aborted rebase of lab', label: 'abort the rebase of lab', target: null, canDrop: false }]);
     expect(await t.rev('lab')).toBe(before);
     expect(await headFile(t)).toBe('ref: refs/heads/lab\n');
     expect(await read(t, 'scratch.txt')).toBe('mine\n');

@@ -3,14 +3,14 @@
 #
 # The license files the packages ship that don't come from the UI build (the UI build writes
 # THIRD-PARTY-NOTICES-ui.txt itself, see ui/build/licenses.ts):
-#   THIRD-PARTY-NOTICES-rust.txt  every crate gitnex-app links, grouped by license (cargo-about,
+#   THIRD-PARTY-NOTICES-rust.txt  every crate gitnexia-app links, grouped by license (cargo-about,
 #                                 then scripts/notices.py); fails on a license about.toml doesn't
 #                                 accept, so a copyleft or unknown license stops the build
 #   CEF-LICENSE.txt               CEF's own license, from the CEF distribution the build uses
 #   CHROMIUM-CREDITS.html.gz         Chromium's credits for everything it bundles, from the same place
-#   LICENSE                       GitNex's license
+#   LICENSE                       GitNexia's license
 #   DICTIONARY-en-US-LICENSE.txt  the spell-check dictionary's source and license (SCOWL), a copy
-#                                 of crates/gitnex-app/dictionaries/en-US-LICENSE.txt
+#                                 of crates/gitnexia-app/dictionaries/en-US-LICENSE.txt
 # `just package` runs this before building, scripts/package-windows.ps1 in Git for Windows'
 # bash (the Windows graph and CEF build, with Python as $PYTHON), and scripts/package-macos.sh on
 # macOS (this Mac's architecture); docs/licensing.md describes the whole flow.
@@ -19,13 +19,13 @@
 # inputs (Cargo.lock, every Cargo.toml, about.toml, the CEF distribution, these scripts and the
 # license files copied) and haven't changed since; the key is in <out-dir>.key. A change to any of
 # them reruns cargo-about, so a dependency under a license about.toml refuses still fails the
-# build. GITNEX_REBUILD=1, and every run without the flag (`just licenses`), regenerates.
+# build. GITNEXIA_REBUILD=1, and every run without the flag (`just licenses`), regenerates.
 set -euo pipefail
 here=$(cd "$(dirname "$0")" && pwd)
 root=$(dirname "$here")
 if_changed=
 [ "${1:-}" = --if-changed ] && { if_changed=1; shift; }
-[ "${GITNEX_REBUILD:-}" = 1 ] && if_changed=
+[ "${GITNEXIA_REBUILD:-}" = 1 ] && if_changed=
 out=${1:-$root/target/licenses}
 outputs=(THIRD-PARTY-NOTICES-rust.txt CEF-LICENSE.txt CHROMIUM-CREDITS.html.gz LICENSE DICTIONARY-en-US-LICENSE.txt)
 fail() { echo "licenses: $*" >&2; exit 1; }
@@ -69,7 +69,7 @@ if [ -n "$if_changed" ]; then
       echo "target=${target[*]-} cef=$cef_dir $(cargo about --version)"
       (cd "$root" && find . -name Cargo.toml -not -path './target/*' -not -path '*/node_modules/*' -not -path './.claude/*' |
         LC_ALL=C sort | xargs sha256sum Cargo.lock about.toml scripts/licenses.sh scripts/notices.py LICENSE \
-          crates/gitnex-app/dictionaries/en-US-LICENSE.txt)
+          crates/gitnexia-app/dictionaries/en-US-LICENSE.txt)
       sha256sum "$cef_dir/CREDITS.html"
       ls -l "$cef_dir"/../*.tar.bz2 2>/dev/null || true # the archive notices.py reads LICENSE.txt from
     } | sha256sum | cut -d' ' -f1
@@ -77,7 +77,7 @@ if [ -n "$if_changed" ]; then
   outputs_key() { (cd "$out" && sha256sum "${outputs[@]}" 2>&1) | sha256sum | cut -d' ' -f1; }
   key="$(inputs_key) $(outputs_key)"
   if [ -f "$key_file" ] && [ "$(cat "$key_file")" = "$key" ]; then
-    echo "licenses: $out is up to date (same Cargo.lock, manifests, about.toml and CEF; GITNEX_REBUILD=1 regenerates)"
+    echo "licenses: $out is up to date (same Cargo.lock, manifests, about.toml and CEF; GITNEXIA_REBUILD=1 regenerates)"
     exit 0
   fi
 fi
@@ -85,14 +85,14 @@ rm -f "$key_file"
 
 # Rust. --locked: the notices describe exactly what Cargo.lock builds.
 cargo about generate --format json --locked --fail -c "$root/about.toml" ${target[@]+"${target[@]}"} \
-  -m "$root/crates/gitnex-app/Cargo.toml" -o "$out/about.json"
+  -m "$root/crates/gitnexia-app/Cargo.toml" -o "$out/about.json"
 "$python" "$here/notices.py" rust "$out/about.json" "$out/THIRD-PARTY-NOTICES-rust.txt"
 rm "$out/about.json"
 
 "$python" "$here/notices.py" cef "$cef_dir" "$out"
 
 cp "$root/LICENSE" "$out/LICENSE"
-cp "$root/crates/gitnex-app/dictionaries/en-US-LICENSE.txt" "$out/DICTIONARY-en-US-LICENSE.txt"
+cp "$root/crates/gitnexia-app/dictionaries/en-US-LICENSE.txt" "$out/DICTIONARY-en-US-LICENSE.txt"
 for f in "${outputs[@]}"; do
   [ -s "$out/$f" ] || fail "$out/$f is missing or empty"
 done

@@ -11,11 +11,11 @@ import { PerfOverlay } from './PerfOverlay';
  * overlay, and the context menu's row-run hook feeding the action log (R11). */
 const offs = [
   registerActions([
-    { id: 'help.debug', label: 'Debug…', group: 'Help', icon: Bug, tooltip: 'The git commands GitNex ran, the actions you ran, diagnostics and the perf overlay', run: () => openDebug('commands') },
+    { id: 'help.debug', label: 'Debug…', group: 'Help', icon: Bug, tooltip: 'The git commands GitNexia ran, the actions you ran, diagnostics and the perf overlay', run: () => openDebug('commands') },
   ]),
   registerAppSlot('overlay', 'debug.perfOverlay', PerfOverlay),
   setMenuRowRunner((id, label, run) => runMenuRow(id, label, run, (e) => {
-    console.warn(`[gitnex] menu row ${id} failed`, e);
+    console.warn(`[gitnexia] menu row ${id} failed`, e);
     toastActionError(e);
   })),
 ];

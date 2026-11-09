@@ -19,15 +19,15 @@ on:
       - ui/build/**
       - ui/scripts/check-site.mjs
       - ui/vite.config.ts
-      - crates/gitnex-graph/**
-      - crates/gitnex-graph-wasm/**
+      - crates/gitnexia-graph/**
+      - crates/gitnexia-graph-wasm/**
       - scripts/site-pages.sh
       - .github/workflows/site.yml
       - README.md
       - about.toml
       - justfile
       - ui/src/security/csp.ts
-      - crates/gitnex-app/tauri.conf.json
+      - crates/gitnexia-app/tauri.conf.json
   workflow_dispatch:
 
 permissions: {}
@@ -43,6 +43,9 @@ env:
   # Keep in step with release.yml and scripts/licenses.sh.
   CARGO_ABOUT_VERSION: 0.9.2
   CARGO_TERM_COLOR: always
+  # The Pages project site (docs/website.md: The domain). Also the defaults in site/build/social.ts.
+  GITNEXIA_SITE_ORIGIN: https://artifactdev.github.io
+  GITNEXIA_SITE_BASE: /gitnexia/
 
 defaults:
   run:
@@ -198,7 +201,7 @@ jobs:
             fi
           done < <(jq -r '.repos[] | "\(.file) \(.rev)"' "$work/manifest.json")
           code=$(curl -sS -o "$work/404.html" -w '%{http_code}' "${base}no-such-page-$GITHUB_RUN_ID/")
-          if [ "$code" != 404 ] || ! grep -q 'data-gitnex-404' "$work/404.html"; then
+          if [ "$code" != 404 ] || ! grep -q 'data-gitnexia-404' "$work/404.html"; then
             echo "::error::A missing page answers $code without the site's 404 page"
             exit 1
           fi

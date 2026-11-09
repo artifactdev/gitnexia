@@ -42,7 +42,7 @@ printf 'Apache License\n' > "$work/LICENSE"
 meta copyright "$work/LICENSE" "$work/x" 2>/dev/null && fail "accepted a license that isn't MIT"
 
 # The real files.
-meta metainfo "$root/crates/gitnex-app/linux/com.gitnex.desktop.metainfo.xml.in" "$root/CHANGELOG.md" "$work/m.xml"
+meta metainfo "$root/crates/gitnexia-app/linux/com.gitnexia.desktop.metainfo.xml.in" "$root/CHANGELOG.md" "$work/m.xml"
 meta copyright "$root/LICENSE" "$work/copyright"
 if command -v appstreamcli >/dev/null; then
   appstreamcli validate --pedantic --no-net "$work/m.xml" >/dev/null || { appstreamcli validate --pedantic --no-net "$work/m.xml"; fail "appstreamcli rejects the metainfo"; }
@@ -53,10 +53,10 @@ if python3 -c 'import debian.copyright' 2>/dev/null; then
   python3 - "$work/copyright" <<'EOF' || fail "the copyright file isn't valid DEP-5"
 import sys, debian.copyright as c
 cp = c.Copyright(open(sys.argv[1], encoding="utf-8"), strict=True)
-assert cp.header.upstream_name == "GitNex"
-assert cp.find_files_paragraph("usr/share/GitNex/gitnex").license.synopsis == "MIT"
-assert cp.find_files_paragraph("usr/share/GitNex/libcef.so").license.synopsis == "BSD-3-Clause"
-assert cp.find_files_paragraph("usr/share/GitNex/dictionaries/en-US-10-2.bdic").license.synopsis == "SCOWL"
+assert cp.header.upstream_name == "GitNexia"
+assert cp.find_files_paragraph("usr/share/GitNexia/gitnexia").license.synopsis == "MIT"
+assert cp.find_files_paragraph("usr/share/GitNexia/libcef.so").license.synopsis == "BSD-3-Clause"
+assert cp.find_files_paragraph("usr/share/GitNexia/dictionaries/en-US-10-2.bdic").license.synopsis == "SCOWL"
 assert {p.license.synopsis for p in cp.all_license_paragraphs()} == {"MIT", "BSD-3-Clause", "SCOWL"}
 EOF
 else

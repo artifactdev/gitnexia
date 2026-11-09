@@ -6,26 +6,26 @@ import { THEMES } from './themes';
 
 const lanes = THEMES.nord.graph.map((c, i) => (i === 0 ? '#123456' : c));
 const mine: CustomTheme = { id: 'custom-0a1b2c3d', name: 'Nord (Custom)', base: 'nord', colors: { 'app-bg0': '#202020', blue: 'rgba(1, 2, 3, 0.5)' }, graph: lanes };
-const json = (body: Record<string, unknown>) => JSON.stringify({ gitnex: 'theme', version: 1, name: 'Shared', base: 'nord', ...body });
+const json = (body: Record<string, unknown>) => JSON.stringify({ gitnexia: 'theme', version: 1, name: 'Shared', base: 'nord', ...body });
 const fresh = () => 'custom-00000009';
 
 describe('theme JSON', () => {
   it('round-trips a custom theme: a new id, a free name, the same colours and lanes', () => {
     const text = themeToJson(customThemeDef(mine), mine);
-    expect(JSON.parse(text)).toEqual({ gitnex: 'theme', version: 1, name: 'Nord (Custom)', base: 'nord', colors: mine.colors, graph: lanes });
+    expect(JSON.parse(text)).toEqual({ gitnexia: 'theme', version: 1, name: 'Nord (Custom)', base: 'nord', colors: mine.colors, graph: lanes });
     const back = themeFromJson(text, [mine], fresh)!;
     expect(back).toEqual({ ...mine, id: 'custom-00000009', name: 'Nord (Custom) (2)' });
     expect(customThemeDef(back).colors).toEqual(customThemeDef(mine).colors);
   });
 
   it('writes a built-in as itself with nothing set', () => {
-    expect(JSON.parse(themeToJson(THEMES.light))).toEqual({ gitnex: 'theme', version: 1, name: 'Light', base: 'light', colors: {}, graph: [] });
+    expect(JSON.parse(themeToJson(THEMES.light))).toEqual({ gitnexia: 'theme', version: 1, name: 'Light', base: 'light', colors: {}, graph: [] });
     expect(themeFromJson(themeToJson(THEMES.light), [], fresh)).toEqual({ id: 'custom-00000009', name: 'Light', base: 'light', colors: {}, graph: [] });
   });
 
   it("refuses what isn't a theme", () => {
-    expect(themeFromJson('{"gitnex":"branch-preset","version":1,"name":"x"}', [])).toBeNull();
-    expect(themeFromJson(JSON.stringify({ gitnex: 'theme', version: 2, name: 'x', base: 'nord' }), [])).toBeNull();
+    expect(themeFromJson('{"gitnexia":"branch-preset","version":1,"name":"x"}', [])).toBeNull();
+    expect(themeFromJson(JSON.stringify({ gitnexia: 'theme', version: 2, name: 'x', base: 'nord' }), [])).toBeNull();
     expect(themeFromJson('not json', [])).toBeNull();
     expect(themeFromJson('[1, 2]', [])).toBeNull();
     expect(themeFromJson(json({ name: '   ' }), [])).toBeNull();

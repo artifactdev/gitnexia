@@ -6,11 +6,11 @@ vi.mock('../api/client', () => ({ api: { appInfo } }));
 import { GitTooOldScreen } from './GitTooOldScreen';
 import { useGitCheck } from './gitCheck';
 
-const tooOld = { kind: 'GitTooOld', message: 'git 2.25.1 is too old; GitNex needs 2.40 or newer', commandId: 1, stderr: null } as const;
+const tooOld = { kind: 'GitTooOld', message: 'git 2.25.1 is too old; GitNexia needs 2.40 or newer', commandId: 1, stderr: null } as const;
 
 it('explains the minimum and offers Retry', () => {
   render(<GitTooOldScreen error={tooOld} />);
-  expect(screen.getByRole('alertdialog').textContent).toContain('GitNex needs git 2.40 or newer');
+  expect(screen.getByRole('alertdialog').textContent).toContain('GitNexia needs git 2.40 or newer');
   expect(screen.getByRole('button', { name: 'Retry' })).toBeTruthy();
 });
 

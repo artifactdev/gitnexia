@@ -5,14 +5,14 @@ import { fixtures, git, openUrl } from './fixtures';
 
 /**
  * The syntax highlighting probe: not part of the suite (it measures rather than asserts).
- * GITNEX_PERF=1 runs it; it prints one JSON line per measurement. An 8,000-line TypeScript file
+ * GITNEXIA_PERF=1 runs it; it prints one JSON line per measurement. An 8,000-line TypeScript file
  * whose only change is near the bottom, so its diff opens scrolled there. Measures, from the click
  * that opens the diff: the time until its lines show, until every visible line with a `const` shows
  * it coloured, and the UI thread's busy time (CDP `TaskDuration`) until then and over the 3 s after
  * the click. Then the same on a reopen of that diff, and on another file once the grammar is warm.
  * The same text as a .txt (no highlighting) is the floor: the diff, layout and paint alone.
  */
-test.skip(!process.env.GITNEX_PERF, 'the highlighting perf probe runs with GITNEX_PERF=1');
+test.skip(!process.env.GITNEXIA_PERF, 'the highlighting perf probe runs with GITNEXIA_PERF=1');
 test.setTimeout(120_000);
 
 /** ~8,000 lines of varied TypeScript: classes, interfaces, comments, template literals, regexes. */

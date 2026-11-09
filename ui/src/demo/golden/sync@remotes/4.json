@@ -6,7 +6,7 @@
           "id": 3,
           "kind": "pull",
           "label": "pull diverged",
-          "op": 3
+          "op": 5
         }
       ],
       "repo": 1,
@@ -21,7 +21,7 @@
         "id": 3,
         "kind": "pull",
         "label": "pull diverged",
-        "op": 3
+        "op": 5
       },
       "stopped": null,
       "type": "queueChanged"
@@ -30,7 +30,7 @@
       "interactive": true,
       "kind": "pull",
       "label": "pull diverged",
-      "op": 3,
+      "op": 5,
       "repo": 1,
       "type": "opStarted"
     },
@@ -59,7 +59,7 @@
       "command": null,
       "kind": "pull",
       "message": null,
-      "op": 3,
+      "op": 5,
       "outcome": "ok",
       "repo": 1,
       "type": "opFinished"
@@ -96,7 +96,7 @@
     },
     "outcome": {
       "branch": "diverged",
-      "op": 3,
+      "op": 5,
       "result": {
         "ahead": 1,
         "behind": 1,

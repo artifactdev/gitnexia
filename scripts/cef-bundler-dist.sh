@@ -4,7 +4,7 @@
 # tauri-bundler 3.0.0-alpha.4 (tauri-cli 3.0.0-alpha.5) copies libEGL.so and libGLESv2.so from the
 # CEF distribution into the .deb and fails ("No such file or directory") when they're missing.
 # CEF 154 doesn't ship them any more: ANGLE is linked into libcef.so, and the two libraries only
-# served `--use-dynamic-angle` (Chromium's ui/ozone/common/egl_util.cc), which GitNex never passes.
+# served `--use-dynamic-angle` (Chromium's ui/ozone/common/egl_util.cc), which GitNexia never passes.
 # For such a distribution this makes <dir>/<version>/cef_linux_x86_64: links to the real
 # distribution's files, plus two empty shared objects under those names for the bundler to copy.
 # The package then carries them; with them or without, --use-dynamic-angle finds no ANGLE, so the

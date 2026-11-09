@@ -4,7 +4,7 @@
     "params": {
       "path": "mixed.txt",
       "repo": "$repo",
-      "rev": "810fba25c47748a55f9bf2ae704a536fdf3decbc",
+      "rev": "6f6d981728c8fe969befa44e70d90112d8ced3d7",
       "worktree": "$wt"
     }
   },
@@ -14,7 +14,7 @@
         "author": "Ada Lovelace",
         "boundary": true,
         "email": "ada@example.com",
-        "sha": "f7f3e660e938bd28c89489fb84880788efeb1536",
+        "sha": "83406789f1d3b56d4a65ab24a4179c77ae47e8f5",
         "summary": "Add long file",
         "time": 1767225720
       },
@@ -22,7 +22,7 @@
         "author": "Grace Hopper",
         "boundary": false,
         "email": "grace@example.com",
-        "sha": "810fba25c47748a55f9bf2ae704a536fdf3decbc",
+        "sha": "6f6d981728c8fe969befa44e70d90112d8ced3d7",
         "summary": "Edit far down",
         "time": 1767225900
       }
@@ -30,52 +30,52 @@
     "hunks": [
       {
         "lines": 49,
-        "sha": "f7f3e660e938bd28c89489fb84880788efeb1536",
+        "sha": "83406789f1d3b56d4a65ab24a4179c77ae47e8f5",
         "start": 1
       },
       {
         "lines": 67,
-        "sha": "f7f3e660e938bd28c89489fb84880788efeb1536",
+        "sha": "83406789f1d3b56d4a65ab24a4179c77ae47e8f5",
         "start": 50
       },
       {
         "lines": 8,
-        "sha": "810fba25c47748a55f9bf2ae704a536fdf3decbc",
+        "sha": "6f6d981728c8fe969befa44e70d90112d8ced3d7",
         "start": 117
       },
       {
         "lines": 7,
-        "sha": "f7f3e660e938bd28c89489fb84880788efeb1536",
+        "sha": "83406789f1d3b56d4a65ab24a4179c77ae47e8f5",
         "start": 125
       },
       {
         "lines": 1,
-        "sha": "810fba25c47748a55f9bf2ae704a536fdf3decbc",
+        "sha": "6f6d981728c8fe969befa44e70d90112d8ced3d7",
         "start": 132
       },
       {
         "lines": 14,
-        "sha": "f7f3e660e938bd28c89489fb84880788efeb1536",
+        "sha": "83406789f1d3b56d4a65ab24a4179c77ae47e8f5",
         "start": 133
       },
       {
         "lines": 4,
-        "sha": "810fba25c47748a55f9bf2ae704a536fdf3decbc",
+        "sha": "6f6d981728c8fe969befa44e70d90112d8ced3d7",
         "start": 147
       },
       {
         "lines": 21,
-        "sha": "f7f3e660e938bd28c89489fb84880788efeb1536",
+        "sha": "83406789f1d3b56d4a65ab24a4179c77ae47e8f5",
         "start": 151
       },
       {
         "lines": 1,
-        "sha": "810fba25c47748a55f9bf2ae704a536fdf3decbc",
+        "sha": "6f6d981728c8fe969befa44e70d90112d8ced3d7",
         "start": 172
       },
       {
         "lines": 25,
-        "sha": "f7f3e660e938bd28c89489fb84880788efeb1536",
+        "sha": "83406789f1d3b56d4a65ab24a4179c77ae47e8f5",
         "start": 173
       }
     ]

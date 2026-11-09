@@ -11,7 +11,7 @@ export type UpdateRelease = {
  */
 version: string, 
 /**
- * The release's title (`GitNex 0.3.0`).
+ * The release's title (`GitNexia 0.3.0`).
  */
 name: string, 
 /**

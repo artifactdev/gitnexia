@@ -55,7 +55,7 @@ export function titleBarMouse(ops: WindowOps = windowOps) {
         void runTitleBarAction(action, ops);
         return;
       }
-      // The window manager's own menu; GitNex's where it has none.
+      // The window manager's own menu; GitNexia's where it has none.
       const at = { clientX: e.clientX, clientY: e.clientY, timeStamp: e.timeStamp, preventDefault() {}, stopPropagation() {} };
       void ops.windowManager('menu').then((shown) => {
         if (!shown) openContextMenu(at, () => fallbackWindowMenu(useWindowChrome.getState().maximized, ops));
@@ -115,7 +115,7 @@ export function WindowButtons({ buttons, maximized, platform }: { buttons: Windo
           onMouseDown={drag.onMouseDown}
           onClick={(e) => {
             if (drag.guardClick(e)) return;
-            void run[b]().catch((err: unknown) => console.warn(`[gitnex] window ${b} failed`, err));
+            void run[b]().catch((err: unknown) => console.warn(`[gitnexia] window ${b} failed`, err));
           }}
         >
           <ButtonIcon button={b} maximized={maximized} platform={platform} />
@@ -126,7 +126,7 @@ export function WindowButtons({ buttons, maximized, platform }: { buttons: Windo
 }
 
 /**
- * GitNex's own title bar (Linux, Windows and macOS, unless Settings › Appearance says to use the
+ * GitNexia's own title bar (Linux, Windows and macOS, unless Settings › Appearance says to use the
  * system's): ☰ at its start, after any window buttons the desktop puts on the left; the window's
  * title in the middle; the window buttons at the end, as GNOME's `button-layout` has them
  * (Windows' three, flat, on the right). On macOS, Apple's traffic lights come first (the window

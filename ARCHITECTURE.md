@@ -1,21 +1,21 @@
 # Architecture
 
-This is a map of how GitNex is put together, for anyone about to change it. It describes what
+This is a map of how GitNexia is put together, for anyone about to change it. It describes what
 the code does today; when the two disagree, the code wins, and this file should be fixed.
 
-GitNex is a desktop app for Linux and Windows: a Rust backend that does all the git work, a
+GitNexia is a desktop app for Linux and Windows: a Rust backend that does all the git work, a
 React UI that draws it, and Tauri 3 on its Chromium (CEF) runtime holding the two together.
 
 ```
-┌──────────────────────── gitnex (one process tree) ────────────────────────┐
+┌──────────────────────── gitnexia (one process tree) ────────────────────────┐
 │                                                                            │
 │  ui/  React 19 + TypeScript, in Chromium (CEF)                             │
 │    invoke('api', {req})  ──►              ◄── 'gb:event' (AppEvent)        │
 │  ──────────────────────────────────────────────────────────────────────    │
-│  gitnex-app   Tauri 3 shell: window, CEF runtime, wiring                  │
-│  gitnex-core  Api::dispatch(Request) · event bus · reads · write pipeline │
+│  gitnexia-app   Tauri 3 shell: window, CEF runtime, wiring                  │
+│  gitnexia-core  Api::dispatch(Request) · event bus · reads · write pipeline │
 │                watcher · graph layout · settings · journal · askpass       │
-│  gitnex-forge GitHub / GitLab / Forgejo providers · HTTP · token store    │
+│  gitnexia-forge GitHub / GitLab / Forgejo providers · HTTP · token store    │
 │                                                                            │
 └──────┬───────────────────────┬─────────────────────────┬───────────────────┘
        │ gix (in-process)      │ git CLI (child process) │ HTTPS
@@ -27,7 +27,7 @@ React UI that draws it, and Tauri 3 on its Chromium (CEF) runtime holding the tw
 
 The Cargo workspace has seven crates under `crates/`; the UI is a separate npm project in `ui/`.
 
-**`gitnex-core`** owns everything a git client does, with no Tauri dependency. Its entry point is
+**`gitnexia-core`** owns everything a git client does, with no Tauri dependency. Its entry point is
 `Api` (`src/api.rs`): one `Request` enum of every method the UI can call, and one `dispatch`
 function that answers it. Around that: repository reads (`walk.rs`, `snapshot.rs`, `details.rs`,
 `diff.rs`, `history.rs`, …), the graph layout (`graph/`), the write pipeline (`write/`) and its
@@ -36,18 +36,18 @@ profiles (`settings.rs`), askpass (`askpass.rs`), log files (`logging.rs`), and 
 contract (`forge/`: the normalized types the UI sees, the `ForgeProvider` trait, the hub that holds
 accounts, the cache). Core never speaks HTTP; it defines traits that the other crates implement.
 
-**`gitnex-forge`** implements that contract for real forges: `github.rs` (GitHub REST, and GraphQL where REST lacks it),
+**`gitnexia-forge`** implements that contract for real forges: `github.rs` (GitHub REST, and GraphQL where REST lacks it),
 `gitlab.rs` (GitLab REST v4), `forgejo.rs` (Forgejo's API v1, Gitea's),
 `bitbucket.rs` (Bitbucket Data Center / Server REST), one HTTP client per account (`http.rs`), the token store
 (`tokens.rs`), avatar and Markdown-image fetching, and Gravatar (`gravatar.rs`). It depends on core,
 never the other way round.
 
-**`gitnex-ai`** implements the AI commit-message contract: OpenAI-compatible `/v1/models` and
+**`gitnexia-ai`** implements the AI commit-message contract: OpenAI-compatible `/v1/models` and
 `/v1/chat/completions` over `ureq`, local command-line tools as argv (no shell), and detection of
 common local servers and CLIs. Core keeps the settings and the prompt; the endpoint token is in
 the same keyring/file store as the forge tokens, and only leaves in the `Authorization` header.
 
-**`gitnex-app`** is the desktop binary (`gitnex`). Its code is a library (`src/lib.rs`, whose
+**`gitnexia-app`** is the desktop binary (`gitnexia`). Its code is a library (`src/lib.rs`, whose
 `run` is the binary's `main` and, on Windows, the DLL entry point CEF's sandbox bootstrap calls). It
 builds the `Api` with the real
 implementations (system openers, the folder-picker portal, Gravatar, the forge connector, the AI
@@ -61,7 +61,7 @@ environment children get back; `window_state.rs` restores the window's size and 
 decorations, and the UI draws its own 30 px title bar above the tab bar (`ui/src/chrome/`): ☰, the
 window's title, and the window buttons as GNOME's `button-layout` has them, with resize handles
 along the window's edges. `chrome.rs` decides the frame (Settings › Appearance › Title bar › System
-keeps the system's, from the next start; Restart GitNex there relaunches through the update
+keeps the system's, from the next start; Restart GitNexia there relaunches through the update
 runner's `relaunch`), reads GNOME's
 `org.gnome.desktop.wm.preferences` (the button layout and what a double, middle and right click on a
 title bar do; the defaults off GNOME) and hands it to the page in an initialization script, so the
@@ -70,7 +70,7 @@ A drag of the title bar's or the tab strip's empty space, a resize edge, maximis
 through Tauri's window API; the runtime makes the moves and resizes EWMH `_NET_WM_MOVERESIZE`
 requests, so the window manager moves the window (edge tiling and snapping included), and
 `window_manager` shows its window menu (`_GTK_SHOW_WINDOW_MENU`) or lowers the window
-(`GITNEX-PATCH.md`). Without a window (the harness's browser, the website demo) there's no title
+(`GITNEXIA-PATCH.md`). Without a window (the harness's browser, the website demo) there's no title
 bar and ☰ stays in the tab bar. An X11 session keeps the system frame (`systemOnly`, so the
 setting shows System, fixed): there the window manager needs the X pointer grab, which
 Chromium's connection holds while the button is down.
@@ -82,11 +82,11 @@ its own; full screen hides the lights, and the slot goes. A double click does wh
 Settings says (`AppleActionOnDoubleClick`, read again whenever the window comes to the front). The
 runtime starts a title bar drag from a press of its own at the pointer and keeps the overlay
 window immovable otherwise, and it sends a resize when a full screen transition ends, so the page
-sees full screen end (`GITNEX-PATCH.md`). `ui/scripts/mac-titlebar.mjs` checks it all with real
+sees full screen end (`GITNEXIA-PATCH.md`). `ui/scripts/mac-titlebar.mjs` checks it all with real
 input on the `mac-port.yml` runner.
 
 **Compact mode** (Settings › Appearance › Title bar › Combined, `compact_title_bar`, read when the
-window is built like `system_title_bar`, and only under GitNex's own title bar) is the
+window is built like `system_title_bar`, and only under GitNexia's own title bar) is the
 same on every platform: there's no title bar row, the tab bar is the title bar (`TabBar`,
 `useCompactTitleBar`). It holds macOS's traffic lights' slot or the window buttons as the
 desktop lays them out, ☰, the tab strip, then a fixed empty space that always moves the window
@@ -102,16 +102,16 @@ only. Drags and resizes go through winit's `drag_window` and `drag_resize_window
 Windows' own move and size loops (Aero Snap included), and `window_manager` shows the system menu
 at the pointer, or at the window's corner for Alt+Space (a shortcut of the page's, since the keys
 go to the browser). Snap layouts (the flyout over □) aren't there: the browser's window gets the
-hit test, not the top-level one (`GITNEX-PATCH.md`). `ui/scripts/win-titlebar.ps1` checks it with
+hit test, not the top-level one (`GITNEXIA-PATCH.md`). `ui/scripts/win-titlebar.ps1` checks it with
 real input on the `windows-titlebar.yml` runners (Windows 11's and Windows 10's shells).
 
-**`gitnex-harness`** serves the same `Api` over a WebSocket so the UI can run in a plain browser
+**`gitnexia-harness`** serves the same `Api` over a WebSocket so the UI can run in a plain browser
 with no Tauri, and adds a fake GitHub/GitLab/Forgejo, fixture repositories and test-only routes. It's what
 the Playwright suite drives; see [Testing](#testing).
 
-**`gitnex-graph`** is the graph's pure pipeline: the walk's order, the pinned trunk, the WIP rows,
+**`gitnexia-graph`** is the graph's pure pipeline: the walk's order, the pinned trunk, the WIP rows,
 the lane layout and the labels, from plain data (`GraphInput`) to `GraphPayload`, with no gix and no
-I/O. Core reads the repository with gix and calls it (`snapshot.rs`); **`gitnex-graph-wasm`**
+I/O. Core reads the repository with gix and calls it (`snapshot.rs`); **`gitnexia-graph-wasm`**
 compiles it to WebAssembly (`just demo-wasm`) for the website demo, whose in-browser backend
 (`ui/src/demo/`: `DemoTransport` over isomorphic-git) answers the UI's requests from repository
 bundles. Its writes run on the same in-memory repositories: a sequencer for rebases, cherry-picks
@@ -137,25 +137,25 @@ other's files. Per-tab view state (selection, open diff, caches) lives in a stor
 (`app/tabStores.ts`). Monaco, Shiki and Mermaid load lazily; `ui/scripts/check-entry-chunk.mjs`
 fails the build if Monaco or Shiki reach the startup bundle.
 
-`vendor/tauri-runtime-cef/` is a patched copy of Tauri's CEF runtime; `GITNEX-PATCH.md` there says
+`vendor/tauri-runtime-cef/` is a patched copy of Tauri's CEF runtime; `GITNEXIA-PATCH.md` there says
 what changed and why. Why CEF and not WebKitGTK is in
 [docs/decisions/cef-over-webkitgtk.md](docs/decisions/cef-over-webkitgtk.md).
 
 ## The process model
 
-GitNex runs as one Chromium process tree. CEF starts its renderer, GPU and utility helpers by
-re-running the same `gitnex` binary with a `--type=` argument; the entry point sends those off to
+GitNexia runs as one Chromium process tree. CEF starts its renderer, GPU and utility helpers by
+re-running the same `gitnexia` binary with a `--type=` argument; the entry point sends those off to
 CEF before any app code runs. On Linux the runtime uses `SandboxPolicy::Required`: without a usable
 sandbox the app refuses to start rather than run Chromium unsandboxed (see
 [docs/dev-setup.md](docs/dev-setup.md) for the setuid helper a dev build needs).
 
 Before any window, `main` also checks two other ways the binary can be started:
-- **As askpass.** Git and ssh run `gitnex` itself as their credential prompt (see
+- **As askpass.** Git and ssh run `gitnexia` itself as their credential prompt (see
   [Askpass](#askpass)). In that mode it asks the running app and exits.
-- **As a second launch.** One GitNex runs per config directory, guarded by a lock and a socket
-  (`$XDG_RUNTIME_DIR/gitnex-instance-<hash of the config dir>.{lock,sock}`). A second launch on
-  the same config dir hands its path (argv or `GITNEX_OPEN`) to the running one, which opens it in
-  a tab and comes to the front, and exits 0. `GITNEX_MULTI_INSTANCE=1` skips the guard (both
+- **As a second launch.** One GitNexia runs per config directory, guarded by a lock and a socket
+  (`$XDG_RUNTIME_DIR/gitnexia-instance-<hash of the config dir>.{lock,sock}`). A second launch on
+  the same config dir hands its path (argv or `GITNEXIA_OPEN`) to the running one, which opens it in
+  a tab and comes to the front, and exits 0. `GITNEXIA_MULTI_INSTANCE=1` skips the guard (both
   instances then write the same settings files; the last write wins).
 
 ### The request API
@@ -192,7 +192,7 @@ CLI, where git's own output is the reference: `git status --porcelain=v2`, chang
 Every git CLI run goes through one runner, `GitCli` (`git.rs`). It requires git 2.40 or newer,
 applies timeouts and cancellation, redacts secrets from what it records, and keeps the last 1000
 commands for Help → Debug. Git runs with the user's login-shell environment (captured once at
-startup, so `SSH_AUTH_SOCK` and `PATH` additions apply even when GitNex starts from a desktop
+startup, so `SSH_AUTH_SOCK` and `PATH` additions apply even when GitNexia starts from a desktop
 launcher). A profile's commit name/email and extra gitconfig are passed as one generated
 `-c include.path=…` (the extra file first, the profile's `user.*` last).
 
@@ -203,7 +203,7 @@ Every write runs the git CLI, never gix, and every write goes through one functi
 `GitInvocation::write` requires, so a read path can't build a write by accident. An API test
 (`WRITE_METHODS` in `api.rs`) checks that every method either is a declared write or never writes.
 
-Why the CLI: GitNex should behave exactly as `git` does in a terminal. Hooks (pre-commit,
+Why the CLI: GitNexia should behave exactly as `git` does in a terminal. Hooks (pre-commit,
 commit-msg, pre-push, …) run, every kind of config applies (includes, conditional includes,
 per-repo settings), commit signing works however it's configured, and credential helpers and ssh
 agents are used as usual.
@@ -262,9 +262,9 @@ that started on development rewinds that branch instead.
 
 ### Undo and redo
 
-The journal (`journal/`) records GitNex's own operations, one file per worktree in the data dir
+The journal (`journal/`) records GitNexia's own operations, one file per worktree in the data dir
 (`<data>/journal/<hash>.json`, mode 0600), never inside `.git`. It keeps the last 50 operations. An
-entry holds the ref moves (applied back with compare-and-swap, so a change made outside GitNex
+entry holds the ref moves (applied back with compare-and-swap, so a change made outside GitNexia
 isn't overwritten) and, where files were at risk, a snapshot: stash-shaped commits of the index,
 the worktree and the untracked files involved, built through a temporary index so the real one is
 never touched. No ref points at them, so git's default prune expiry (two weeks) keeps them, and
@@ -281,11 +281,11 @@ journaled.
 
 Git and ssh never prompt on a terminal. Network commands run with `GIT_TERMINAL_PROMPT=0`, stdin
 closed, and in their own session with no controlling terminal. `GIT_ASKPASS` and `SSH_ASKPASS`
-point at the `gitnex` binary itself (`SSH_ASKPASS_REQUIRE=force`, so ssh uses it with or without
+point at the `gitnexia` binary itself (`SSH_ASKPASS_REQUIRE=force`, so ssh uses it with or without
 `DISPLAY`; OpenSSH 8.4+).
 
 When git runs it, the binary connects to the app's per-session Unix socket
-(`$XDG_RUNTIME_DIR/gitnex-askpass-<pid>-<rand>.sock`, mode 0600, removed on exit), sends the
+(`$XDG_RUNTIME_DIR/gitnexia-askpass-<pid>-<rand>.sock`, mode 0600, removed on exit), sends the
 prompt with the session's random token, and prints the answer. The app checks the peer's user
 (`SO_PEERCRED`) and the token, and shows a modal only for an operation the user started. A
 background fetch that needs credentials is denied at once and reported as skipped in the status
@@ -343,7 +343,7 @@ trunk branches (a pull or merge request usually starts from a branch of its own)
 
 **Branch presets.** The UI owns the presets (built-ins, the user's, a repository's Custom, the
 picks) and sends the current one with each graph read as a `ViewSpec`; All sends none, and the
-payload is then the plain graph's. The view transform runs in `gitnex-graph`, inside `assemble`,
+payload is then the plain graph's. The view transform runs in `gitnexia-graph`, inside `assemble`,
 on the walked window and before the lane layout, so lanes close up around what it removes:
 - **Rules** (`presets/`): every branch unit (a short name with its local and remote refs) gets
   facts in one pass over the window (trunk, checked out, own authors, tip age, merged into the
@@ -397,7 +397,7 @@ every tracked directory (from the index) and every directory holding an untracke
 file, non-recursively, plus `.git`, `.git/worktrees`, each linked worktree's gitdir, and
 `.git/refs` recursively. Events are classified (worktree, index, refs, HEAD, stash, config,
 merge/rebase state), debounced (150 ms, at most 1 s while events keep coming), and a worktree change
-is confirmed against a digest of `git status`, so churn in ignored files and GitNex's own reads
+is confirmed against a digest of `git status`, so churn in ignored files and GitNexia's own reads
 never reach the UI. Past 20 000 directories, or at inotify's own limit, the watch is degraded: it
 still reports what it sees, but every graph build re-reads status. During a write, the watcher is
 held and the write announces its own changes.
@@ -423,7 +423,7 @@ other or missing per known remote; absent while none is known).
 ## Diffs
 
 **Text** diffs use Monaco's diff editor (`ui/src/diff/monaco/host.ts`): inline or side by side,
-with GitNex's own hunk and line staging actions. The core supplies changed-file lists and both
+with GitNexia's own hunk and line staging actions. The core supplies changed-file lists and both
 sides' contents; the UI never re-derives which blobs to compare.
 
 Syntax highlighting is Shiki's TextMate grammars on the Oniguruma WASM, in a Web Worker started
@@ -444,7 +444,7 @@ difference, with zoom. **Binary** files show in a hex view: the core makes cappe
 marked.
 
 **Rendered Markdown** (`ui/src/markdown/`) is used for `.md` files, their diffs, and MR/PR text:
-1. **Parse**: unified with `remark-parse` and `remark-gfm`, plus GitNex's plugins for emoji,
+1. **Parse**: unified with `remark-parse` and `remark-gfm`, plus GitNexia's plugins for emoji,
    issue/MR references, heading ids and an autolink guard (`parse.ts`). A file's YAML (`---`) or
    TOML (`+++`) front matter becomes a key/value table (`remark-frontmatter`, then `yaml` or
    `smol-toml`; `plugins/frontmatter.ts`); MR/PR text keeps it as typed, as the forges do. Up to 16 KiB parses on the main
@@ -454,7 +454,7 @@ marked.
    `rehype-sanitize` with GitHub's schema, tightened (`sanitize.ts`): no `style` or form
    attributes, ids prefixed `user-content-`, links limited to http(s), mailto and relative, and
    `data:` images limited to raster formats.
-3. **Render** to React with `hast-util-to-jsx-runtime`, with GitNex components for code blocks
+3. **Render** to React with `hast-util-to-jsx-runtime`, with GitNexia components for code blocks
    (Shiki), links, images and Mermaid diagrams.
 4. **Diff** (`markdown/diff/`): the old and new trees are aligned block by block (paragraphs,
    headings, list items, table rows), similar blocks are paired and word-diffed with `jsdiff`, and
@@ -462,7 +462,7 @@ marked.
    alignment that takes too long falls back to the source diff.
 
 **CSV and TSV** files (`ui/src/table/`) show as a table, Markdown's `Source | Rendered` control
-labelled Table with its own pick: GitNex's own RFC 4180 parser (`csv.ts`), a grid that renders
+labelled Table with its own pick: GitNexia's own RFC 4180 parser (`csv.ts`), a grid that renders
 only the rows in view (`@tanstack/react-virtual`), and in Diff View a row diff (`rowDiff.ts`: rows
 lined up with `jsdiff`, a changed row's cells marked). Parsing is on the main thread, so the limits
 (`limits.ts`) show the source instead: over 8 MB, over 500 columns, more rows than a grid can lay
@@ -481,9 +481,9 @@ with an Open in browser action. A diff shows the old and new pages side by side.
 
 ## Forge layer
 
-GitHub, GitLab, Forgejo and Bitbucket Data Center / Server are the providers (`gitnex-forge`),
+GitHub, GitLab, Forgejo and Bitbucket Data Center / Server are the providers (`gitnexia-forge`),
 all over personal access tokens. Bitbucket Cloud is a different API and is not included.
-Azure DevOps Services (`gitnex-forge/src/azure_devops.rs`) supports PAT-authenticated repository
+Azure DevOps Services (`gitnexia-forge/src/azure_devops.rs`) supports PAT-authenticated repository
 discovery and lookup, not PR workflows. Accounts and parsed remotes use organization-scoped
 keys (`dev.azure.com/<organization>`); HTTPS, SSH and legacy Visual Studio URLs map to the same
 project/repository identity. Azure user and repository GUIDs remain strings in `ForgeId`;
@@ -506,19 +506,19 @@ MRs/PRs and inline review comments (`forge/mrs.rs`, `forge/create.rs`, `forge/st
 drafts and their submit). The UI keeps one review session per tab (`ui/src/forge/review/`), and the
 diff view draws its threads and drafts (`ui/src/diff/review/`).
 
-**HTTP** (`gitnex-forge/src/http.rs`): one client per account with bearer auth (Azure PATs use
+**HTTP** (`gitnexia-forge/src/http.rs`): one client per account with bearer auth (Azure PATs use
 Basic auth with an empty username), an ETag cache
 (`If-None-Match`, so an unchanged answer is a cheap 304), the forges' poll-interval hints, rate
 limits (once limited, requests fail fast until the reset time), timeouts, and
-`User-Agent: GitNex/<version>`.
+`User-Agent: GitNexia/<version>`.
 
-**Tokens** (`gitnex-forge/src/tokens.rs`) live in the system Secret Service through the `keyring`
-crate (service `gitnex`, account `<profile id>/<account id>`: `<profile id>/<host>` for the account a
+**Tokens** (`gitnexia-forge/src/tokens.rs`) live in the system Secret Service through the `keyring`
+crate (service `gitnexia`, account `<profile id>/<account id>`: `<profile id>/<host>` for the account a
 host had first, the name 1.5.0 gave every account, so a downgrade still finds that token, and
 `<profile id>/<host>#<user id>` for the others). Removing an account deletes its token and cache
 only; the host's other accounts keep their names, and the host's own name goes to a new account
 only when the host has none. Where there's no Secret Service, they go
-to `~/.local/share/gitnex/forge-tokens` (file 0600, directory 0700), and Settings › Accounts warns
+to `~/.local/share/gitnexia/forge-tokens` (file 0600, directory 0700), and Settings › Accounts warns
 about it. Tokens never go in settings files, and nothing logs, prints or formats one.
 
 **Cache** (`forge/cache.rs`): per project, the last MR/PR lists and badge lookups with their ETags,
@@ -527,16 +527,16 @@ revalidates instead of downloading everything again. It holds the forge's own da
 
 **Polling** (`ui/src/forge/poller.ts`): only the active tab polls, when it becomes active, on the
 fetch timer (at most once a minute, and only while the window has the focus), when the window gets
-the focus back, and after a GitNex forge action. While a visible MR/PR's pipeline runs, it polls
+the focus back, and after a GitNexia forge action. While a visible MR/PR's pipeline runs, it polls
 faster (20 s, backing off to 2 min). A failed poll keeps the data shown.
 
 ## Updates
 
-`gitnex-core/src/updates/` checks `artifactdev/gitnex`'s GitHub Releases for a newer version (SemVer; a local build's
+`gitnexia-core/src/updates/` checks `artifactdev/gitnexia`'s GitHub Releases for a newer version (SemVer; a local build's
 `+<stamp>` doesn't count), downloads the package for the install kind into the cache, keeps it only
 if the release's `SHA256SUMS` matches, and installs it (`pkexec apt`/`dnf`/`zypper`/`pacman` on Linux, the
-installer on Windows, a copy of the `.dmg`'s GitNex.app over the running bundle on macOS). The
-fetching is `gitnex-forge/src/updates.rs`, through the forge HTTP client without a token; the
+installer on Windows, a copy of the `.dmg`'s GitNexia.app over the running bundle on macOS). The
+fetching is `gitnexia-forge/src/updates.rs`, through the forge HTTP client without a token; the
 commands run through an `UpdateRunner` the app supplies (the harness only records them). The
 install kind comes from `install-kind` beside the binary (in `Contents/Resources` on macOS),
 which the packages write (docs/releasing.md). The UI's pill and dialog are in `ui/src/updates/`; progress
@@ -546,15 +546,15 @@ arrives as `updateChanged` events.
 
 | What | Where |
 |---|---|
-| App settings (fetch interval, prune, commit limit, date format, Gravatar, window geometry, …) | `$XDG_CONFIG_HOME/gitnex/settings.json` |
-| Profiles (tabs, recent repos, repos folder, editor, commit name/email, extra gitconfig, host overrides, per-repo settings, file colours (by common git dir)) | `$XDG_CONFIG_HOME/gitnex/profiles/<id>/profile.json` |
-| Undo journal | `$XDG_DATA_HOME/gitnex/journal/` |
-| Remotes' tags (the last fetch's listing, per repository) | `$XDG_DATA_HOME/gitnex/remote-tags/` |
-| Forge cache | `$XDG_DATA_HOME/gitnex/forge-cache/` |
-| Forge tokens (only without a Secret Service) | `$XDG_DATA_HOME/gitnex/forge-tokens` |
-| Log files | `$XDG_CACHE_HOME/gitnex/logs/gitnex.YYYY-MM-DD.log` |
-| Avatars, forge avatars, "open old version" copies, the downloaded update | `$XDG_CACHE_HOME/gitnex/{avatars,forge-avatars,open,updates}/` |
-| Chromium profile | `$XDG_CACHE_HOME/com.gitnex.desktop/cef/` |
+| App settings (fetch interval, prune, commit limit, date format, Gravatar, window geometry, …) | `$XDG_CONFIG_HOME/gitnexia/settings.json` |
+| Profiles (tabs, recent repos, repos folder, editor, commit name/email, extra gitconfig, host overrides, per-repo settings, file colours (by common git dir)) | `$XDG_CONFIG_HOME/gitnexia/profiles/<id>/profile.json` |
+| Undo journal | `$XDG_DATA_HOME/gitnexia/journal/` |
+| Remotes' tags (the last fetch's listing, per repository) | `$XDG_DATA_HOME/gitnexia/remote-tags/` |
+| Forge cache | `$XDG_DATA_HOME/gitnexia/forge-cache/` |
+| Forge tokens (only without a Secret Service) | `$XDG_DATA_HOME/gitnexia/forge-tokens` |
+| Log files | `$XDG_CACHE_HOME/gitnexia/logs/gitnexia.YYYY-MM-DD.log` |
+| Avatars, forge avatars, "open old version" copies, the downloaded update | `$XDG_CACHE_HOME/gitnexia/{avatars,forge-avatars,open,updates}/` |
+| Chromium profile | `$XDG_CACHE_HOME/com.gitnexia.desktop/cef/` |
 
 The XDG defaults are `~/.config`, `~/.local/share` and `~/.cache`. Settings and profiles are
 written debounced and flushed once more on exit. To run a second instance without touching your
@@ -564,7 +564,7 @@ own, point `XDG_CONFIG_HOME`, `XDG_CACHE_HOME` and `XDG_DATA_HOME` at throwaway 
 module calls `registerSettingsPage` (id, scope, order, icon, summary, an optional `Body`) and
 `registerSettings` (each setting's label, page, group, one-line description, hidden keywords, its
 `Control`, and a `binding` to where its value lives: `appSetting`, `profileField`, `repoField` or
-`storeBinding` in `bindings.ts`). The scopes are `app` (GitNex), `profile` and `repo` (the shown
+`storeBinding` in `bindings.ts`). The scopes are `app` (GitNexia), `profile` and `repo` (the shown
 tab's repository), the nav's three groups. The overlay, its nav, the search, the changed dot and ↺
 on a setting, Reset all (app scope only) and the palette's `#` settings all come from the registry,
 so a feature adds a page, or a setting to an existing page, from its own module; Settings' own
@@ -579,7 +579,7 @@ commands, the actions you ran, the activity log of fetches and clones, **Copy di
 (versions, OS, Chromium, git and the settings, with secrets removed) and **Open logs folder**.
 
 **Folder picker.** Open folder… calls xdg-desktop-portal's `FileChooser` over D-Bus
-(`crates/gitnex-core/src/openers/folder_picker.rs`), parented to the main window, rather than a
+(`crates/gitnexia-core/src/openers/folder_picker.rs`), parented to the main window, rather than a
 GTK 3 dialog that would clash with CEF's GTK 4. Without a portal, it picks nothing and logs a
 warning.
 
@@ -588,11 +588,11 @@ warning.
 Tests live in three layers. Use the cheapest one that proves the behavior.
 
 - **Rust** (`cargo nextest run --workspace`, or `just test-rust`): unit tests next to the code, on
-  throwaway repositories from `gitnex_core::testing` (`TestRepo`, deterministic fixtures with
+  throwaway repositories from `gitnexia_core::testing` (`TestRepo`, deterministic fixtures with
   fixed dates and an environment isolated from your git config and ssh agent). Each fixture is
   built once into `target/fixture-cache/` and copied for each test (`testing/cache.rs`). The
-  harness's integration tests are one test binary, `crates/gitnex-harness/tests/it/`, one module
-  per area: `cargo nextest run -p gitnex-harness -E 'test(/^forge_stacks::/)'`.
+  harness's integration tests are one test binary, `crates/gitnexia-harness/tests/it/`, one module
+  per area: `cargo nextest run -p gitnexia-harness -E 'test(/^forge_stacks::/)'`.
 - **UI unit tests** (vitest with jsdom, `just test-ui`): components and logic, next to the source
   as `*.test.ts(x)`.
 - **End to end** (Playwright, `just e2e`, `ui/e2e/`): the real UI against the real backend
@@ -601,26 +601,26 @@ Tests live in three layers. Use the cheapest one that proves the behavior.
 `testdata/` holds JSON test vectors that both the Rust and the TypeScript tests check, so the two
 sides of a shared rule can't drift.
 
-**The harness.** `gitnex-harness serve [--port N] [--config-dir DIR]` serves `Api::dispatch`
+**The harness.** `gitnexia-harness serve [--port N] [--config-dir DIR]` serves `Api::dispatch`
 over a WebSocket (`/ws`: `{id, req}` in, `{id, ok|err}` and `{event}` out), so the UI runs in an
-ordinary browser. It uses a throwaway config dir (never `~/.config/gitnex`), a temp home and
+ordinary browser. It uses a throwaway config dir (never `~/.config/gitnexia`), a temp home and
 runtime dir, an isolated git environment and no avatar provider. It starts with background fetch
 off, records "Open in…" launches instead of running them, and refuses writes to any repository
 that isn't a marked fixture. Test-only routes: `POST /test/reset`, `/test/emit`, `/test/next-pick`,
 `/test/write`, `GET /test/watched`, `GET /launches`, `ANY /test/auth/*` (always 401), and the fake
-forge's `/test/forge/{seed,script,requests,account}`. `gitnex-harness fixture <name> <dir>` builds
+forge's `/test/forge/{seed,script,requests,account}`. `gitnexia-harness fixture <name> <dir>` builds
 a fixture repository (the showcase ones, for previews, submodules and LFS: [docs/playground.md](docs/playground.md)).
 
-**The fake forge** (`crates/gitnex-harness/src/fake_forge/`) answers the subset of the GitHub,
+**The fake forge** (`crates/gitnexia-harness/src/fake_forge/`) answers the subset of the GitHub,
 GitLab and Forgejo REST APIs that the providers use, from a seed: ETags with 304s, each forge's
 rate-limit headers, scripted one-shot answers (429s, 500s, poll intervals), and a request log that
 records whether a valid token came but never the token. The Forgejo one (`forgejo.example.com`)
-keeps the rules GitNex works around: a message for a pending review and for Request changes, one
+keeps the rules GitNexia works around: a message for a pending review and for Request changes, one
 timeline entry per review POST, a branch deleted after a merge only when asked. It runs on its own ephemeral port. The harness's
 connector points the real providers at it and can reach no other host, and its tokens go in a file
 in the temp dir, never the system keyring.
 
-**Fixtures** are made once per e2e run with `gitnex-harness fixture` (a copy from the fixture
+**Fixtures** are made once per e2e run with `gitnexia-harness fixture` (a copy from the fixture
 cache) and copied for each test
 that needs a fresh one (`freshFixture` in `ui/e2e/fixtures.ts`).
 

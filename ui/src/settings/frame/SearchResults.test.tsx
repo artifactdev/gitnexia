@@ -23,7 +23,7 @@ describe('SearchResults', () => {
     const rows = [...container.querySelectorAll('[data-setting-id]')];
     expect(rows.map((r) => r.getAttribute('data-setting-id'))).toEqual(['gravatar', 'forgeAvatars', 'profileGitEmail', 'forgeAccounts']);
     for (const r of rows) expect(r.querySelector('mark'), r.getAttribute('data-setting-id')!).not.toBeNull();
-    expect(screen.getByRole('group', { name: 'Graph › Avatars' })).toHaveTextContent('GitNex › Graph › Avatars');
+    expect(screen.getByRole('group', { name: 'Graph › Avatars' })).toHaveTextContent('GitNexia › Graph › Avatars');
     expect(screen.getByRole('group', { name: 'Accounts › Accounts' })).toHaveTextContent('Profile · Work › Accounts › Accounts');
   });
 

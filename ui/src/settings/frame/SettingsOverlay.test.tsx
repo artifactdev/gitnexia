@@ -77,7 +77,7 @@ describe('SettingsOverlay', () => {
     expect(container.innerHTML).toBe('');
     act(() => useSettingsUi.getState().show());
     const nav = screen.getByRole('navigation', { name: 'Settings pages' });
-    expect(within(nav).getByText('GitNex')).toBeInTheDocument();
+    expect(within(nav).getByText('GitNexia')).toBeInTheDocument();
     expect(within(nav).getByText('Profile · Work')).toBeInTheDocument();
     expect(within(nav).getByText('Repository · orbital')).toBeInTheDocument();
     expect(screen.getByRole('region', { name: 'General' })).toBeInTheDocument();
@@ -218,7 +218,7 @@ describe('SettingsOverlay', () => {
       expect(screen.getByRole('radio', { name: 'Standard' })).toBeChecked();
       fireEvent.click(screen.getByRole('radio', { name: 'Compact' }));
       expect(useDensity.getState().density).toBe('compact');
-      expect(localStorage.getItem('gitnex.density.v1')).toBe('compact');
+      expect(localStorage.getItem('gitnexia.density.v1')).toBe('compact');
       // One tab stop, on the chosen button; the arrows (wrapping), Home and End move and choose.
       expect(radios.map((r) => r.tabIndex)).toEqual([0, -1, -1]);
       radios[0]!.focus();
@@ -239,7 +239,7 @@ describe('SettingsOverlay', () => {
       expect(sw).not.toBeChecked();
       fireEvent.click(sw);
       expect(useAppState.getState().settings.editorStickyScroll).toBe(true);
-      expect(localStorage.getItem('gitnex.editorSettings.v1')).toBeNull();
+      expect(localStorage.getItem('gitnexia.editorSettings.v1')).toBeNull();
       expect(screen.getByText(/Pins the enclosing scope's first line/)).toBeVisible();
     });
 

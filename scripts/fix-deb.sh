@@ -6,8 +6,8 @@
 # package's control member:
 #   Depends = what dpkg-shlibdeps finds for every shipped ELF file
 #           + tauri.conf.json's extra deps (libgtk-4-1, git), minus libgtk-3-0
-#   Package = gitnex, not Tauri's kebab-case of the product name (gitnex): the command's name, and
-#             the RPM's and Arch package's
+#   Package = gitnexia, the command's name, and the RPM's and Arch package's
+#   Replaces/Conflicts/Provides = gitnex: the package replaces the one from before the rename
 #   Version = the SemVer version as a Debian one (scripts/version.py deb): 0.1.0-alpha.1 becomes
 #             0.1.0~alpha.1, which sorts before 0.1.0 (Tauri only takes SemVer)
 #   License = MIT (LICENSE). Not a Debian field, but GNOME Software shows a local .deb's license
@@ -19,7 +19,7 @@ set -euo pipefail
 here=$(cd "$(dirname "$0")" && pwd)
 license=MIT # the metainfo's project_license says the same (check-deb.sh compares them)
 deb=$(realpath "${1:?usage: fix-deb.sh <package.deb>}")
-cache=${GITNEX_SHLIBDEPS_CACHE:+$(realpath -m "$GITNEX_SHLIBDEPS_CACHE")}
+cache=${GITNEXIA_SHLIBDEPS_CACHE:+$(realpath -m "$GITNEXIA_SHLIBDEPS_CACHE")}
 work=$(mktemp -d); trap 'rm -rf "$work"' EXIT
 cd "$work"
 ar x "$deb"
@@ -33,14 +33,14 @@ tar -xf "$data" -C payload --no-same-owner
 mapfile -t elfs < <(find payload -type f -exec sh -c 'head -c 4 "$1" | grep -q ELF' _ {} \; -print | sort)
 [ ${#elfs[@]} -gt 0 ] || { echo "fix-deb: no ELF files in $deb" >&2; exit 1; }
 mapfile -t libdirs < <(printf '%s\n' "${elfs[@]}" | xargs -n1 dirname | sort -u)
-printf 'Source: gitnex\n\nPackage: gitnex\nArchitecture: any\n' > debian/control
-# GITNEX_SHLIBDEPS_CACHE=<dir> (`just package`): dpkg-shlibdeps takes ~20 s, mostly libcef.so's
+printf 'Source: gitnexia\n\nPackage: gitnexia\nArchitecture: any\n' > debian/control
+# GITNEXIA_SHLIBDEPS_CACHE=<dir> (`just package`): dpkg-shlibdeps takes ~20 s, mostly libcef.so's
 # and the binary's symbols, so its answer is kept under a key of everything it reads: each ELF
 # file's objdump output as dpkg-shlibdeps reads it (less addresses and sizes, which change with
 # any code change but not what it concludes), its copy relocations, the paths, dpkg-dev's version
-# and the system's installed packages and library cache. GITNEX_REBUILD=1 skips the cache.
+# and the system's installed packages and library cache. GITNEXIA_REBUILD=1 skips the cache.
 cached=
-if [ -n "$cache" ] && [ "${GITNEX_REBUILD:-}" != 1 ]; then
+if [ -n "$cache" ] && [ "${GITNEXIA_REBUILD:-}" != 1 ]; then
   key=$({
     dpkg-query -W -f '${Version}\n' dpkg-dev
     sha256sum /var/lib/dpkg/status /etc/ld.so.cache 2>&1
@@ -72,9 +72,9 @@ new=$(printf '%s\n%s\n' "$shlib" "$orig" | tr ',' '\n' | sed 's/^ *//; s/ *$//' 
   END { for (i = 1; i <= n; i++) printf "%s%s", (i > 1 ? ", " : ""), seen[order[i]] }')
 debver=$(python3 "$here/version.py" deb "$(sed -n 's/^Version: //p' control/control)")
 awk -v d="Depends: $new" -v v="Version: $debver" -v l="License: $license" '
-  /^Package:/ { print "Package: gitnex"; next }
+  /^Package:/ { print "Package: gitnexia"; next }
   /^License:/ { next }
-  /^Depends:/ { print l; print d; done = 1; next }
+  /^Depends:/ { print l; print d; print "Replaces: gitnex"; print "Conflicts: gitnex"; print "Provides: gitnex"; done = 1; next }
   /^Version:/ { print v; next }
   { print }
   END { if (!done) { print l; print d } }' control/control > control/control.new
@@ -91,4 +91,4 @@ mv "$ctrl.new" "$ctrl"
 rm -f "$deb.tmp"
 ar rc "$deb.tmp" debian-binary "$ctrl" "$data" # member order matters to dpkg
 mv "$deb.tmp" "$deb"
-echo "fix-deb: Package: gitnex; Version: $debver; License: $license; Depends: $new"
+echo "fix-deb: Package: gitnexia (Replaces/Conflicts/Provides: gitnex); Version: $debver; License: $license; Depends: $new"

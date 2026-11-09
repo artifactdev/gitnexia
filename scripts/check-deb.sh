@@ -21,30 +21,34 @@ for f in Homepage Section License; do
   echo "$f: $v"
 done
 [ "$(dpkg-deb -f "$deb" Description | wc -l)" -gt 1 ] || fail "the Description has no long description"
-[ "$(dpkg-deb -f "$deb" Package)" = gitnex ] || fail "the package isn't named gitnex: $(dpkg-deb -f "$deb" Package)"
+[ "$(dpkg-deb -f "$deb" Package)" = gitnexia ] || fail "the package isn't named gitnexia: $(dpkg-deb -f "$deb" Package)"
+# The package from before the rename is replaced, so apt moves it over (scripts/fix-deb.sh).
+for f in Replaces Conflicts Provides; do
+  [ "$(dpkg-deb -f "$deb" "$f")" = gitnex ] || fail "$f isn't gitnex: $(dpkg-deb -f "$deb" "$f")"
+done
 contents=$(dpkg-deb -c "$deb")
 line=$(grep '/chrome-sandbox$' <<<"$contents") || fail "no chrome-sandbox in the payload"
 [[ $line == -rwsr-xr-x\ root/root* || $line == -rwsr-xr-x\ 0/0* ]] || fail "chrome-sandbox is not root:root 4755: $line"
-# The license notices (docs/licensing.md): GitNex's license and the third-party notices, and the
+# The license notices (docs/licensing.md): GitNexia's license and the third-party notices, and the
 # DEP-5 copyright file that points to them.
 # Plus the spell-check dictionary beside the binary, which the app copies into Chromium's profile
 # (PRIVACY.md: spell check works offline).
-for f in doc/gitnex/{copyright,LICENSE,THIRD-PARTY-NOTICES-rust.txt,THIRD-PARTY-NOTICES-ui.txt,CEF-LICENSE.txt,CHROMIUM-CREDITS.html.gz,DICTIONARY-en-US-LICENSE.txt} \
-  GitNex/dictionaries/en-US-10-2.bdic; do
+for f in doc/gitnexia/{copyright,LICENSE,THIRD-PARTY-NOTICES-rust.txt,THIRD-PARTY-NOTICES-ui.txt,CEF-LICENSE.txt,CHROMIUM-CREDITS.html.gz,DICTIONARY-en-US-LICENSE.txt} \
+  GitNexia/dictionaries/en-US-10-2.bdic; do
   size=$(awk -v p="usr/share/$f" '$1 ~ /^-/ && ($NF == p || $NF == "./" p) { print $3 }' <<<"$contents")
   [ -n "$size" ] || fail "no /usr/share/$f"
   [ "$size" -gt 0 ] || fail "/usr/share/$f is empty"
 done
 # How the package was installed, beside the binary: the update check picks the .deb by it.
-kind=$(dpkg-deb --fsys-tarfile "$deb" | tar -xO --wildcards '*usr/share/GitNex/install-kind' 2>/dev/null) || true
-[ "$kind" = deb ] || fail "/usr/share/GitNex/install-kind isn't 'deb': '$kind'"
+kind=$(dpkg-deb --fsys-tarfile "$deb" | tar -xO --wildcards '*usr/share/GitNexia/install-kind' 2>/dev/null) || true
+[ "$kind" = deb ] || fail "/usr/share/GitNexia/install-kind isn't 'deb': '$kind'"
 
 # The desktop entry, the AppStream metainfo and the copyright file, unpacked once.
 meta=$(mktemp -d); trap 'rm -rf "$meta"' EXIT
 dpkg-deb --fsys-tarfile "$deb" | tar -x -C "$meta" --wildcards \
-  '*usr/share/applications/*' '*usr/share/metainfo/*' '*usr/share/doc/gitnex/copyright' 2>/dev/null || true
-head -1 "$meta/usr/share/doc/gitnex/copyright" | grep -qx 'Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/' ||
-  fail "/usr/share/doc/gitnex/copyright isn't in the machine-readable (DEP-5) format"
+  '*usr/share/applications/*' '*usr/share/metainfo/*' '*usr/share/doc/gitnexia/copyright' 2>/dev/null || true
+head -1 "$meta/usr/share/doc/gitnexia/copyright" | grep -qx 'Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/' ||
+  fail "/usr/share/doc/gitnexia/copyright isn't in the machine-readable (DEP-5) format"
 shopt -s nullglob
 desktops=("$meta"/usr/share/applications/*.desktop)
 [ ${#desktops[@]} = 1 ] || fail "expected one .desktop entry, found ${#desktops[@]}"
@@ -53,7 +57,7 @@ grep -E '^(Name|Categories|Icon|StartupWMClass)=' <<<"$desktop"
 # A desktop entry matching the window's WM_CLASS, so the dock groups it and shows the icon
 # (consistent with `just install-desktop`).
 grep -Eq '^Categories=.*Development;' <<<"$desktop" || fail "desktop entry lacks Categories=Development;"
-grep -qx 'StartupWMClass=gitnex' <<<"$desktop" || fail "desktop entry lacks StartupWMClass=gitnex"
+grep -qx 'StartupWMClass=gitnexia' <<<"$desktop" || fail "desktop entry lacks StartupWMClass=gitnexia"
 desktop-file-validate "${desktops[0]}" || fail "desktop-file-validate rejects ${desktops[0]##*/}"
 
 # The AppStream metainfo (software centres, once installed): valid, and consistent with the

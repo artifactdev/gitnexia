@@ -21,7 +21,7 @@ import type { HandlerTable } from '../transport';
 async function outcome(cx: WriteCx, s: SeqState, end: SeqEnd): Promise<IntegrateOutcome> {
   const onto = s.onto;
   if (end.status === 'stopped') {
-    // GitNex's interactive rebase keeps its session on the paused entry (what was made, what moved).
+    // GitNexia's interactive rebase keeps its session on the paused entry (what was made, what moved).
     cx.paused = { kind: 'rebase', target: s.target, targetOid: onto, picked: [], irebase: s.interactive };
     return stoppedOutcome(end);
   }

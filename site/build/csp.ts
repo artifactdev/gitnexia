@@ -18,7 +18,7 @@ export const SITE_CSP = [
 
 export function sitePolicy(): Plugin {
   return {
-    name: 'gitnex-site-csp',
+    name: 'gitnexia-site-csp',
     apply: 'build',
     transformIndexHtml: {
       order: 'post',

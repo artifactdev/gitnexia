@@ -41,7 +41,7 @@ orbital-test ref="main":
     #!/usr/bin/env bash
     set -euo pipefail
     tmp="$(mktemp -d)"; trap 'rm -rf "$tmp"' EXIT
-    repo="$(cargo run -q -p gitnex-harness -- showcase orbital "$tmp/build")"
+    repo="$(cargo run -q -p gitnexia-harness -- showcase orbital "$tmp/build")"
     git clone -q "$repo" "$tmp/checkout"
     cd "$tmp/checkout" && git checkout -q "{{ref}}" && cargo test --workspace
 
@@ -57,9 +57,9 @@ test-ui-changed since="":
     cd ui && npx vitest run --passWithNoTests --changed "$since"
 
 gen-types:
-    cargo test -p gitnex-core -p gitnex-graph export_bindings
+    cargo test -p gitnexia-core -p gitnexia-graph export_bindings
 
-# The graph pipeline as WebAssembly for the website demo (crates/gitnex-graph-wasm) into
+# The graph pipeline as WebAssembly for the website demo (crates/gitnexia-graph-wasm) into
 # ui/src/demo/wasm/ (git-ignored): the wasm-bindgen glue, and the .wasm gzipped (GitHub Pages
 # doesn't compress it; the demo unpacks it with DecompressionStream). Also writes the notices of
 # the crates it holds, failing on a license about.toml doesn't accept. Needs the wasm32 target
@@ -72,28 +72,28 @@ demo-wasm:
     rustup target list --installed | grep -qx wasm32-unknown-unknown || { echo "missing the wasm32 target; install: rustup target add wasm32-unknown-unknown"; exit 1; }
     wasm-bindgen --version 2>/dev/null | grep -qxF 'wasm-bindgen {{wasm_bindgen_version}}' || { echo "wrong or missing wasm-bindgen CLI; install: cargo install wasm-bindgen-cli --version {{wasm_bindgen_version}} --locked"; exit 1; }
     # Remap the build machine's paths (serde's panic locations) out of the binary.
-    RUSTFLAGS="${RUSTFLAGS:-} --remap-path-prefix=${CARGO_HOME:-$HOME/.cargo}=/cargo --remap-path-prefix=$PWD=/gitnex" \
-      cargo build --release --locked -p gitnex-graph-wasm --target wasm32-unknown-unknown
+    RUSTFLAGS="${RUSTFLAGS:-} --remap-path-prefix=${CARGO_HOME:-$HOME/.cargo}=/cargo --remap-path-prefix=$PWD=/gitnexia" \
+      cargo build --release --locked -p gitnexia-graph-wasm --target wasm32-unknown-unknown
     target_dir="${CARGO_TARGET_DIR:-target}"
     out=ui/src/demo/wasm
     rm -rf "$out" && mkdir -p "$out"
-    wasm-bindgen --target web --omit-default-module-path --out-dir "$out" "$target_dir/wasm32-unknown-unknown/release/gitnex_graph_wasm.wasm"
-    gzip -9 -n "$out/gitnex_graph_wasm_bg.wasm"
-    cargo about generate --format json --locked --fail -c about.toml --target wasm32-unknown-unknown -m crates/gitnex-graph-wasm/Cargo.toml -o "$out/about.json"
+    wasm-bindgen --target web --omit-default-module-path --out-dir "$out" "$target_dir/wasm32-unknown-unknown/release/gitnexia_graph_wasm.wasm"
+    gzip -9 -n "$out/gitnexia_graph_wasm_bg.wasm"
+    cargo about generate --format json --locked --fail -c about.toml --target wasm32-unknown-unknown -m crates/gitnexia-graph-wasm/Cargo.toml -o "$out/about.json"
     python3 scripts/notices.py rust "$out/about.json" "$out/THIRD-PARTY-NOTICES-wasm.txt"
     rm "$out/about.json"
-    echo "$out/gitnex_graph_wasm_bg.wasm.gz: $(du -k "$out/gitnex_graph_wasm_bg.wasm.gz" | cut -f1) KB"
+    echo "$out/gitnexia_graph_wasm_bg.wasm.gz: $(du -k "$out/gitnexia_graph_wasm_bg.wasm.gz" | cut -f1) KB"
 
 # The website demo's parity data (ui/src/demo/golden/): each fixture with a request list in
 # requests/ built by the harness, packed (<fixture>.gbdemo) and answered by the real core
 # (<fixture>/<n>.json), plus the core's default settings and a demo manifest. Rerun when the
 # core's answers or the fixtures change, and commit the result.
 demo-golden:
-    cargo build -p gitnex-harness
+    cargo build -p gitnexia-harness
     node ui/scripts/demo-golden.mjs
 
 # The website demo (ui/demo.html, `vite build --mode demo`) into site/dist/demo/, with the data in
-# site/demo-data/ (GITNEX_DEMO_DATA=<folder> picks another, e.g. ui/src/demo/golden).
+# site/demo-data/ (GITNEXIA_DEMO_DATA=<folder> picks another, e.g. ui/src/demo/golden).
 demo-build: demo-wasm
     cd ui && npx vite build --mode demo
 
@@ -115,7 +115,7 @@ site-shots *args: demo-build
     #!/usr/bin/env bash
     set -euo pipefail
     tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
-    (cd site && GITNEX_SITE_SHOTS_RAW="$tmp" npx playwright test -c playwright.shots.config.ts --workers=1 {{args}})
+    (cd site && GITNEXIA_SITE_SHOTS_RAW="$tmp" npx playwright test -c playwright.shots.config.ts --workers=1 {{args}})
     python3 scripts/site-shots.py "$tmp" site/shots
 
 # The site's social-sharing image (site/public/og.jpg, og:image): site/og/og.html, drawn with the
@@ -163,36 +163,36 @@ site-pages:
 # The Playwright suites (Chromium, its @budget latency tests, then WebKit; one worker) against a
 # production build of the UI, rebuilt only when ui/src changes. Arguments go to Playwright:
 # `just e2e --project=chromium --project=chromium-budget`, `just e2e e2e/diff.spec.ts`.
-# GITNEX_E2E_TRACE=1 keeps a trace of each failure (off by default:
-# recording them doubles the CPU time); GITNEX_E2E_DEV=1 tests the Vite dev server instead. Set
-# GITNEX_E2E_PORT_BASE (e.g. `GITNEX_E2E_PORT_BASE=7600 just e2e`) to run this from several
+# GITNEXIA_E2E_TRACE=1 keeps a trace of each failure (off by default:
+# recording them doubles the CPU time); GITNEXIA_E2E_DEV=1 tests the Vite dev server instead. Set
+# GITNEXIA_E2E_PORT_BASE (e.g. `GITNEXIA_E2E_PORT_BASE=7600 just e2e`) to run this from several
 # worktrees at once without port collisions. See docs/dev-setup.md.
 e2e *args:
-    cargo build -p gitnex-harness
+    cargo build -p gitnexia-harness
     cd ui && npx playwright test {{args}}
 
 # Throwaway repos to try the app in, all direct children of one folder (so "Add a folder" lists
 # them): orbital, basic, sync, conflicts, stack, wip_staging, rebase-lab, previews, submodules,
-# lfs (`gitnex-harness showcase`). Their local bare remotes live in .remotes/ and linked
+# lfs (`gitnexia-harness showcase`). Their local bare remotes live in .remotes/ and linked
 # worktrees in .worktrees/. Re-running resets them; it only ever deletes a folder that
-# carries the .gitnex-playground marker (see scripts/playground.sh).
-playground dir="~/gitnex-playground":
+# carries the .gitnexia-playground marker (see scripts/playground.sh).
+playground dir="~/gitnexia-playground":
     @echo "building the fixture harness (first run takes a few minutes)…"
-    @cargo build -p gitnex-harness
-    @scripts/playground.sh "${CARGO_TARGET_DIR:-target}/debug/gitnex-harness" "{{dir}}"
+    @cargo build -p gitnexia-harness
+    @scripts/playground.sh "${CARGO_TARGET_DIR:-target}/debug/gitnexia-harness" "{{dir}}"
 
 # The demo's repositories (site/demo-data/*.gbdemo and manifest.json): each showcase repo built
 # with the harness and packed with ui/scripts/pack-demo.mjs; one whose content didn't change keeps
 # its committed bundle. Fails over the 15 MB budget. See docs/playground.md.
 demo-data:
-    cargo build -p gitnex-harness
-    node ui/build/demoBundles.ts "${CARGO_TARGET_DIR:-target}/debug/gitnex-harness" site/demo-data
+    cargo build -p gitnexia-harness
+    node ui/build/demoBundles.ts "${CARGO_TARGET_DIR:-target}/debug/gitnexia-harness" site/demo-data
 
 # The theme and zoom pixel baselines (Chromium, recorded on the dev machine): opt-in, since fonts
 # and antialiasing differ between machines. Add `-- --update-snapshots` to re-record them.
 e2e-shots *args:
-    cargo build -p gitnex-harness
-    cd ui && GITNEX_E2E_SHOTS=1 npx playwright test --project=chromium e2e/themes.spec.ts e2e/zoom.spec.ts {{args}}
+    cargo build -p gitnexia-harness
+    cd ui && GITNEXIA_E2E_SHOTS=1 npx playwright test --project=chromium e2e/themes.spec.ts e2e/zoom.spec.ts {{args}}
 
 # The README's screenshot, docs/images/screenshot.webp: the made-up repos of scripts/showcase-repo.sh
 # in seven tabs in three groups (Web collapsed); driftwood on the harness's fake GitHub with three open PRs, a
@@ -201,16 +201,16 @@ e2e-shots *args:
 readme-screenshot:
     #!/usr/bin/env bash
     set -euo pipefail
-    cargo build -p gitnex-harness
+    cargo build -p gitnexia-harness
     tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
-    (cd ui && GITNEX_README_SHOT="$tmp/raw.png" npx playwright test --project=chromium e2e/readme-screenshot.spec.ts)
+    (cd ui && GITNEXIA_README_SHOT="$tmp/raw.png" npx playwright test --project=chromium e2e/readme-screenshot.spec.ts)
     mkdir -p docs/images
     python3 -c 'import sys; from PIL import Image; Image.open(sys.argv[1]).convert("RGB").save(sys.argv[2], lossless=True, method=6)' "$tmp/raw.png" docs/images/screenshot.webp
     echo "docs/images/screenshot.webp: $(du -k docs/images/screenshot.webp | cut -f1) KB"
 
 # The CEF app needs the v3-alpha `cargo tauri` CLI, pinned to match the vendored/patched
 # tauri-runtime-cef and the other Tauri crates (root Cargo.toml, vendor/tauri-runtime-cef/
-# GITNEX-PATCH.md). Install with: cargo install tauri-cli --version =3.0.0-alpha.5 --locked
+# GITNEXIA-PATCH.md). Install with: cargo install tauri-cli --version =3.0.0-alpha.5 --locked
 check-tauri-cli:
     cargo tauri --version | grep -qxF 'tauri-cli 3.0.0-alpha.5' || { echo "wrong cargo-tauri version; install: cargo install tauri-cli --version =3.0.0-alpha.5 --locked"; exit 1; }
 
@@ -220,13 +220,13 @@ check-tauri-cli:
 # Chromium always prefers a helper next to the executable when one exists (and aborts if it
 # isn't root-owned setuid), and only reads CHROME_DEVEL_SANDBOX when there's none. The sandbox
 # stays on either way; this only changes where the helper lives, so rebuilds need no sudo.
-sandbox_helper := "/usr/local/lib/gitnex/chrome-sandbox"
+sandbox_helper := "/usr/local/lib/gitnexia/chrome-sandbox"
 
 dev repo="": check-tauri-cli
     #!/usr/bin/env bash
     set -euo pipefail
     if [ -e "{{sandbox_helper}}" ]; then export CHROME_DEVEL_SANDBOX="{{sandbox_helper}}"; rm -f target/debug/chrome-sandbox; fi
-    cd crates/gitnex-app && GITNEX_OPEN="{{repo}}" CARGO_BUILD_JOBS=4 cargo tauri dev
+    cd crates/gitnexia-app && GITNEXIA_OPEN="{{repo}}" CARGO_BUILD_JOBS=4 cargo tauri dev
 
 # Release build of the CEF app, unbundled (matches the spike's build flow). The first build
 # downloads the CEF distribution (~320 MB) into ~/.cache/tauri-cef. Needs libgtk-4-dev and
@@ -234,14 +234,14 @@ dev repo="": check-tauri-cli
 # `just run-app`), or a root-owned setuid chrome-sandbox next to the binary after every build.
 # See docs/dev-setup.md and docs/decisions/cef-over-webkitgtk.md.
 build-app: check-tauri-cli
-    cd crates/gitnex-app && env -u CARGO_INCREMENTAL CARGO_BUILD_JOBS=4 cargo tauri build --no-bundle
+    cd crates/gitnexia-app && env -u CARGO_INCREMENTAL CARGO_BUILD_JOBS=4 cargo tauri build --no-bundle
 
 # The .deb, then the Arch package and the RPM made from it (`just package-arch`, `just
 # package-rpm`, run side by side), so one build gives all three.
 package: package-deb
     #!/usr/bin/env bash
     set -euo pipefail
-    deb=(target/release/bundle/deb/GitNex_*_amd64.deb)
+    deb=(target/release/bundle/deb/GitNexia_*_amd64.deb)
     scripts/package-arch.sh "${deb[@]}" target/release/bundle/arch & arch=$!
     scripts/package-rpm.sh "${deb[@]}" target/release/bundle/rpm & rpm=$!
     status=0
@@ -252,14 +252,14 @@ package: package-deb
 # The .deb alone (AppImage is deferred), with the GTK 4 dependency fix (spec §18): the .deb's
 # control member is rewritten by scripts/fix-deb.sh and checked by scripts/check-deb.sh.
 # A local build skips what hasn't changed since the last one (the license notices, the UI build,
-# dpkg-shlibdeps) and compresses fast; GITNEX_REBUILD=1 redoes everything, and a release build
+# dpkg-shlibdeps) and compresses fast; GITNEXIA_REBUILD=1 redoes everything, and a release build
 # compresses as it ships (scripts/package-compression.sh). docs/dev-setup.md, "Packaging".
 # `env -u CARGO_INCREMENTAL` (here and in build-app): a CARGO_INCREMENTAL=0 from the caller would
 # override the release profile's `incremental = true` (Cargo.toml), and sccache refuses a 1.
 package-deb: check-tauri-cli
     # Old packages first: the globs below must match only the .deb this build makes. And the
     # bundler's staging folders (~400 MB each), one per stamped version.
-    rm -rf target/release/bundle/deb/GitNex_*_amd64.deb target/release/bundle/deb/GitNex_*_amd64/
+    rm -rf target/release/bundle/deb/GitNexia_*_amd64.deb target/release/bundle/deb/GitNexia_*_amd64/
     # The license notices (docs/licensing.md): the Rust, CEF and Chromium ones into
     # target/licenses here, unless Cargo.lock, the manifests, about.toml and CEF are as they were
     # for the last ones; the UI's come from the UI build `cargo tauri build` runs, unless the UI,
@@ -269,21 +269,21 @@ package-deb: check-tauri-cli
     # The AppStream metainfo (its releases from CHANGELOG.md) and the DEP-5 copyright file, into
     # target/package-meta for tauri.conf.json's files map (docs/dev-setup.md, "Software centres").
     mkdir -p target/package-meta
-    scripts/package-meta.py metainfo crates/gitnex-app/linux/com.gitnex.desktop.metainfo.xml.in CHANGELOG.md target/package-meta/com.gitnex.desktop.metainfo.xml
+    scripts/package-meta.py metainfo crates/gitnexia-app/linux/com.gitnexia.desktop.metainfo.xml.in CHANGELOG.md target/package-meta/com.gitnexia.desktop.metainfo.xml
     scripts/package-meta.py copyright LICENSE target/package-meta/copyright
     # Each build gets its own, increasing version (0.1.0+<UTC time>.<sha>), so `apt install` of a
     # newer build replaces the installed one instead of skipping it as "already the newest".
-    # GITNEX_RELEASE_VERSION=<version> (the release workflow) builds the plain version instead,
+    # GITNEXIA_RELEASE_VERSION=<version> (the release workflow) builds the plain version instead,
     # which must equal tauri.conf.json's (scripts/package-version.sh). CARGO_BUILD_JOBS defaults to 4.
-    # GITNEX_BUILD_VERSION bakes the same version into the binary (the status bar, the update check).
+    # GITNEXIA_BUILD_VERSION bakes the same version into the binary (the status bar, the update check).
     # CEF_PATH: the CEF distribution the bundler copies from, with the two libraries CEF 154
     # dropped and the bundler still copies (scripts/cef-bundler-dist.sh).
-    cd crates/gitnex-app && v="$(../../scripts/package-version.sh tauri.conf.json)" && \
+    cd crates/gitnexia-app && v="$(../../scripts/package-version.sh tauri.conf.json)" && \
       cef="$(../../scripts/cef-bundler-dist.sh ../../target/cef-bundler)" && \
       comp="$(../../scripts/package-compression.sh deb)" && \
-      env -u CARGO_INCREMENTAL CEF_PATH="$cef" CARGO_BUILD_JOBS="${CARGO_BUILD_JOBS:-4}" GITNEX_BUILD_VERSION="$v" cargo tauri build --bundles deb --config "{\"version\":\"$v\",\"bundle\":{\"linux\":{\"deb\":{\"compression\":$comp}}}}"
-    GITNEX_SHLIBDEPS_CACHE=target/package-cache/shlibdeps scripts/fix-deb.sh target/release/bundle/deb/GitNex_*_amd64.deb
-    scripts/check-deb.sh target/release/bundle/deb/GitNex_*_amd64.deb
+      env -u CARGO_INCREMENTAL CEF_PATH="$cef" CARGO_BUILD_JOBS="${CARGO_BUILD_JOBS:-4}" GITNEXIA_BUILD_VERSION="$v" cargo tauri build --bundles deb --config "{\"version\":\"$v\",\"bundle\":{\"linux\":{\"deb\":{\"compression\":$comp}}}}"
+    GITNEXIA_SHLIBDEPS_CACHE=target/package-cache/shlibdeps scripts/fix-deb.sh target/release/bundle/deb/GitNexia_*_amd64.deb
+    scripts/check-deb.sh target/release/bundle/deb/GitNexia_*_amd64.deb
 
 # The third-party license notices the packages ship (docs/licensing.md): the Rust crates, CEF and
 # Chromium into target/licenses (scripts/licenses.sh, needs cargo-about), then the UI build, which
@@ -293,28 +293,28 @@ licenses:
     scripts/licenses.sh
     cd ui && npm run build
 
-# The Arch package (target/release/bundle/arch/GitNex-<ver>-1-x86_64.pkg.tar.zst), made from the
+# The Arch package (target/release/bundle/arch/GitNexia-<ver>-1-x86_64.pkg.tar.zst), made from the
 # .deb of `just package` without makepkg: same payload, pacman's .PKGINFO and .MTREE, Depends
 # mapped through the table in scripts/arch-pkg.py. `just package` already runs it.
 package-arch:
-    scripts/package-arch.sh target/release/bundle/deb/GitNex_*_amd64.deb target/release/bundle/arch
+    scripts/package-arch.sh target/release/bundle/deb/GitNexia_*_amd64.deb target/release/bundle/arch
 
-# The RPM for Fedora, RHEL and openSUSE (target/release/bundle/rpm/GitNex-<version>-1.x86_64.rpm),
+# The RPM for Fedora, RHEL and openSUSE (target/release/bundle/rpm/GitNexia-<version>-1.x86_64.rpm),
 # made from the .deb of `just package` without rpmbuild: same payload less the system directories,
 # Requires from the ELF files in rpm's form, the notices as %license files (scripts/rpm-pkg.py).
 # `just package` already runs it.
 package-rpm:
-    scripts/package-rpm.sh target/release/bundle/deb/GitNex_*_amd64.deb target/release/bundle/rpm
+    scripts/package-rpm.sh target/release/bundle/deb/GitNexia_*_amd64.deb target/release/bundle/rpm
 
 # On Windows: the NSIS per-user installer and the per-machine MSI, from one release build, in
 # target\release\bundle\windows\ (scripts/package-windows.ps1 has the steps and requirements).
-# CEF's bootstrap.exe runs as GitNex.exe and loads gitnex-app built as GitNex.dll, which
-# gives Chromium its sandbox. Versions as in `just package`; GITNEX_SIGN_COMMAND signs.
+# CEF's bootstrap.exe runs as GitNexia.exe and loads gitnexia-app built as GitNexia.dll, which
+# gives Chromium its sandbox. Versions as in `just package`; GITNEXIA_SIGN_COMMAND signs.
 package-windows:
     powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File scripts/package-windows.ps1
 
-# On macOS: target/release/bundle/dmg/GitNex_<version>_aarch64.dmg (x64 on an Intel Mac), the
-# release GitNex.app (signed with GITNEX_MACOS_SIGNING_IDENTITY, else ad-hoc), beside a link
+# On macOS: target/release/bundle/dmg/GitNexia_<version>_aarch64.dmg (x64 on an Intel Mac), the
+# release GitNexia.app (signed with GITNEXIA_MACOS_SIGNING_IDENTITY, else ad-hoc), beside a link
 # to /Applications; then its checks (scripts/package-macos.sh). Versions as in `just package`.
 package-macos: check-tauri-cli
     scripts/package-macos.sh
@@ -323,31 +323,31 @@ package-macos: check-tauri-cli
 # the network, so `just package` doesn't run it): dependencies, pacman -Qkk, the setuid
 # chrome-sandbox, ldd, and a headless launch. See scripts/check-arch-pkg.sh.
 check-arch-pkg:
-    scripts/check-arch-pkg.sh target/release/bundle/arch/GitNex-*-x86_64.pkg.tar.zst
+    scripts/check-arch-pkg.sh target/release/bundle/arch/GitNexia-*-x86_64.pkg.tar.zst
 
 # Installs the RPM in a throwaway fedora:latest container and checks it (Docker and the network, so
 # `just package` doesn't run it): rpm -K, dnf resolving every Requires, rpm -V, the setuid
 # chrome-sandbox, the notices despite nodocs, ldd, a headless launch, and a clean dnf remove. See
 # scripts/check-rpm-pkg.sh.
 check-rpm-pkg:
-    scripts/check-rpm-pkg.sh target/release/bundle/rpm/GitNex-*.x86_64.rpm
+    scripts/check-rpm-pkg.sh target/release/bundle/rpm/GitNexia-*.x86_64.rpm
 
 # Runs the release binary from `just build-app`, with the installed sandbox helper if present.
 run-app repo="":
     #!/usr/bin/env bash
     set -euo pipefail
     if [ -e "{{sandbox_helper}}" ]; then export CHROME_DEVEL_SANDBOX="{{sandbox_helper}}"; rm -f target/release/chrome-sandbox; fi
-    GITNEX_OPEN="{{repo}}" target/release/gitnex
+    GITNEXIA_OPEN="{{repo}}" target/release/gitnexia
 
-# The app's platform icon set (crates/gitnex-app/icons) from icons/source.svg (scripts/icons.py; needs the Tauri CLI).
+# The app's platform icon set (crates/gitnexia-app/icons) from icons/source.svg (scripts/icons.py; needs the Tauri CLI).
 icons:
     python3 scripts/icons.py
 
 # A desktop entry for the unbundled release build (H13): the dock and the app grid then show
-# GitNex's icon and match its window (StartupWMClass = the window's WM_CLASS, set in
-# crates/gitnex-app/src/desktop.rs). Writes only under $XDG_DATA_HOME (default
-# ~/.local/share): applications/gitnex.desktop and icons/hicolor/<size>/apps/gitnex.png, plus
-# the scalable source.svg. It launches this checkout's release binary (target/release/gitnex,
+# GitNexia's icon and match its window (StartupWMClass = the window's WM_CLASS, set in
+# crates/gitnexia-app/src/desktop.rs). Writes only under $XDG_DATA_HOME (default
+# ~/.local/share): applications/gitnexia.desktop and icons/hicolor/<size>/apps/gitnexia.png, plus
+# the scalable source.svg. It launches this checkout's release binary (target/release/gitnexia,
 # from `just build-app`) through `just run-app`, so the sandbox helper setup stays in one place.
 # The .deb has its own entry (Tauri's bundler writes it). Run it from the MAIN checkout: Exec
 # bakes in this checkout's path, and a `.claude/worktrees/` worktree is temporary (the entry
@@ -361,32 +361,32 @@ install-desktop:
     case "{{justfile_directory()}}" in
       */.claude/worktrees/*) echo "warning: this is a temporary worktree ({{justfile_directory()}}); the entry's Exec points here. Run 'just install-desktop' from the main checkout instead." >&2 ;;
     esac
-    [ -x "{{justfile_directory()}}/target/release/gitnex" ] || echo "note: target/release/gitnex isn't built yet; run 'just build-app' before launching it from the dock." >&2
+    [ -x "{{justfile_directory()}}/target/release/gitnexia" ] || echo "note: target/release/gitnexia isn't built yet; run 'just build-app' before launching it from the dock." >&2
     data="${XDG_DATA_HOME:-$HOME/.local/share}"; apps="$data/applications"; icons="$data/icons/hicolor"
     mkdir -p "$apps"
     for size in {{desktop_icons}}; do
       dir="$icons/${size%%:*}/apps"; mkdir -p "$dir"
-      cp "{{justfile_directory()}}/crates/gitnex-app/icons/${size#*:}" "$dir/gitnex.png"
+      cp "{{justfile_directory()}}/crates/gitnexia-app/icons/${size#*:}" "$dir/gitnexia.png"
     done
     mkdir -p "$icons/scalable/apps"
-    cp "{{justfile_directory()}}/crates/gitnex-app/icons/source.svg" "$icons/scalable/apps/gitnex.svg"
-    printf '%s\n' '[Desktop Entry]' 'Type=Application' 'Name=GitNex' 'Comment=Git GUI' \
-      'Exec="{{just_executable()}}" --justfile "{{justfile()}}" run-app' 'Icon=gitnex' \
-      'StartupWMClass=gitnex' 'Categories=Development;RevisionControl;' 'Terminal=false' \
-      > "$apps/gitnex.desktop"
+    cp "{{justfile_directory()}}/crates/gitnexia-app/icons/source.svg" "$icons/scalable/apps/gitnexia.svg"
+    printf '%s\n' '[Desktop Entry]' 'Type=Application' 'Name=GitNexia' 'Comment=Git GUI' \
+      'Exec="{{just_executable()}}" --justfile "{{justfile()}}" run-app' 'Icon=gitnexia' \
+      'StartupWMClass=gitnexia' 'Categories=Development;RevisionControl;' 'Terminal=false' \
+      > "$apps/gitnexia.desktop"
     command -v update-desktop-database >/dev/null && update-desktop-database "$apps" || true
     command -v gtk-update-icon-cache >/dev/null && gtk-update-icon-cache -q -t "$icons" || true
-    echo "Wrote $apps/gitnex.desktop (Exec: just run-app in {{justfile_directory()}})"
+    echo "Wrote $apps/gitnexia.desktop (Exec: just run-app in {{justfile_directory()}})"
 
 uninstall-desktop:
     #!/usr/bin/env bash
     set -euo pipefail
     data="${XDG_DATA_HOME:-$HOME/.local/share}"; apps="$data/applications"; icons="$data/icons/hicolor"
-    rm -f "$apps/gitnex.desktop" "$icons/scalable/apps/gitnex.svg"
-    for size in {{desktop_icons}}; do rm -f "$icons/${size%%:*}/apps/gitnex.png"; done
+    rm -f "$apps/gitnexia.desktop" "$icons/scalable/apps/gitnexia.svg"
+    for size in {{desktop_icons}}; do rm -f "$icons/${size%%:*}/apps/gitnexia.png"; done
     [ -d "$apps" ] && command -v update-desktop-database >/dev/null && update-desktop-database "$apps" || true
     [ -d "$icons" ] && command -v gtk-update-icon-cache >/dev/null && gtk-update-icon-cache -q -t "$icons" || true
-    echo "Removed GitNex's desktop entry and icons from $data"
+    echo "Removed GitNexia's desktop entry and icons from $data"
 
 lint:
     cargo clippy --workspace --all-targets -- -D warnings
@@ -394,16 +394,16 @@ lint:
     cd site && npx tsc --noEmit
 
 # A smoke check of the two §17.3 rows that need a live app (idle CPU, memory). Non-gating: it
-# prints numbers next to the budgets and never fails on them. Point GITNEX_PID at the browser
-# process of a running instance (open the tabs you want measured first): the gitnex process
+# prints numbers next to the budgets and never fails on them. Point GITNEXIA_PID at the browser
+# process of a running instance (open the tabs you want measured first): the gitnexia process
 # without `--type=` (not `pgrep -nx`, which finds a renderer; docs/dev-setup.md has a
 # one-liner). The other rows are asserted by `just e2e`
 # (menu-perf, tabs) and the opt-in real-repo spec. See docs/dev-setup.md.
 bench:
     #!/usr/bin/env bash
     set -uo pipefail
-    : "${GITNEX_PID:?set GITNEX_PID to a running GitNex browser process (see docs/dev-setup.md)}"
-    export GITNEX_PID
+    : "${GITNEXIA_PID:?set GITNEXIA_PID to a running GitNexia browser process (see docs/dev-setup.md)}"
+    export GITNEXIA_PID
     echo "== idle CPU, 60 s (budget < 1.5%; keep the window focused and idle) =="
     scripts/measure-idle.sh 60 || echo "(measure-idle failed)"
     echo

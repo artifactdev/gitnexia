@@ -4,16 +4,32 @@
     "params": {
       "repo": "$repo",
       "spec": {
-        "id": "810fba25c47748a55f9bf2ae704a536fdf3decbc",
+        "id": "6f6d981728c8fe969befa44e70d90112d8ced3d7",
         "kind": "commit",
         "parent": 0
       }
     }
   },
   "response": {
-    "added": 16,
+    "added": 18,
     "deleted": 21,
     "files": [
+      {
+        "additions": 2,
+        "deletions": 0,
+        "new": {
+          "kind": "object",
+          "oid": "489065711f80ddf125feede1ee941353be54329d"
+        },
+        "old": {
+          "kind": "object",
+          "oid": "f133443fcf8b63e0aaed4c910c29683b334612c2"
+        },
+        "oldPath": null,
+        "path": "ledger.php",
+        "status": "M",
+        "submodule": false
+      },
       {
         "additions": 2,
         "deletions": 4,

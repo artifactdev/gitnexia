@@ -166,7 +166,7 @@ export const journalHandlers: Pick<
     ctx.writes.cancel(op);
     return null;
   },
-  // SettleIntent: runs nothing; a paused merge that ended outside GitNex settles at step 2b.
+  // SettleIntent: runs nothing; a paused merge that ended outside GitNexia settles at step 2b.
   settlePaused: async ({ repo, worktree }, ctx) => {
     const settle: WriteIntent<null> = { kind: 'resolve', label: () => 'finish a merge or rebase', undo: () => null, allowedInProgress: true, onlySettles: true, run: async () => null };
     return runWrite(ctx, repo, worktree, NO_EXPECT, settle);

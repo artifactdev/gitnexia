@@ -5,11 +5,11 @@
       "force": false,
       "new": {
         "kind": "object",
-        "oid": "a7009bbd7053ef71d2beb97595c89d662810e82a"
+        "oid": "a2b49943b9cb9cd8744c222933ddeb05b578dd2d"
       },
       "old": {
         "kind": "object",
-        "oid": "84734cabc0423913502c75a891103574dbc84e08"
+        "oid": "032a788975d818274b802f6df769cdf20db90f78"
       },
       "path": "docs/design.pdf",
       "repo": "$repo"
@@ -19,21 +19,21 @@
     "eolOnly": false,
     "image": false,
     "new": {
-      "base64": "sha256:3beee2e515e7a1d79999775cb94a3eec4ba6ea3c93b75a79fe4485ae947b12c7:58852",
+      "base64": "sha256:4c0753cc820812eef56d28adf328e46c27bbfadcace588d532b06c323581470b:58852",
       "binary": true,
       "encoding": "",
       "eol": "none",
-      "hash": "a7009bbd7053ef71d2beb97595c89d662810e82a",
-      "size": 44138,
+      "hash": "a2b49943b9cb9cd8744c222933ddeb05b578dd2d",
+      "size": 44139,
       "text": null
     },
     "old": {
-      "base64": "sha256:dfb0f44604dfba079a64ea70362d4e315aae3cf938a12571a3b5e3be336dd2c7:50236",
+      "base64": "sha256:d49ea26c886449b429d9070b6b98b97ef54314aac93d3faa35cd823ac776a863:50236",
       "binary": true,
       "encoding": "",
       "eol": "none",
-      "hash": "84734cabc0423913502c75a891103574dbc84e08",
-      "size": 37675,
+      "hash": "032a788975d818274b802f6df769cdf20db90f78",
+      "size": 37676,
       "text": null
     },
     "pdf": true,

@@ -5,7 +5,7 @@
 // the notices it copies in from target/licenses, tauri.conf.json), the VITE_* environment and
 // Node's version. A `just package` after a Rust-only change then skips the UI's 1-2 minutes, and
 // the license check of the UI's packages still reruns whenever the lockfile or the allow-list
-// changes. GITNEX_REBUILD=1 always builds (docs/dev-setup.md, "Packaging").
+// changes. GITNEXIA_REBUILD=1 always builds (docs/dev-setup.md, "Packaging").
 import { execSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
@@ -17,7 +17,7 @@ const root = join(ui, '..');
 const dist = join(ui, 'dist');
 // Outside dist, which the app embeds as it is.
 const stamp = join(root, 'target', 'ui-build', 'dist.key');
-const licensesDir = process.env.GITNEX_LICENSES_DIR ?? join(root, 'target', 'licenses');
+const licensesDir = process.env.GITNEXIA_LICENSES_DIR ?? join(root, 'target', 'licenses');
 // Build outputs and per-run files, at any depth under ui/.
 const skip = new Set(['node_modules', 'dist', 'dist-e2e', 'dist-demo-e2e', 'test-results', 'playwright-report', '.fixtures.json']);
 
@@ -62,16 +62,16 @@ const inputs = createHash('sha256')
     join(ui, 'node_modules', '.package-lock.json'),
     join(root, 'about.toml'),
     join(root, 'LICENSE'),
-    join(root, 'crates', 'gitnex-app', 'dictionaries', 'en-US-LICENSE.txt'),
-    join(root, 'crates', 'gitnex-app', 'tauri.conf.json'),
+    join(root, 'crates', 'gitnexia-app', 'dictionaries', 'en-US-LICENSE.txt'),
+    join(root, 'crates', 'gitnexia-app', 'tauri.conf.json'),
     join(licensesDir, 'THIRD-PARTY-NOTICES-rust.txt'),
     join(licensesDir, 'CEF-LICENSE.txt'),
   ]))
   .digest('hex');
 
 const [had, hadDist] = existsSync(stamp) ? readFileSync(stamp, 'utf8').split('\n') : [];
-if (process.env.GITNEX_REBUILD !== '1' && had === inputs && hadDist && hadDist === distDigest()) {
-  console.log('UI build is up to date (ui/dist; GITNEX_REBUILD=1 rebuilds it)');
+if (process.env.GITNEXIA_REBUILD !== '1' && had === inputs && hadDist && hadDist === distDigest()) {
+  console.log('UI build is up to date (ui/dist; GITNEXIA_REBUILD=1 rebuilds it)');
 } else {
   execSync('npm run build', { cwd: ui, stdio: 'inherit' });
   mkdirSync(dirname(stamp), { recursive: true });

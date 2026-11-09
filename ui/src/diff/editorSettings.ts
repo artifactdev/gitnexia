@@ -6,7 +6,7 @@ import { useAppState } from '../app/state';
  * setting now (`editorStickyScroll`, options.ts). The first loaded settings take the old value
  * over, once, and the key goes.
  */
-export const EDITOR_SETTINGS_STORAGE_KEY = 'gitnex.editorSettings.v1';
+export const EDITOR_SETTINGS_STORAGE_KEY = 'gitnexia.editorSettings.v1';
 
 /** The old key's sticky scroll, if it holds a valid one; the key is removed either way. Blocked
  * storage reads as nothing. */

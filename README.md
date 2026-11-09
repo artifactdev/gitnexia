@@ -1,32 +1,32 @@
 <p align="center">
-  <img src="crates/gitnex-app/icons/source.svg" alt="GitNex" width="128" height="128">
+  <img src="crates/gitnexia-app/icons/source.svg" alt="GitNexia" width="128" height="128">
 </p>
 
-<h1 align="center">GitNex</h1>
+<h1 align="center">GitNexia</h1>
 
 <p align="center">A fast, keyboard-friendly desktop Git client with a commit graph at its heart.</p>
 
 ---
 
-GitNex is a graphical Git client inspired by [GitKraken](https://www.gitkraken.com/). If you've
+GitNexia is a graphical Git client inspired by [GitKraken](https://www.gitkraken.com/). If you've
 used GitKraken, it'll feel familiar on purpose: the lane graph down the middle, the branch and
 remote sidebar, the commit details on the right, and workflows driven from context menus and
-the keyboard. GitNex is an independent project, not affiliated with or endorsed
+the keyboard. GitNexia is an independent project, not affiliated with or endorsed
 by GitKraken / Axosoft.
 
-**Built on GitVolt (and GitBolt before it).** GitNex started as a rename and continuation of
-GitVolt, and it builds on that codebase while adding features of its own: several accounts per
+**Built on GitNex (and GitVolt before it).** GitNexia started as a rename and continuation of
+GitNex, and it builds on that codebase while adding features of its own: several accounts per
 forge, AI-written commit messages, a two-column Open screen with Clone and Create, stash of
-selected files, and profile commit identities. Upgrading from GitVolt is seamless: the first
-start moves its settings, profiles, undo history and tokens over. **On GitBolt?** Install GitNex
-fresh from [artifactdev/gitnex releases](https://github.com/artifactdev/gitnex/releases):
+selected files, and profile commit identities. Upgrading from GitNex or GitVolt is seamless: the
+first start moves its settings, profiles, undo history, UI state and tokens over. **On GitBolt?**
+Install GitNexia fresh from [artifactdev/gitnexia releases](https://github.com/artifactdev/gitnexia/releases):
 GitBolt's settings aren't moved over.
 
 It's built with a Rust core (using [gitoxide](https://github.com/GitoxideLabs/gitoxide) for most reads
 and the `git` CLI for writes, so your hooks, config and credentials behave exactly as they do in a
 terminal), a React UI, and [Tauri](https://tauri.app/) with the Chromium (CEF) runtime.
 
-![GitNex: the commit graph with repository tabs in three tab groups, branches with their GitHub pull requests, a second worktree, and a selected commit's files as a tree](docs/images/screenshot.webp)
+![GitNexia: the commit graph with repository tabs in three tab groups, branches with their GitHub pull requests, a second worktree, and a selected commit's files as a tree](docs/images/screenshot.webp)
 
 > **Status:** used day to day on Linux and Windows; newer on macOS.
 
@@ -45,25 +45,25 @@ see [connection setup](docs/azure-devops.md).
 ## Installing
 
 Download the package for your system from the
-[latest release](https://github.com/artifactdev/gitnex/releases/latest):
+[latest release](https://github.com/artifactdev/gitnexia/releases/latest):
 
-- **Debian and Ubuntu:** `sudo apt install ./GitNex_<version>_amd64.deb`
-- **Arch Linux:** `sudo pacman -U GitNex-<version>-x86_64.pkg.tar.zst`
-- **Fedora 40 or later:** `sudo dnf install ./GitNex-<version>-1.x86_64.rpm` (openSUSE Tumbleweed:
-  `sudo zypper install --allow-unsigned-rpm ./GitNex-<version>-1.x86_64.rpm`)
-- **Windows:** run `GitNex_<version>_x64-setup.exe` (installs for you, no administrator rights)
-  or `GitNex_<version>_x64.msi` (installs for all users). They aren't code-signed yet, so
+- **Debian and Ubuntu:** `sudo apt install ./GitNexia_<version>_amd64.deb`
+- **Arch Linux:** `sudo pacman -U GitNexia-<version>-x86_64.pkg.tar.zst`
+- **Fedora 40 or later:** `sudo dnf install ./GitNexia-<version>-1.x86_64.rpm` (openSUSE Tumbleweed:
+  `sudo zypper install --allow-unsigned-rpm ./GitNexia-<version>-1.x86_64.rpm`)
+- **Windows:** run `GitNexia_<version>_x64-setup.exe` (installs for you, no administrator rights)
+  or `GitNexia_<version>_x64.msi` (installs for all users). They aren't code-signed yet, so
   Windows SmartScreen warns the first time: **More info** › **Run anyway**.
-- **macOS (Apple Silicon):** open `GitNex_<version>_aarch64.dmg` and drag GitNex to
-  Applications. The app is signed with GitNex's own certificate, not an Apple Developer ID, and
+- **macOS (Apple Silicon):** open `GitNexia_<version>_aarch64.dmg` and drag GitNexia to
+  Applications. The app is signed with GitNexia's own certificate, not an Apple Developer ID, and
   isn't notarized, so the first launch is blocked ("Apple could not verify…"). Either run
-  `xattr -dr com.apple.quarantine /Applications/GitNex.app` once, or try to open it, then
+  `xattr -dr com.apple.quarantine /Applications/GitNexia.app` once, or try to open it, then
   go to System Settings › Privacy & Security and click **Open Anyway**.
 
-GitNex needs Git 2.40 or newer on your `PATH` (on Windows,
+GitNexia needs Git 2.40 or newer on your `PATH` (on Windows,
 [Git for Windows](https://gitforwindows.org/); on macOS, Xcode's command line tools or Homebrew's
 `git`). `SHA256SUMS` in each release lists the files'
-checksums. After that, GitNex updates itself (see [Updates](#updates)).
+checksums. After that, GitNexia updates itself (see [Updates](#updates)).
 
 ## Features
 
@@ -111,7 +111,7 @@ checksums. After that, GitNex updates itself (see [Updates](#updates)).
 - **Undo history.** Each worktree keeps a journal of its last 50 operations, and it
   survives restarts: commits and amends, checkouts, branch and tag changes, merges, rebases,
   cherry-picks, reverts, resets, stashes, discards and pulls. Staging has its own undo too.
-- **Interactive rebase.** Besides pick, reword, squash and drop, GitNex has fixup
+- **Interactive rebase.** Besides pick, reword, squash and drop, GitNexia has fixup
   and edit (the rebase stops so you can amend that commit), predicts which commits will
   conflict before you start, and lets you move, add or delete branches on the rewritten commits
   in the same step.
@@ -139,7 +139,7 @@ checksums. After that, GitNex updates itself (see [Updates](#updates)).
 
 - **Tabs and tab groups.** A tab for each repository or worktree. Drop a tab onto another to
   group them; a group's chip collapses it, moves it, or saves and closes it to reopen later.
-- **Clone** into a folder you pick: GitNex makes a folder named after the repository inside it.
+- **Clone** into a folder you pick: GitNexia makes a folder named after the repository inside it.
   Or search your own repositories across configured GitHub, GitLab, Forgejo, Bitbucket and Azure DevOps Services accounts,
   grouped by integration and account, and clone one straight there. The Open screen puts Your
   repositories and Recent side by side, with Open, Clone and Create in its header; Create makes
@@ -217,12 +217,12 @@ checksums. After that, GitNex updates itself (see [Updates](#updates)).
 - **Cherry-pick and revert,** each with a no-commit variant; stashes; tags.
 - **Git flow.** Start and finish features, releases and hotfixes from a sidebar panel; a finish
   (merges, tag, delete) is one Undo.
-- **Activity log** of every git command GitNex ran, with its output, hooks included.
+- **Activity log** of every git command GitNexia ran, with its output, hooks included.
 - **Signed commits** through your git config, and signature verification in the commit details.
 
 #### Privacy
 
-- **No telemetry,** analytics or crash reporting. The update check is the only request GitNex
+- **No telemetry,** analytics or crash reporting. The update check is the only request GitNexia
   makes on its own that isn't about your repositories or accounts.
 - **Locked-down webview.** A strict Content Security Policy, and Chromium can't resolve any host
   name but localhost: the Rust core makes every network request. Images from hosts other than
@@ -233,7 +233,7 @@ checksums. After that, GitNex updates itself (see [Updates](#updates)).
 
 ✅ yes, 🟡 partly, ❌ no.
 
-| | GitKraken | GitNex |
+| | GitKraken | GitNexia |
 |---|---|---|
 | Commit graph with lanes, branch/tag chips and avatars | ✅ | ✅ |
 | Main branch pinned to the left | 🟡 When you pin one | ✅ Automatic, with its remote branch and, in a fork, the original project's; can be changed or turned off |
@@ -274,7 +274,7 @@ checksums. After that, GitNex updates itself (see [Updates](#updates)).
 | Windows and macOS | ✅ | ✅ (macOS: Apple Silicon only) |
 | License | Proprietary; free for local and public repos | MIT |
 
-### What GitNex doesn't do
+### What GitNexia doesn't do
 
 - **Not planned:** Intel Macs, an integrated terminal, AI features, issue tracker integrations,
   cloud workspaces and team features, and Bitbucket Cloud, Azure DevOps Server or GitHub Enterprise Server
@@ -284,23 +284,28 @@ checksums. After that, GitNex updates itself (see [Updates](#updates)).
 
 ## Updates
 
-GitNex checks GitHub for a new release at startup and once a day. When there is one:
+GitNexia checks GitHub for a new release at startup and once a day. When there is one:
 
 1. A pill at the bottom right says **Update to 0.6.0** (the new version). A click downloads the package for how
-   you installed GitNex.
-2. GitNex checks the download against the release's `SHA256SUMS`, then offers **Install**.
+   you installed GitNexia.
+2. GitNexia checks the download against the release's `SHA256SUMS`, then offers **Install**.
 3. **Install** depends on the platform:
-   - **Linux (`.deb`, `.rpm`, Arch):** GitNex runs the package manager through `pkexec`
+   - **Linux (`.deb`, `.rpm`, Arch):** GitNexia runs the package manager through `pkexec`
      (`pkexec apt install`, `pkexec dnf install` or zypper, `pkexec pacman -U`), so your desktop
      asks for your password. If it can't ask, it shows the command to run in a terminal; on Arch,
      it can show your AUR helper's command instead.
-   - **Windows:** GitNex starts the installer you installed with (the setup `.exe` or the `.msi`)
+   - **Windows:** GitNexia starts the installer you installed with (the setup `.exe` or the `.msi`)
      and closes so it can be replaced.
-   - **macOS:** GitNex copies the new GitNex.app over the one you run, with no password. If it
-     can't write to its folder, it says to open the `.dmg` and drag GitNex to Applications.
-4. **Restart GitNex** starts the new version (on Linux and macOS).
+   - **macOS:** GitNexia copies the new GitNexia.app over the one you run, with no password. If it
+     can't write to its folder, it says to open the `.dmg` and drag GitNexia to Applications.
+4. **Restart GitNexia** starts the new version (on Linux and macOS).
 
 A build from source only links to the release page.
+
+The repository moved from `artifactdev/gitnex` to `artifactdev/gitnexia` in 1.6.0. 1.5.x still
+checks the old address; if GitHub's redirect doesn't carry it, install 1.6.0 once from the
+[releases page](https://github.com/artifactdev/gitnexia/releases) by hand, and updates work as
+before.
 
 - **Check now:** Help › **Check for updates**.
 - **Settings › General › Updates:** turn the automatic check off, or include pre-releases.
@@ -336,10 +341,10 @@ See [docs/dev-setup.md](docs/dev-setup.md) for the full setup, including Chromiu
 - [ARCHITECTURE.md](ARCHITECTURE.md): how the pieces fit together
 - [CONTRIBUTING.md](CONTRIBUTING.md): how to contribute
 - [SECURITY.md](SECURITY.md): reporting a vulnerability
-- [PRIVACY.md](PRIVACY.md): what GitNex stores and sends
+- [PRIVACY.md](PRIVACY.md): what GitNexia stores and sends
 - [CHANGELOG.md](CHANGELOG.md): what changed in each release
 - [docs/dev-setup.md](docs/dev-setup.md): the full development setup
-- [docs/decisions/cef-over-webkitgtk.md](docs/decisions/cef-over-webkitgtk.md): why GitNex runs on CEF rather than WebKitGTK
+- [docs/decisions/cef-over-webkitgtk.md](docs/decisions/cef-over-webkitgtk.md): why GitNexia runs on CEF rather than WebKitGTK
 - [docs/decisions/structural-diff-difftastic.md](docs/decisions/structural-diff-difftastic.md): why there's no structural diff mode, and what was tried
 - [docs/licensing.md](docs/licensing.md): licensing details
 
@@ -347,5 +352,5 @@ See [docs/dev-setup.md](docs/dev-setup.md) for the full setup, including Chromiu
 
 [MIT](LICENSE)
 
-GitKraken is a trademark of Axosoft, LLC. It's mentioned here only to describe GitNex's
+GitKraken is a trademark of Axosoft, LLC. It's mentioned here only to describe GitNexia's
 inspiration and to compare features.

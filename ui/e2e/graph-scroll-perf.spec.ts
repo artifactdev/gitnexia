@@ -6,7 +6,7 @@ import { avatarPng, makePerfRepo } from './perfRepo';
 
 /**
  * The graph's scroll performance probe: not part of the suite (it takes ~30 s and measures
- * rather than asserts much), and a branch preset switch's budget on the same repo, which is. GITNEX_PERF=1 runs it; it prints one JSON line per measurement.
+ * rather than asserts much), and a branch preset switch's budget on the same repo, which is. GITNEXIA_PERF=1 runs it; it prints one JSON line per measurement.
  * A 4000-commit, ~22-lane generated repo with a picture for every author (answered in the
  * WebSocket, the harness has none), a 2560×1440 viewport at dpr 2, the Graph column at its
  * widest (every lane fits). Measures:
@@ -23,7 +23,7 @@ const stats = (xs: number[]) => {
 };
 
 test.describe('graph scroll perf probe', () => {
-  test.skip(!process.env.GITNEX_PERF, 'the graph perf probe runs with GITNEX_PERF=1');
+  test.skip(!process.env.GITNEXIA_PERF, 'the graph perf probe runs with GITNEXIA_PERF=1');
   test.use({ viewport: { width: 2560, height: 1440 }, deviceScaleFactor: 2 });
   test.setTimeout(120_000);
 

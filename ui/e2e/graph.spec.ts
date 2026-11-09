@@ -36,7 +36,7 @@ test.describe('commit graph', () => {
       await expect(gridRows.nth(3)).toContainText('Hotfix: null check');
       await expect(rows.nth(4).getByText('main', { exact: true })).toBeVisible();
       await expect(grid.getByText('v1.0')).toBeVisible();
-      await expect(page).toHaveTitle('GitNex — repo');
+      await expect(page).toHaveTitle('GitNexia — repo');
     });
     await test.step('canvas paints an opaque lane-colored rail at its right edge on every row', async () => {
       // Row 0 (the stash) and row 4 (main's merge, lane 0): sample the rail's last device pixel
@@ -1324,9 +1324,9 @@ test.describe('graph column width', () => {
     await page.goto(openUrl(fixtures.wide));
     await expect(page.getByRole('grid', { name: 'Commit graph' })).toBeVisible();
     // The real lane count, straight from the backend (the same harness the page talks to).
-    // Harness port follows GITNEX_E2E_PORT_BASE (see playwright.config.ts), so this stays correct
+    // Harness port follows GITNEXIA_E2E_PORT_BASE (see playwright.config.ts), so this stays correct
     // when several `just e2e` runs share a machine on different port bases.
-    const harnessPort = process.env.GITNEX_E2E_PORT_BASE ? Number(process.env.GITNEX_E2E_PORT_BASE) : 7433;
+    const harnessPort = process.env.GITNEXIA_E2E_PORT_BASE ? Number(process.env.GITNEXIA_E2E_PORT_BASE) : 7433;
     const maxLanes = await page.evaluate(async ({ path, harnessPort }) => {
       const ws = new WebSocket(`ws://127.0.0.1:${harnessPort}/ws`);
       let id = 0;

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // SPDX-License-Identifier: MIT
 
-//! GitNex patch: a window that draws its own title bar keeps Windows' frame everywhere else.
+//! GitNexia patch: a window that draws its own title bar keeps Windows' frame everywhere else.
 //!
 //! winit builds an undecorated window (`decorations(false)`) with the usual styles, caption and
 //! sizing frame included, and makes its client area the whole window in `WM_NCCALCSIZE`: no
@@ -63,7 +63,7 @@ const SUBCLASS_ID: usize = 0x4756_6672;
 /// The message that has the subclass show the window menu at the point in its `LPARAM`.
 fn window_menu_message() -> u32 {
   static MESSAGE: OnceLock<u32> = OnceLock::new();
-  *MESSAGE.get_or_init(|| unsafe { RegisterWindowMessageW(w!("GitNex.ShowWindowMenu")) })
+  *MESSAGE.get_or_init(|| unsafe { RegisterWindowMessageW(w!("GitNexia.ShowWindowMenu")) })
 }
 
 fn rect(r: RECT) -> Rect {
@@ -108,7 +108,7 @@ fn applies(hwnd: HWND) -> bool {
   }
 }
 
-/// Whether the window has the subclass, so GitNex's frame.
+/// Whether the window has the subclass, so GitNexia's frame.
 pub(super) fn installed(hwnd: HWND) -> bool {
   unsafe { GetWindowSubclass(hwnd, Some(subclass_proc), SUBCLASS_ID, None).as_bool() }
 }
@@ -182,7 +182,7 @@ fn grow(hwnd: HWND, dx: i32, dy: i32) {
 }
 
 /// Shows the window menu at the pointer, from the window's own message dispatch. False if the
-/// window doesn't have GitNex's frame.
+/// window doesn't have GitNexia's frame.
 pub(super) fn show_window_menu(hwnd: HWND) -> bool {
   if !installed(hwnd) {
     return false;

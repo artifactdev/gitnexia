@@ -15,7 +15,7 @@ const folded: BranchPreset = {
 describe('preset JSON', () => {
   it('copy as JSON is self-describing and leaves picks out', () => {
     const json = JSON.parse(presetToJson(folded));
-    expect(json).toEqual({ gitnex: 'branch-preset', version: 1, name: 'Mine, others folded', color: 'purple', rules: folded.rules, otherwise: 'collapse', foldMerged: true, ghostLines: false, ghostPicks: false });
+    expect(json).toEqual({ gitnexia: 'branch-preset', version: 1, name: 'Mine, others folded', color: 'purple', rules: folded.rules, otherwise: 'collapse', foldMerged: true, ghostLines: false, ghostPicks: false });
     expect(Object.keys(json)).not.toContain('id');
     expect(parsePresetJson(presetToJson(folded))).toEqual({ name: folded.name, color: 'purple', rules: folded.rules, otherwise: 'collapse', foldMerged: true, ghostLines: false, ghostPicks: false });
   });
@@ -28,7 +28,7 @@ describe('preset JSON', () => {
   });
 
   it('import rejects other JSON and renames clashes', () => {
-    expect(parsePresetJson(JSON.stringify({ gitnex: 'theme', version: 1, name: 'Dusk', base: 'dark' }))).toBeNull();
+    expect(parsePresetJson(JSON.stringify({ gitnexia: 'theme', version: 1, name: 'Dusk', base: 'dark' }))).toBeNull();
     expect(parsePresetJson('{}')).toBeNull();
     expect(parsePresetJson('not json {')).toBeNull();
     const body = JSON.parse(presetToJson(folded));

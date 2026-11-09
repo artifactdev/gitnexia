@@ -269,8 +269,8 @@ describe('the branch preset editor', () => {
     act(() => settingsPasteHandler()?.(presetToJson(preset('x', { name: 'Quiet', otherwise: 'collapse' }))));
     expect(settings().branchPresets?.map((p) => p.name)).toEqual(['Quiet', 'No bots', 'Quiet (2)']);
     expect(screen.getByRole('button', { name: 'Quiet (2)', pressed: true })).toBeTruthy();
-    act(() => settingsPasteHandler()?.('{"gitnex":"theme","version":1}'));
-    expect(useToast.getState().message).toBe("That isn't a GitNex branch preset");
+    act(() => settingsPasteHandler()?.('{"gitnexia":"theme","version":1}'));
+    expect(useToast.getState().message).toBe("That isn't a GitNexia branch preset");
     expect(settings().branchPresets).toHaveLength(3);
     // Copy as JSON, then the Paste preset button.
     fireEvent.click(screen.getByRole('button', { name: 'Copy as JSON' }));

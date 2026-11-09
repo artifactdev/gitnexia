@@ -1,6 +1,6 @@
 // Stacked merge requests (the core's forge/stack.rs), on the demo's GitLab: the stack view, the
 // Stack table kept in each open MR's description, retargeting, and the merge guard. The demo's
-// GitLab is 18.9.1, so stacks are managed (GitNex keeps the table); GitLab 19.1 links them itself.
+// GitLab is 18.9.1, so stacks are managed (GitNexia keeps the table); GitLab 19.1 links them itself.
 // GitLab only: `!n`, the noun `MR`.
 import type { ForgeMr } from '../../api/gen/ForgeMr';
 import type { GbError } from '../../api/gen/GbError';
@@ -49,7 +49,7 @@ export const eolOf = (description: string): '\r\n' | '\n' => (description.includ
 
 /** `render_block`: the marker-fenced Stack table, bottom to top, `current`'s row in bold. */
 export function renderBlock(rows: { number: number; title: string; state: MrState }[], current: number, eol: string): string {
-  const lines = [MARK_START, '**Stack** (kept up to date by GitNex)', '', '| # | MR | Title | State |', '|---|---|---|---|'];
+  const lines = [MARK_START, '**Stack** (kept up to date by GitNexia)', '', '| # | MR | Title | State |', '|---|---|---|---|'];
   rows.forEach((r, i) => {
     const cells = [String(i + 1), mrRef(r.number), escapeCell(r.title), STATE_WORD[r.state]];
     lines.push(`| ${(r.number === current ? cells.map((c) => (c === '' ? '' : `**${c}**`)) : cells).join(' | ')} |`);

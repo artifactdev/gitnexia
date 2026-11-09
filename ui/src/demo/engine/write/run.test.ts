@@ -66,8 +66,8 @@ describe('runWrite', () => {
 
   it('refuses what the UI no longer shows, and an operation in progress', async () => {
     const { t, base, two, ctx } = await setup();
-    await expect(runWrite(ctx, 1, t.dir, { head: base, refs: {} }, moveMain(two, base))).rejects.toMatchObject({ kind: 'RefMoved', message: 'HEAD changed outside GitNex' });
-    await expect(runWrite(ctx, 1, t.dir, { head: null, refs: { 'refs/heads/main': base } }, moveMain(two, base))).rejects.toMatchObject({ kind: 'RefMoved', message: 'main changed outside GitNex' });
+    await expect(runWrite(ctx, 1, t.dir, { head: base, refs: {} }, moveMain(two, base))).rejects.toMatchObject({ kind: 'RefMoved', message: 'HEAD changed outside GitNexia' });
+    await expect(runWrite(ctx, 1, t.dir, { head: null, refs: { 'refs/heads/main': base } }, moveMain(two, base))).rejects.toMatchObject({ kind: 'RefMoved', message: 'main changed outside GitNexia' });
     t.memfs.writeFileSync(`${t.repo.gitdir}/MERGE_HEAD`, `${base}\n`);
     await expect(runWrite(ctx, 1, t.dir, NO, moveMain(two, base))).rejects.toMatchObject({ kind: 'InProgress', message: 'A merge is in progress' });
     expect((await runWrite(ctx, 1, t.dir, NO, moveMain(two, base, { allowedInProgress: true }))).outcome).toBe('moved');

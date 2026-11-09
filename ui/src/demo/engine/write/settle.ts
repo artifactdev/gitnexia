@@ -1,6 +1,6 @@
 // A paused merge, rebase or pick settles once nothing is in progress any more (run_write's
 // settle_paused, §13.2): completed or aborted by the core's `completed` (write/mod.rs), its moves
-// recorded either way. Steps 2b (it ended outside GitNex) and 7b (this write started mid-operation:
+// recorded either way. Steps 2b (it ended outside GitNexia) and 7b (this write started mid-operation:
 // Commit, Continue, Abort); its autostash is restored either way. Not here: the core's leftover
 // `.git/sequencer` quit (the demo's picks keep no git sequencer).
 import type { ReadRepo } from '../read/seam';
@@ -44,7 +44,7 @@ function revertsOneOf(message: string, oids: string[]): boolean {
 }
 
 /** The core's `completed`: the paused op ended as itself (else it was aborted). `inside`: the write
- *  that ended it is GitNex's own (a Commit or Continue). */
+ *  that ended it is GitNexia's own (a Commit or Continue). */
 async function completed(cx: WriteCx, entry: JournalEntry, op: PausedOp, now: Map<string, string | null>, inside: boolean): Promise<boolean> {
   const branch = entry.headBefore.branch;
   if (branch === null) return false;
@@ -75,7 +75,7 @@ async function completed(cx: WriteCx, entry: JournalEntry, op: PausedOp, now: Ma
       if (!(await isAncestor(repo, old, tip))) return false;
       const made = await beyond(repo, tip, old);
       if (made.length > op.picked.length) return false;
-      // GitNex's own Continue commits the message the user may have rewritten; ended outside it,
+      // GitNexia's own Continue commits the message the user may have rewritten; ended outside it,
       // each new commit must say what it reverts.
       if (inside) return true;
       for (const c of made) if (!revertsOneOf((await readCommit(repo, c)).rawMessage, op.picked)) return false;

@@ -25,7 +25,7 @@ export function demoFile(demoDir: string, url: string): string | null {
 
 export function demoDev(demoDir: string): Plugin {
   return {
-    name: 'gitnex-site-demo-dev',
+    name: 'gitnexia-site-demo-dev',
     apply: 'serve',
     configureServer(server) {
       server.middlewares.use('/demo', (req, res, next) => {

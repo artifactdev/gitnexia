@@ -3,13 +3,14 @@
 # before deploying): the landing page (`just site-build`, which runs the page's own checks), the
 # demo under demo/ (`just demo-build`: the WebAssembly graph, then `vite build --mode demo` over the
 # bundles in site/demo-data/) and the 404 page, then ui/scripts/check-site.mjs over the result.
-# GITNEX_SITE_BASE is the path the site is served under: / on gitnex.com; GITNEX_SITE_ORIGIN its
-# scheme and host, https://gitnex.com by default (the link previews' URLs). See docs/website.md.
+# GITNEXIA_SITE_BASE is the path the site is served under: /gitnexia/ on GitHub Pages; GITNEXIA_SITE_ORIGIN its
+# scheme and host, https://artifactdev.github.io by default (the link previews' URLs). See docs/website.md.
 set -euo pipefail
 root=$(cd "$(dirname "$0")/.." && pwd)
 cd "$root"
-export GITNEX_SITE_BASE=${GITNEX_SITE_BASE:-/}
-base=$GITNEX_SITE_BASE
+export GITNEXIA_SITE_BASE=${GITNEXIA_SITE_BASE:-/gitnexia/}
+export GITNEXIA_SITE_ORIGIN=${GITNEXIA_SITE_ORIGIN:-https://artifactdev.github.io}
+base=$GITNEXIA_SITE_BASE
 
 # The page (with its own checks, site/build/check.ts), then the demo under demo/; either order works.
 just site-build demo-build

@@ -39,7 +39,7 @@ export const DEFAULT_COMMIT_LIMIT = 2000;
 /** How a graph read lays the repository out: the window, the pin, the active worktree, the
  * forge's cached facts on the remotes' projects, and the branch preset's view (none under All). */
 export interface GraphOptions { limit: number | null; pin?: PinSetting; active?: string; forks?: ForkFacts; view?: ViewSpec }
-const COMPARE_REFS = 'refs/gitnex/compare/';
+const COMPARE_REFS = 'refs/gitnexia/compare/';
 const NULL_OID = '0'.repeat(40);
 const OID = /^[0-9a-f]{40}$/;
 /** What `git init` makes and a bundle (files only) can't carry: isomorphic-git lists and writes

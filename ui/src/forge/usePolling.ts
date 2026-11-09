@@ -35,7 +35,7 @@ export function useForgePolling(tabId: string, repoId: number | undefined): void
   }, [tabId, repoId, intervalMs]);
 }
 
-/** After a GitNex forge write (spec #4 §3.4): the tab's poller polls at once. */
+/** After a GitNexia forge write (spec #4 §3.4): the tab's poller polls at once. */
 export function notifyForgeWrite(tabId: string): void {
   pollers.get(tabId)?.afterWrite();
 }

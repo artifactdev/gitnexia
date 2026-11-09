@@ -32,13 +32,13 @@ use crate::{
 use super::{chrome, icon::icon_to_hicon};
 
 impl AppWindow {
-  /// GitNex patch: an undecorated window keeps Windows' resize border and shadow, for a page
+  /// GitNexia patch: an undecorated window keeps Windows' resize border and shadow, for a page
   /// that draws its own title bar (`chrome.rs`); a decorated one has the system's frame.
   pub(crate) fn sync_custom_frame(&self) {
     chrome::set_custom_frame(self.hwnd(), !self.window.is_decorated());
   }
 
-  /// GitNex patch: `set_size`, for the client area. winit sizes an undecorated window as if it
+  /// GitNexia patch: `set_size`, for the client area. winit sizes an undecorated window as if it
   /// had no frame, so the resize border is added on top.
   pub(crate) fn request_surface_size(&self, size: Size) {
     let (dx, dy) = chrome::extra(self.hwnd());
@@ -51,7 +51,7 @@ impl AppWindow {
     let _ = self.window.request_surface_size(size);
   }
 
-  /// GitNex patch: whether Windows was asked (`chrome.rs`). A menu shows after this returns.
+  /// GitNexia patch: whether Windows was asked (`chrome.rs`). A menu shows after this returns.
   pub(crate) fn window_manager_request(&self, request: WindowManagerRequest) -> bool {
     let hwnd = self.hwnd();
     match request {

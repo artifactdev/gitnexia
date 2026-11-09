@@ -29,34 +29,34 @@ python3 "$helper" depends 'libgtk-3-0' 2>/dev/null && fail "GTK 3 mapped (fix-de
 
 eq escape "$(python3 "$helper" escape 'usr/a b#c=d\e')" 'usr/a\040b\043c\075d\134e'
 eq escape-utf8 "$(python3 "$helper" escape 'é')" '\303\251'
-eq escape-plain "$(python3 "$helper" escape 'usr/share/GitNex/libEGL.so')" 'usr/share/GitNex/libEGL.so'
+eq escape-plain "$(python3 "$helper" escape 'usr/share/GitNexia/libEGL.so')" 'usr/share/GitNexia/libEGL.so'
 
 # The whole script on a synthetic .deb.
 command -v dpkg-deb >/dev/null || { echo "test-package-arch: pure parts OK; package test skipped (no dpkg-deb)"; exit 0; }
 umask 022
 work=$(mktemp -d); trap 'rm -rf "$work"' EXIT
 pkg="$work/pkg"
-mkdir -p "$pkg/DEBIAN" "$pkg/usr/share/GitNex" "$pkg/usr/bin" "$pkg/usr/share/applications"
-cp /usr/bin/true "$pkg/usr/share/GitNex/gitnex"
-printf '#!/bin/sh\n' > "$pkg/usr/share/GitNex/chrome-sandbox"
-chmod 4755 "$pkg/usr/share/GitNex/chrome-sandbox"
+mkdir -p "$pkg/DEBIAN" "$pkg/usr/share/GitNexia" "$pkg/usr/bin" "$pkg/usr/share/applications"
+cp /usr/bin/true "$pkg/usr/share/GitNexia/gitnexia"
+printf '#!/bin/sh\n' > "$pkg/usr/share/GitNexia/chrome-sandbox"
+chmod 4755 "$pkg/usr/share/GitNexia/chrome-sandbox"
 printf '[Desktop Entry]\n' > "$pkg/usr/share/applications/Git Volt.desktop"
-ln -s ../share/GitNex/gitnex "$pkg/usr/bin/gitnex"
+ln -s ../share/GitNexia/gitnexia "$pkg/usr/bin/gitnexia"
 notices="LICENSE THIRD-PARTY-NOTICES-rust.txt THIRD-PARTY-NOTICES-ui.txt CEF-LICENSE.txt CHROMIUM-CREDITS.html.gz DICTIONARY-en-US-LICENSE.txt"
-mkdir -p "$pkg/usr/share/doc/gitnex"
-for f in $notices; do printf 'notice %s\n' "$f" > "$pkg/usr/share/doc/gitnex/$f"; done
+mkdir -p "$pkg/usr/share/doc/gitnexia"
+for f in $notices; do printf 'notice %s\n' "$f" > "$pkg/usr/share/doc/gitnexia/$f"; done
 printf 'Rust notices\n\nSummary\n-------\n  MIT          40\n  Apache-2.0    2\n  Unicode-3.0   1\n\n\nMIT\n' \
-  > "$pkg/usr/share/doc/gitnex/THIRD-PARTY-NOTICES-rust.txt"
+  > "$pkg/usr/share/doc/gitnexia/THIRD-PARTY-NOTICES-rust.txt"
 printf 'UI notices\n\nSummary\n-------\n  MIT     9\n  ISC     3\n  0BSD    1\n\n\nMIT\n' \
-  > "$pkg/usr/share/doc/gitnex/THIRD-PARTY-NOTICES-ui.txt"
+  > "$pkg/usr/share/doc/gitnexia/THIRD-PARTY-NOTICES-ui.txt"
 mkdir -p "$pkg/usr/share/metainfo"
-printf '<component>\n  <id>com.gitnex.desktop</id>\n  <pkgname>gitnex</pkgname>\n</component>\n' \
-  > "$pkg/usr/share/metainfo/com.gitnex.desktop.metainfo.xml"
-mkdir -p "$pkg/usr/share/GitNex/dictionaries"
-printf 'BDic' > "$pkg/usr/share/GitNex/dictionaries/en-US-10-2.bdic"
-printf 'deb\n' > "$pkg/usr/share/GitNex/install-kind"
+printf '<component>\n  <id>com.gitnexia.desktop</id>\n  <pkgname>gitnexia</pkgname>\n</component>\n' \
+  > "$pkg/usr/share/metainfo/com.gitnexia.desktop.metainfo.xml"
+mkdir -p "$pkg/usr/share/GitNexia/dictionaries"
+printf 'BDic' > "$pkg/usr/share/GitNexia/dictionaries/en-US-10-2.bdic"
+printf 'deb\n' > "$pkg/usr/share/GitNexia/install-kind"
 cat > "$pkg/DEBIAN/control" <<'EOT'
-Package: gitnex
+Package: gitnexia
 Version: 0.1.0+202610051325.ab4dbf9e
 Architecture: amd64
 Maintainer: package-arch self-test <test@example.invalid>
@@ -66,57 +66,59 @@ Description: A fast desktop Git client
 EOT
 dpkg-deb --root-owner-group -Zgzip -b "$pkg" "$work/t.deb" >/dev/null
 SOURCE_DATE_EPOCH= "$here/package-arch.sh" "$work/t.deb" "$work/out" >/dev/null
-out="$work/out/GitNex-0.1.0.202610051325.ab4dbf9e-1-x86_64.pkg.tar.zst"
+out="$work/out/GitNexia-0.1.0.202610051325.ab4dbf9e-1-x86_64.pkg.tar.zst"
 [ -f "$out" ] || fail "no package: $(ls "$work/out")"
 zstd -dcq "$out" > "$work/p.tar"
 eq order "$(tar -tf "$work/p.tar" | head -3 | tr '\n' ' ')" '.PKGINFO .MTREE usr/ '
-tar -tvf "$work/p.tar" | grep -Eq '^-rwsr-xr-x root/root .* usr/share/GitNex/chrome-sandbox$' || fail "chrome-sandbox lost root:root 4755"
-tar -tvf "$work/p.tar" | grep -Eq '^lrwxrwxrwx root/root .* usr/bin/gitnex -> \.\./share/GitNex/gitnex$' || fail "lost the /usr/bin/gitnex symlink"
-tar -tvf "$work/p.tar" | grep -Eq '^-rw-r--r-- root/root +4 .* usr/share/GitNex/dictionaries/en-US-10-2\.bdic$' || fail "lost the dictionary"
-eq install-kind "$(tar -xOf "$work/p.tar" usr/share/GitNex/install-kind)" arch
+tar -tvf "$work/p.tar" | grep -Eq '^-rwsr-xr-x root/root .* usr/share/GitNexia/chrome-sandbox$' || fail "chrome-sandbox lost root:root 4755"
+tar -tvf "$work/p.tar" | grep -Eq '^lrwxrwxrwx root/root .* usr/bin/gitnexia -> \.\./share/GitNexia/gitnexia$' || fail "lost the /usr/bin/gitnexia symlink"
+tar -tvf "$work/p.tar" | grep -Eq '^-rw-r--r-- root/root +4 .* usr/share/GitNexia/dictionaries/en-US-10-2\.bdic$' || fail "lost the dictionary"
+eq install-kind "$(tar -xOf "$work/p.tar" usr/share/GitNexia/install-kind)" arch
 info=$(tar -xOf "$work/p.tar" .PKGINFO)
-for kv in 'pkgname = gitnex' 'pkgver = 0.1.0.202610051325.ab4dbf9e-1' 'pkgdesc = A fast desktop Git client' \
+for kv in 'pkgname = gitnexia' 'pkgver = 0.1.0.202610051325.ab4dbf9e-1' 'pkgdesc = A fast desktop Git client' \
           'arch = x86_64' "builddate = $built" \
+          'provides = gitnexia' 'provides = gitnex' \
+          'conflicts = gitnexia' 'conflicts = gitnex' 'replaces = gitnex' \
           'depend = gcc-libs' 'depend = git' 'depend = glibc' 'depend = gtk4'; do
   grep -qxF "$kv" <<<"$info" || fail ".PKGINFO lacks '$kv': $info"
 done
 eq licenses "$(sed -n 's/^license = //p' <<<"$info" | tr '\n' ' ')" \
   'MIT 0BSD Apache-2.0 BSD-3-Clause ISC LicenseRef-SCOWL Unicode-3.0 '
 # The metainfo names this package, not the .deb's.
-eq pkgname "$(tar -xOf "$work/p.tar" usr/share/metainfo/com.gitnex.desktop.metainfo.xml | sed -n 's|.*<pkgname>\(.*\)</pkgname>.*|\1|p')" gitnex
+eq pkgname "$(tar -xOf "$work/p.tar" usr/share/metainfo/com.gitnexia.desktop.metainfo.xml | sed -n 's|.*<pkgname>\(.*\)</pkgname>.*|\1|p')" gitnexia
 mtree=$(tar -xOf "$work/p.tar" .MTREE | gzip -dc)
 eq mtree-head "$(head -2 <<<"$mtree" | tr '\n' '|')" '#mtree|/set type=file uid=0 gid=0 mode=644|'
 grep -Eq '^\./\.PKGINFO time=[0-9]+\.0 size=[0-9]+ md5digest=[0-9a-f]{32} sha256digest=[0-9a-f]{64}$' <<<"$mtree" || fail ".MTREE lacks .PKGINFO: $mtree"
-grep -Eq '^\./usr/share/GitNex/chrome-sandbox time=[0-9]+\.0 mode=4755 size=10 ' <<<"$mtree" || fail ".MTREE chrome-sandbox line: $mtree"
-grep -qxF "./usr/bin/gitnex time=$built.0 mode=777 type=link link=../share/GitNex/gitnex" <<<"$mtree" || fail ".MTREE symlink line: $mtree"
+grep -Eq '^\./usr/share/GitNexia/chrome-sandbox time=[0-9]+\.0 mode=4755 size=10 ' <<<"$mtree" || fail ".MTREE chrome-sandbox line: $mtree"
+grep -qxF "./usr/bin/gitnexia time=$built.0 mode=777 type=link link=../share/GitNexia/gitnexia" <<<"$mtree" || fail ".MTREE symlink line: $mtree"
 grep -Eq '^\./usr/share/applications/Git\\040Volt\.desktop ' <<<"$mtree" || fail ".MTREE escaping: $mtree"
 grep -Eq '^\./usr time=[0-9]+\.0 mode=755 type=dir$' <<<"$mtree" || fail ".MTREE dir line: $mtree"
-# The license notices: the .deb's files, and Arch's /usr/share/licenses/gitnex pointing at them.
+# The license notices: the .deb's files, and Arch's /usr/share/licenses/gitnexia pointing at them.
 # (The listing is read once: `tar | grep -q` under pipefail fails when grep stops reading early.)
 listing=$(tar -tvf "$work/p.tar")
 for f in $notices; do
-  grep -Eq "^-rw-r--r-- root/root +[1-9][0-9]* .* usr/share/doc/gitnex/$f\$" <<<"$listing" || fail "no usr/share/doc/gitnex/$f"
+  grep -Eq "^-rw-r--r-- root/root +[1-9][0-9]* .* usr/share/doc/gitnexia/$f\$" <<<"$listing" || fail "no usr/share/doc/gitnexia/$f"
 done
-grep -Eq '^lrwxrwxrwx root/root .* usr/share/licenses/gitnex -> \.\./doc/gitnex$' <<<"$listing" || fail "no usr/share/licenses/gitnex symlink"
-grep -Eq '^\./usr/share/licenses/gitnex time=[0-9]+\.0 mode=777 type=link link=\.\./doc/gitnex$' <<<"$mtree" || fail ".MTREE licenses symlink: $mtree"
+grep -Eq '^lrwxrwxrwx root/root .* usr/share/licenses/gitnexia -> \.\./doc/gitnexia$' <<<"$listing" || fail "no usr/share/licenses/gitnexia symlink"
+grep -Eq '^\./usr/share/licenses/gitnexia time=[0-9]+\.0 mode=777 type=link link=\.\./doc/gitnexia$' <<<"$mtree" || fail ".MTREE licenses symlink: $mtree"
 # A .deb without them (or with an empty one) fails.
-: > "$pkg/usr/share/doc/gitnex/CEF-LICENSE.txt"
+: > "$pkg/usr/share/doc/gitnexia/CEF-LICENSE.txt"
 dpkg-deb --root-owner-group -Zgzip -b "$pkg" "$work/n.deb" >/dev/null
 "$here/package-arch.sh" "$work/n.deb" "$work/out3" 2>/dev/null && fail "package-arch accepted an empty CEF-LICENSE.txt"
-rm "$pkg/usr/share/doc/gitnex/CEF-LICENSE.txt"
+rm "$pkg/usr/share/doc/gitnexia/CEF-LICENSE.txt"
 dpkg-deb --root-owner-group -Zgzip -b "$pkg" "$work/n.deb" >/dev/null
 "$here/package-arch.sh" "$work/n.deb" "$work/out3" 2>/dev/null && fail "package-arch accepted a .deb without CEF-LICENSE.txt"
-printf 'notice\n' > "$pkg/usr/share/doc/gitnex/CEF-LICENSE.txt"
+printf 'notice\n' > "$pkg/usr/share/doc/gitnexia/CEF-LICENSE.txt"
 # Likewise without the spell-check dictionary.
-mv "$pkg/usr/share/GitNex/dictionaries/en-US-10-2.bdic" "$work/dict"
+mv "$pkg/usr/share/GitNexia/dictionaries/en-US-10-2.bdic" "$work/dict"
 dpkg-deb --root-owner-group -Zgzip -b "$pkg" "$work/n.deb" >/dev/null
 "$here/package-arch.sh" "$work/n.deb" "$work/out3" 2>/dev/null && fail "package-arch accepted a .deb without the dictionary"
-mv "$work/dict" "$pkg/usr/share/GitNex/dictionaries/en-US-10-2.bdic"
+mv "$work/dict" "$pkg/usr/share/GitNexia/dictionaries/en-US-10-2.bdic"
 # Likewise without the install kind (the update check needs it).
-rm "$pkg/usr/share/GitNex/install-kind"
+rm "$pkg/usr/share/GitNexia/install-kind"
 dpkg-deb --root-owner-group -Zgzip -b "$pkg" "$work/n.deb" >/dev/null
 "$here/package-arch.sh" "$work/n.deb" "$work/out3" 2>/dev/null && fail "package-arch accepted a .deb without install-kind"
-printf 'deb\n' > "$pkg/usr/share/GitNex/install-kind"
+printf 'deb\n' > "$pkg/usr/share/GitNexia/install-kind"
 # An unknown dependency fails the whole build.
 sed -i 's/^Depends: .*/Depends: libgtk-4-1, libfoo9/' "$pkg/DEBIAN/control"
 dpkg-deb --root-owner-group -Zgzip -b "$pkg" "$work/u.deb" >/dev/null

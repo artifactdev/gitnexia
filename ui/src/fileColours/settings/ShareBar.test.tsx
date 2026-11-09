@@ -30,12 +30,12 @@ describe('ShareBar', () => {
     render(<ShareBar commonDir="/r/.git" scopes={[sc('A', ['a'])]} onChange={vi.fn()} />);
     fireEvent.click(screen.getByRole('button', { name: 'Copy as JSON' }));
     await flush();
-    expect(JSON.parse(clip.text)).toMatchObject({ gitnex: 'file-colours', version: 1, scopes: [{ name: 'A', patterns: ['a'] }] });
+    expect(JSON.parse(clip.text)).toMatchObject({ gitnexia: 'file-colours', version: 1, scopes: [{ name: 'A', patterns: ['a'] }] });
     expect(toast()).toBe('Copied 1 scope');
   });
 
   it('Paste scopes appends and renames clashes', async () => {
-    clip.text = '{"gitnex":"file-colours","version":1,"scopes":[{"name":"A","tint":"blue","patterns":["b"]}]}';
+    clip.text = '{"gitnexia":"file-colours","version":1,"scopes":[{"name":"A","tint":"blue","patterns":["b"]}]}';
     const onChange = vi.fn();
     render(<ShareBar commonDir="/r/.git" scopes={[sc('A', ['a'])]} onChange={onChange} />);
     fireEvent.click(screen.getByRole('button', { name: 'Paste scopes' }));
@@ -50,7 +50,7 @@ describe('ShareBar', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Paste scopes' }));
     await flush();
     expect(onChange).not.toHaveBeenCalled();
-    expect(toast()).toBe("That isn't GitNex file colours");
+    expect(toast()).toBe("That isn't GitNexia file colours");
   });
 
   it("Copy from another repository lists the others and appends the chosen one's", () => {

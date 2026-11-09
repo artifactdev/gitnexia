@@ -114,7 +114,7 @@ pub(crate) fn winit_theme_to_tauri_theme(theme: winit::window::Theme) -> Theme {
   }
 }
 
-// GitNex patch: X11 resizes go through `platform/linux/chrome.rs`.
+// GitNexia patch: X11 resizes go through `platform/linux/chrome.rs`.
 #[cfg(not(any(
   target_os = "linux",
   target_os = "dragonfly",
@@ -399,7 +399,7 @@ pub(crate) enum WindowMessage {
   SetFullscreen(bool),
   SetFullscreenOnMonitor(PhysicalPosition<f64>),
   /// Applies the fullscreen request held back during a transition, now that it ended. See
-  /// [`AppWindow::request_fullscreen`]. GitNex patch: sent at the end of every transition,
+  /// [`AppWindow::request_fullscreen`]. GitNexia patch: sent at the end of every transition,
   /// which then also tells the window's listeners its size ([`WinitCefApp::fullscreen_transition_ended`]).
   #[cfg(target_os = "macos")]
   ApplyPendingFullscreen,
@@ -426,11 +426,11 @@ pub(crate) enum WindowMessage {
   SetBackgroundColor(Option<Color>),
   StartDragging,
   StartResizeDragging(tauri_runtime::ResizeDirection),
-  /// GitNex patch: answers whether the window manager was asked.
+  /// GitNexia patch: answers whether the window manager was asked.
   WindowManager(WindowManagerRequest, Sender<Result<bool>>),
 }
 
-/// GitNex patch: what a window that draws its own title bar asks the window manager for, on
+/// GitNexia patch: what a window that draws its own title bar asks the window manager for, on
 /// top of `start_dragging`, `start_resize_dragging`, `minimize` and the maximize calls.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[non_exhaustive]
@@ -564,7 +564,7 @@ pub(crate) struct AppWindowAttrs {
   pub(crate) transient_for: Option<gtk::Window>,
 }
 
-/// GitNex patch: only X11 and Windows have these requests so far (`platform/linux/chrome.rs`,
+/// GitNexia patch: only X11 and Windows have these requests so far (`platform/linux/chrome.rs`,
 /// `platform/windows/chrome.rs`).
 #[cfg(target_os = "macos")]
 impl AppWindow {
@@ -574,7 +574,7 @@ impl AppWindow {
 }
 
 impl AppWindow {
-  /// GitNex patch: whether a browser's native window is still in this (closed) window, which
+  /// GitNexia patch: whether a browser's native window is still in this (closed) window, which
   /// must outlive it (`WinitCefApp::release_window`). Only Linux's X11 host is known to keep one
   /// past `on_before_close`; macOS and Windows destroy theirs before it (`do_close`).
   pub(crate) fn has_browser_windows(&self) -> bool {
@@ -827,7 +827,7 @@ impl<T: UserEvent> WinitCefApp<T> {
       appwindow.apply_transient_for();
     }
 
-    // GitNex patch: an undecorated window keeps Windows' resize border
+    // GitNexia patch: an undecorated window keeps Windows' resize border
     // (`platform/windows/chrome.rs`).
     #[cfg(windows)]
     appwindow.sync_custom_frame();
@@ -956,7 +956,7 @@ impl<T: UserEvent> WinitCefApp<T> {
     }
   }
 
-  /// GitNex patch: sends a mouse leave to the browsers of every window the pointer left since
+  /// GitNexia patch: sends a mouse leave to the browsers of every window the pointer left since
   /// the last pass, which Chromium misses under GPU compositing (`platform/linux/pointer.rs`).
   #[cfg(any(
     target_os = "linux",
@@ -981,7 +981,7 @@ impl<T: UserEvent> WinitCefApp<T> {
   }
 
   /// A fullscreen transition of `window_id` ended: the request held back during it is made,
-  /// and (GitNex patch) the window's listeners get a `Resized`. winit only counts a window out
+  /// and (GitNexia patch) the window's listeners get a `Resized`. winit only counts a window out
   /// of fullscreen once AppKit has finished leaving it, after the last resize of the
   /// transition, so a page that checks `is_fullscreen` on each resize would never see it end;
   /// Tauri has no event of its own for it.
@@ -1171,11 +1171,11 @@ impl<T: UserEvent> WinitCefApp<T> {
         window.set_decorations(value);
         #[cfg(target_os = "macos")]
         appwindow.apply_movability();
-        // GitNex patch: an undecorated window keeps Windows' resize border.
+        // GitNexia patch: an undecorated window keeps Windows' resize border.
         #[cfg(windows)]
         appwindow.sync_custom_frame();
       }
-      // GitNex patch: on Windows, the client area's size whatever the frame.
+      // GitNexia patch: on Windows, the client area's size whatever the frame.
       #[cfg(windows)]
       WindowMessage::SetSize(size) => appwindow.request_surface_size(size),
       #[cfg(not(windows))]
@@ -1310,7 +1310,7 @@ impl<T: UserEvent> WinitCefApp<T> {
         #[cfg(windows)]
         appwindow.set_overlay_icon(_icon);
       }
-      // GitNex patch: on X11 the window manager is asked directly (`platform/linux/chrome.rs`):
+      // GitNexia patch: on X11 the window manager is asked directly (`platform/linux/chrome.rs`):
       // winit-gtk4 needs a button press GTK saw, and the presses go to the CEF browsers.
       #[cfg(any(
         target_os = "linux",
@@ -1330,7 +1330,7 @@ impl<T: UserEvent> WinitCefApp<T> {
       WindowMessage::StartResizeDragging(direction) => {
         _ = appwindow.begin_move_resize(Some(direction));
       }
-      // GitNex patch: on macOS from a press made at the pointer (`platform/macos/window.rs`):
+      // GitNexia patch: on macOS from a press made at the pointer (`platform/macos/window.rs`):
       // winit's uses the event AppKit is dispatching, which isn't the page's press.
       #[cfg(target_os = "macos")]
       WindowMessage::StartDragging => _ = appwindow.begin_window_drag(),

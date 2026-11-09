@@ -13,7 +13,7 @@ import { netOf, resolveRemote } from './network';
 
 export interface RefUpdate { ref: string; old: string | null; new: string | null }
 export interface Refspec { force: boolean; src: string; dst: string }
-export const COMPARE_REFS = 'refs/gitnex/compare/';
+export const COMPARE_REFS = 'refs/gitnexia/compare/';
 /** What git's reflog says of a fetched ref, after its command line (git 2.53, Task 13 Step 1). */
 const STORING = 'storing head';
 const FAST_FORWARD = 'fast-forward';

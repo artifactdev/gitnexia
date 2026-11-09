@@ -12,7 +12,7 @@ export function emptyExceptDemo(dir: string): void {
 export function keepDemo(): Plugin {
   let outDir = '';
   return {
-    name: 'gitnex-site-keep-demo',
+    name: 'gitnexia-site-keep-demo',
     apply: 'build',
     configResolved(config) {
       outDir = resolve(config.root, config.build.outDir);

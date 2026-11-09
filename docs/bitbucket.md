@@ -1,6 +1,6 @@
 # Bitbucket Data Center / Server
 
-GitNex supports self-hosted Bitbucket Data Center / Server, not Bitbucket Cloud
+GitNexia supports self-hosted Bitbucket Data Center / Server, not Bitbucket Cloud
 (`bitbucket.org`). Cloud has a different API and authentication model.
 
 ## Connect
@@ -9,11 +9,11 @@ GitNex supports self-hosted Bitbucket Data Center / Server, not Bitbucket Cloud
    personal access token. Give it repository read permission for browsing and the write
    permissions required for the PR actions you intend to use. The token cannot grant access
    its user does not already have.
-2. In GitNex, open **Settings > Accounts > Add account** and choose **Bitbucket**.
+2. In GitNexia, open **Settings > Accounts > Add account** and choose **Bitbucket**.
 3. Enter the installation's HTTPS address, including any custom port and context path,
    for example `https://code.example.com:8443/bitbucket`. Do not enter a clone URL or a REST
    endpoint.
-4. Paste the token and add the account. GitNex keeps it in the system keyring, with the
+4. Paste the token and add the account. GitNexia keeps it in the system keyring, with the
    existing explicit warning if only file storage is available.
 
 Use user personal access tokens, also called user HTTP access tokens. OAuth, app passwords,
@@ -35,16 +35,16 @@ routing a token to a different installation.
 ## Supported workflows and limits
 
 - Repository discovery, forks, PR lists/details and branch badges use the Bitbucket REST API.
-- Create, edit, retarget, close/reopen, comments and reviews stay in the normal GitNex PR UI.
-- Build/check status means statuses already reported to Bitbucket. GitNex does not connect to,
+- Create, edit, retarget, close/reopen, comments and reviews stay in the normal GitNexia PR UI.
+- Build/check status means statuses already reported to Bitbucket. GitNexia does not connect to,
   launch or retry Jenkins/Bamboo jobs.
 - PR creation supports reviewers. This integration does not offer native draft PRs, assignees,
   labels or reactions. A saved create form containing unsupported choices must be explicitly
   cleared before submission; its title and description are preserved.
 - Pending inline review drafts are local to the running session. Submit them before restarting
-  GitNex; they are not server-side pending reviews or durable saved drafts.
+  GitNexia; they are not server-side pending reviews or durable saved drafts.
 - Merging opens the PR in your system browser. This avoids relying on merge operations
-  restricted by HTTP token authentication. GitNex never bypasses merge checks with a local
+  restricted by HTTP token authentication. GitNexia never bypasses merge checks with a local
   merge and push. Auto-merge and branch-update controls are not offered for this integration.
 - `#12` means PR #12, not an issue. Bitbucket Data Center / Server has no built-in issue route;
   Jira integration is not included.
@@ -55,7 +55,7 @@ routing a token to a different installation.
 
 Contract tests use a local fake Bitbucket, not a live company server. They do not establish that
 every Bitbucket version, plugin or reverse-proxy configuration has been tested. Check your
-server's permissions and API availability if an operation is refused; GitNex shows the error
+server's permissions and API availability if an operation is refused; GitNexia shows the error
 instead of reporting an unsupported write as successful.
 The portable API contract is based on the Bitbucket Server 7.21 REST documentation, not the
 unrelated Cloud API. This is a documented contract baseline, not a claim that a live 7.21 server
@@ -64,7 +64,7 @@ was tested or that every earlier release is supported.
 Bitbucket uses versions to protect PR and comment edits against concurrent changes. A
 conflict requires refreshing and reviewing the new state, not blindly repeating the write
 against a newer version.
-GitNex pins mutation versions so background polls cannot silently overwrite a concurrent edit.
+GitNexia pins mutation versions so background polls cannot silently overwrite a concurrent edit.
 After a conflict, reconnect the account to obtain a new writable version, then reopen the PR
 and review its current contents before editing again.
 

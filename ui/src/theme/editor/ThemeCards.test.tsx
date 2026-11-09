@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const api = vi.hoisted(() => ({
   saveSettings: vi.fn(async () => null),
   saveProfile: vi.fn(async () => null),
-  saveExport: vi.fn(async (_name: string, _contents: string): Promise<string | null> => '/home/ada/themes/nord-custom.gitnex-theme.json'),
+  saveExport: vi.fn(async (_name: string, _contents: string): Promise<string | null> => '/home/ada/themes/nord-custom.gitnexia-theme.json'),
   forgeAccounts: vi.fn(async () => []),
   listOpeners: vi.fn(async () => []),
 }));
@@ -58,7 +58,7 @@ describe('theme cards', () => {
 
   it('arrows move the focus, Space or Enter selects, a click selects', () => {
     render(<ThemeCards />);
-    const first = radio('GitNex Dark');
+    const first = radio('GitNexia Dark');
     expect(first).toHaveAttribute('tabindex', '0');
     act(() => first.focus());
     fireEvent.keyDown(first, { key: 'ArrowRight' });
@@ -76,10 +76,10 @@ describe('theme cards', () => {
     expect(settings().theme).toBe('nord');
   });
 
-  it('shows an unknown saved theme as GitNex Dark', () => {
+  it('shows an unknown saved theme as GitNexia Dark', () => {
     use({ theme: 'no-such-theme' });
     render(<ThemeCards />);
-    expect(radio('GitNex Dark')).toHaveAttribute('aria-checked', 'true');
+    expect(radio('GitNexia Dark')).toHaveAttribute('aria-checked', 'true');
   });
 });
 
@@ -152,13 +152,13 @@ describe('sharing', () => {
     expect(useToast.getState().message).toBe('Copied Nord (Custom) as JSON');
   });
 
-  it('Export file… saves "<name>.gitnex-theme.json" where the user picks; a cancel says nothing', async () => {
+  it('Export file… saves "<name>.gitnexia-theme.json" where the user picks; a cancel says nothing', async () => {
     use({ theme: nordCustom.id, customThemes: [nordCustom] });
     render(<EditingStrip />);
     fireEvent.click(screen.getByRole('button', { name: 'Export file…' }));
-    await waitFor(() => expect(useToast.getState().message).toBe('Saved nord-custom.gitnex-theme.json'));
-    expect(api.saveExport).toHaveBeenCalledWith('nord-custom.gitnex-theme.json', expect.stringContaining('"gitnex": "theme"'));
-    expect(useToast.getState().detail).toBe('/home/ada/themes/nord-custom.gitnex-theme.json');
+    await waitFor(() => expect(useToast.getState().message).toBe('Saved nord-custom.gitnexia-theme.json'));
+    expect(api.saveExport).toHaveBeenCalledWith('nord-custom.gitnexia-theme.json', expect.stringContaining('"gitnexia": "theme"'));
+    expect(useToast.getState().detail).toBe('/home/ada/themes/nord-custom.gitnexia-theme.json');
     act(() => useToast.getState().dismiss());
     api.saveExport.mockResolvedValueOnce(null);
     fireEvent.click(screen.getByRole('button', { name: 'Export file…' }));
@@ -178,7 +178,7 @@ describe('sharing', () => {
     use({ theme: nordCustom.id, customThemes: [nordCustom] });
     const dialog = showThemePage();
     expect(within(dialog).getByRole('radio', { name: 'Nord (Custom)' })).toHaveFocus();
-    transport.readClipboardText.mockResolvedValueOnce(JSON.stringify({ gitnex: 'theme', version: 1, name: 'Nord (Custom)', base: 'nord', colors: { 'app-bg0': '#101010' }, graph: [] }));
+    transport.readClipboardText.mockResolvedValueOnce(JSON.stringify({ gitnexia: 'theme', version: 1, name: 'Nord (Custom)', base: 'nord', colors: { 'app-bg0': '#101010' }, graph: [] }));
     ctrlV(document.activeElement!);
     await waitFor(() => expect(current()?.name).toBe('Nord (Custom) (2)'));
     expect(current()?.colors).toEqual({ 'app-bg0': '#101010' });
@@ -192,12 +192,12 @@ describe('sharing', () => {
     const before = settings();
     transport.readClipboardText.mockResolvedValueOnce('hello');
     ctrlV(within(dialog).getByRole('radio', { name: 'Nord' }));
-    await waitFor(() => expect(useToast.getState().message).toBe("The clipboard doesn't hold a GitNex theme"));
+    await waitFor(() => expect(useToast.getState().message).toBe("The clipboard doesn't hold a GitNexia theme"));
     expect(settings()).toBe(before);
   });
 
   it('the Paste a theme card pastes from the clipboard', async () => {
-    transport.readClipboardText.mockResolvedValueOnce(JSON.stringify({ gitnex: 'theme', version: 1, name: 'Dusk', base: 'dracula', colors: {}, graph: [] }));
+    transport.readClipboardText.mockResolvedValueOnce(JSON.stringify({ gitnexia: 'theme', version: 1, name: 'Dusk', base: 'dracula', colors: {}, graph: [] }));
     render(<ThemeCards />);
     fireEvent.click(screen.getByRole('button', { name: /Paste a theme/ }));
     await waitFor(() => expect(current()?.name).toBe('Dusk'));
@@ -209,7 +209,7 @@ describe('the theme dropdown (search results)', () => {
     use({ theme: 'default-dark', customThemes: [mine] });
     render(<><span id="label-theme">Theme</span><ThemeSelect /><ContextMenu /></>);
     const button = screen.getByRole('button', { name: 'Theme' });
-    expect(button).toHaveTextContent('GitNex Dark');
+    expect(button).toHaveTextContent('GitNexia Dark');
     expect(document.querySelector('select')).toBeNull();
     fireEvent.click(button);
     expect(screen.getAllByRole('menuitem').map((r) => r.textContent)).toEqual([...THEME_IDS.map((id) => THEMES[id].label), 'Mine']);

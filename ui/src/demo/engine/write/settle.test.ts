@@ -41,7 +41,7 @@ async function setup() {
   /** A commit like `like` (its author as stored) on `parent`. */
   const commitLike = async (like: string, parent: string, message = 'x\n') =>
     writeCommitObject(t.repo, { tree: (await readCommit(t.repo, like)).tree, parents: [parent], author: await rawAuthor(t.repo, like), committer: 'You <you@example.com> 1800000000 +0000', message });
-  /** The op ends: its state goes, and feature (and chip) move as given, by `inside` GitNex's own write or outside it. */
+  /** The op ends: its state goes, and feature (and chip) move as given, by `inside` GitNexia's own write or outside it. */
   const end = async (inside: boolean, feature: string, chip?: string | null) => {
     const move = () => {
       t.memfs.rmdirSync(`${gitdir}/rebase-merge`);
@@ -69,9 +69,9 @@ describe('a paused rebase or pick settles as the core does', () => {
     expect(readRef(s.t.repo.demo!, 'refs/heads/chip')).toBeNull();
   });
 
-  it("a rebase ended outside GitNex counts only if it kept the branch's own commits", async () => {
+  it("a rebase ended outside GitNexia counts only if it kept the branch's own commits", async () => {
     const s = await setup();
-    // Reset onto the target outside: the branch is the target itself, which only GitNex's Continue can complete.
+    // Reset onto the target outside: the branch is the target itself, which only GitNexia's Continue can complete.
     let p = await s.pause({ kind: 'rebase', target: 'main', targetOid: s.pick, picked: [], irebase: null });
     await s.end(false, s.pick);
     expect(s.ctx.writes.journal(s.t.dir).entry(p.entry)).toBeNull();
@@ -93,7 +93,7 @@ describe('a paused rebase or pick settles as the core does', () => {
     expect(s.recorded).toEqual([]);
   });
 
-  it("a cherry-pick completes with the picked commits only; a revert outside GitNex only when each says what it reverts", async () => {
+  it("a cherry-pick completes with the picked commits only; a revert outside GitNexia only when each says what it reverts", async () => {
     const s = await setup();
     let p = await s.pause({ kind: 'cherryPick', target: 'Pick', targetOid: s.pick, picked: [s.pick], irebase: null });
     const picked = await s.commitLike(s.pick, s.f1);
@@ -107,7 +107,7 @@ describe('a paused rebase or pick settles as the core does', () => {
     p = await s.pause({ kind: 'revert', target: 'Pick', targetOid: s.pick, picked: [s.pick], irebase: null });
     await s.end(false, await s.commitLike(s.f1, tip, 'Reworded\n'));
     expect(s.ctx.writes.journal(s.t.dir).entry(p.entry)).toBeNull();
-    // GitNex's own Continue may commit a rewritten message: one commit, as many as it reverts.
+    // GitNexia's own Continue may commit a rewritten message: one commit, as many as it reverts.
     const aborted = readRef(s.t.repo.demo!, 'refs/heads/feature')!;
     p = await s.pause({ kind: 'revert', target: 'Pick', targetOid: s.pick, picked: [s.pick], irebase: null });
     await s.end(true, await s.commitLike(s.f1, aborted, 'Reworded again\n'));

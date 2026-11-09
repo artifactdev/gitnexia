@@ -1,4 +1,4 @@
-// What an Abort of GitNex's interactive rebase keeps of the work done at its stops (the core's
+// What an Abort of GitNexia's interactive rebase keeps of the work done at its stops (the core's
 // write/irebase/split.rs `keep_work`, UX N: only what can't be had again): the commits holding new
 // work on `<branch>-rebase-work`, the index's and the worktree's new content in a stash, with the
 // "work from the stop" banner. What the step left at its stop (`noteStop`: a merge result git
@@ -194,7 +194,7 @@ async function workBranch(cx: WriteCx, branch: string, head: string): Promise<st
 }
 
 /** Before a rebase's Abort: git's reset back to orig-head refuses over an untracked file at a path
- *  orig-head has, whatever it holds (the binary, 2.53), and changes nothing. In GitNex's session
+ *  orig-head has, whatever it holds (the binary, 2.53), and changes nothing. In GitNexia's session
  *  (the core's `clear_leftovers`) a file holding exactly orig-head's content there is the stop's
  *  commit's own, left unstaged: it goes first, and the reset writes it back. */
 export async function clearLeftovers(cx: WriteCx, origHead: string, session: boolean): Promise<void> {
@@ -218,7 +218,7 @@ export async function clearLeftovers(cx: WriteCx, origHead: string, session: boo
 
 export interface KeptWork { stash: string | null; branch: string | null; record: { oid: string; message: string; label: string; target: string | null } | null }
 
-/** Before an Abort of GitNex's interactive rebase (`session`: its paused entry's): the work done at
+/** Before an Abort of GitNexia's interactive rebase (`session`: its paused entry's): the work done at
  *  its stops, kept. The stash's banner is written once the abort ran (`finishKeptWork`). */
 export async function keepWork(cx: WriteCx, s: SeqState, head: string, session: IrebasePause): Promise<KeptWork> {
   const w: KeptWork = { stash: null, branch: null, record: null };
@@ -258,7 +258,7 @@ export async function keepWork(cx: WriteCx, s: SeqState, head: string, session: 
   });
   const itree = await treeWith(read, head, staged);
   const wtree = await treeWith(read, head, worth.map((p): [string, State] => [p, worktree.get(p) ?? null]));
-  const message = `GitNex: work from the aborted rebase of ${short}`;
+  const message = `GitNexia: work from the aborted rebase of ${short}`;
   // `git commit-tree -m`, as the visitor.
   const i = await writeCommitObject(read, { tree: itree, parents: [head], message: `index on ${short}\n` }, cx.ctx);
   const created = await writeCommitObject(read, { tree: wtree, parents: [head, i], message: `${message}\n` }, cx.ctx);

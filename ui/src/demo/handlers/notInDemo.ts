@@ -53,7 +53,7 @@ const WHAT: Record<NotInDemoMethod, string> = {
   updateDownload: 'updates',
   updateInstall: 'updates',
   updateRestart: 'updates',
-  relaunchApp: 'restarting GitNex',
+  relaunchApp: 'restarting GitNexia',
 };
 
 export const notInDemoHandlers = Object.fromEntries(

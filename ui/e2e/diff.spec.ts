@@ -6,7 +6,7 @@ import { fixtures, freshFixture, git, openUrl } from './fixtures';
 // Diff prefs persist in localStorage (plan 1B amendment 3). Every test starts from the defaults
 // (Inline, no toggles): the key is cleared on the test's first page load only, so a reload inside
 // a test keeps what it picked.
-const DIFF_PREFS_KEY = 'gitnex.diffPrefs.v1';
+const DIFF_PREFS_KEY = 'gitnexia.diffPrefs.v1';
 const COMMIT = 'Rename guide and update assets';
 const GREET_OLD = 'function greet(name, greeting) {\n  return greeting + ", " + name;\n}\n\nconst people = ["Ada", "Grace"];\nfor (const p of people) { console.log(greet(p, "Hello")); }\n';
 const GREET_NEW = 'function greet(name, greeting) {\n    return greeting + ", " + name;\n}\n\nconst people = ["Ada", "Grace"];\nfor (const p of people) {\n  console.log(greet(p, "Hi"));\n}\n';
@@ -711,7 +711,7 @@ test.describe('diff viewer controls', () => {
   test('closing and reopening a file wakes the kept panel fast: the reopen is well under the cold open (J16)', { tag: '@budget' }, async ({ page }) => {
     const ready: number[] = [];
     page.on('console', (m) => {
-      const t = /\[gitnex\] diff ready in (\d+) ms/.exec(m.text());
+      const t = /\[gitnexia\] diff ready in (\d+) ms/.exec(m.text());
       if (t) ready.push(Number(t[1]));
     });
     const d = diff(page);

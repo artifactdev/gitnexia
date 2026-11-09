@@ -1,12 +1,23 @@
 # Changelog
 
-All notable changes to GitNex (GitVolt before this release, GitBolt before 0.7.0) are listed here, newest first. The format follows
+All notable changes to GitNexia (GitNex before this release, GitVolt before 1.5.1, GitBolt before 0.7.0) are listed here, newest first. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
 ### Changed
 
+- **GitNex is now GitNexia.** The app, its bundles and packages, its repository
+  (`artifactdev/gitnexia`) and its website (`https://artifactdev.github.io/gitnexia/`) are
+  GitNexia. The first start copies GitNex's config, data, CEF profile and tokens to GitNexia's
+  folders and keyring service, and moves the UI's `localStorage` keys over; the old folders and
+  keys stay, so a downgrade still finds them. Stack tables, Compare refs and an in-progress
+  interactive rebase written by GitNex are still recognized. The internal crates and binary are
+  `gitnexia-*` / `gitnexia` (Windows: `GitNexia.exe`), the bundle id is `com.gitnexia.desktop`,
+  and the Linux packages replace the `gitnex` ones.
+- **Updates move to the new repository.** 1.6.0 publishes its packages under both `GitNexia_*`
+  and the old `GitNex_*` asset names, and this version reads either; older builds may need a
+  manual install if GitHub's repository redirect doesn't carry them.
 - **macOS releases are signed with a new certificate.** The first update signed with it asks once
   more for folder permissions; the ones after it keep them (docs/releasing.md, "macOS signing").
 

@@ -17,3 +17,4 @@ node_modules/
 /site/test-results
 /site/playwright-report
 /.playwright-mcp
+/.DS_Store

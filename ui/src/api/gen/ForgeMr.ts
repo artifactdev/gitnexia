@@ -24,7 +24,7 @@ conflicts: boolean | null, labels: Array<string>,
  */
 labelColors: Record<string, string>, updatedAt: number, 
 /**
- * 4D: its description/body carries GitNex's Stack table (`stack::MARK_START`): the stack
+ * 4D: its description/body carries GitNexia's Stack table (`stack::MARK_START`): the stack
  * evidence the after-merge retarget needs (a forge write before any confirm).
  */
 stacked: boolean, 

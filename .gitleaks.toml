@@ -5,5 +5,5 @@
 useDefault = true
 
 [[allowlists]]
-description = "localStorage keys (gitnex.<name>.v<N>) aren't secrets"
-regexes = ['''^gitnex\.[A-Za-z]+\.v[0-9]+$''']
+description = "localStorage keys (gitnexia.<name>.v<N>; gitnex.* is the pre-rename form) aren't secrets"
+regexes = ['''^(?:gitnexia|gitnex)\.[A-Za-z]+\.v[0-9]+$''']

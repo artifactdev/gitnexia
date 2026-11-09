@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Builds GitNex.app locally, ad-hoc signs it, sets its minimum macOS version to 12.0, and copies
-# it to target/<profile>/bundle/macos/GitNex.app. The build runs in a fresh temporary target
+# Builds GitNexia.app locally, ad-hoc signs it, sets its minimum macOS version to 12.0, and copies
+# it to target/<profile>/bundle/macos/GitNexia.app. The build runs in a fresh temporary target
 # directory (compiling into a network volume can corrupt build artifacts); MACOSX_DEPLOYMENT_TARGET
 # stays unset because this toolchain makes corrupt proc-macro dylibs with it.
 #
@@ -16,12 +16,12 @@ Usage: ./build-macos-app.sh [--debug] [--keep] [--install] [--wkwebview]
 
   --debug    build the debug profile instead of release
   --keep     keep the temporary build directory (removed on success otherwise; kept on failure)
-  --install  also replace the app in $GITNEX_APP_DIR (default: /Applications/GitNex.app)
+  --install  also replace the app in $GITNEXIA_APP_DIR (default: /Applications/GitNexia.app)
   --wkwebview
              build on Tauri's system webview (WKWebView) instead of the bundled CEF
              (spike; see docs/macos-wkwebview-spike.md)
 
-The existing bundle is swapped by renames in the same folder, so a running GitNex keeps
+The existing bundle is swapped by renames in the same folder, so a running GitNexia keeps
 running the old build until it is quit and reopened.
 EOF
 }
@@ -72,7 +72,7 @@ else
   runner_args=()
   bundle_config='{"bundle":{"macOS":{"minimumSystemVersion":null}}}'
 fi
-build_dir=$(mktemp -d "${TMPDIR:-/tmp}/gitnex-app.XXXXXX")
+build_dir=$(mktemp -d "${TMPDIR:-/tmp}/gitnexia-app.XXXXXX")
 install_new=
 cleanup() {
   local status=$?
@@ -86,14 +86,14 @@ cleanup() {
 trap cleanup EXIT
 
 echo "build-macos-app: building the $profile bundle (build directory: $build_dir)"
-(cd "$root/crates/gitnex-app" && \
+(cd "$root/crates/gitnexia-app" && \
   env -u CARGO_INCREMENTAL -u MACOSX_DEPLOYMENT_TARGET \
     CARGO_TARGET_DIR="$build_dir" CARGO_BUILD_JOBS="${CARGO_BUILD_JOBS:-4}" \
     cargo tauri build "${tauri_args[@]}" \
       --config "$bundle_config" \
       ${runner_args[@]+"${runner_args[@]}"})
 
-built=$build_dir/$profile/bundle/macos/GitNex.app
+built=$build_dir/$profile/bundle/macos/GitNexia.app
 [ -d "$built" ] || fail "the build made no $built"
 if [ "$wkwebview" = 1 ]; then
   # This app runs on WKWebView and ships no CEF. The CLI still creates CEF's helper apps (it
@@ -110,7 +110,7 @@ fi
 codesign --force --deep --sign - --timestamp=none "$built" >/dev/null 2>&1
 codesign --verify --deep --strict "$built"
 
-dest=$root/target/$profile/bundle/macos/GitNex.app
+dest=$root/target/$profile/bundle/macos/GitNexia.app
 mkdir -p "$(dirname "$dest")"
 rm -rf "$dest"
 cp -R "$built" "$dest"
@@ -118,11 +118,11 @@ codesign --verify --deep --strict "$dest"
 echo "build-macos-app: $dest"
 
 if [ "$install" = 1 ]; then
-  app_dir=${GITNEX_APP_DIR:-/Applications}
-  target=$app_dir/GitNex.app
+  app_dir=${GITNEXIA_APP_DIR:-/Applications}
+  target=$app_dir/GitNexia.app
   [ -w "$app_dir" ] || fail "no write access to $app_dir (install by hand, or grant it and retry)"
-  install_new=$app_dir/.GitNex.app.new.$$
-  install_old=$app_dir/.GitNex.app.old.$$
+  install_new=$app_dir/.GitNexia.app.new.$$
+  install_old=$app_dir/.GitNexia.app.old.$$
   rm -rf "$install_new" "$install_old"
   ditto "$dest" "$install_new"
   if [ -d "$target" ]; then
@@ -139,7 +139,7 @@ if [ "$install" = 1 ]; then
   fi
   codesign --verify --deep --strict "$target"
   echo "build-macos-app: installed $target"
-  if pgrep -x GitNex >/dev/null 2>&1; then
-    echo "build-macos-app: GitNex is running; quit and reopen it to use this build" >&2
+  if pgrep -x GitNexia >/dev/null 2>&1; then
+    echo "build-macos-app: GitNexia is running; quit and reopen it to use this build" >&2
   fi
 fi

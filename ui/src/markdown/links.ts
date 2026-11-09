@@ -175,7 +175,7 @@ export function browserUrlFor(ctx: MarkdownContext, target: LinkTarget): string 
 /** The hover tooltip: the full target first (spec §4.1). */
 export function linkTooltip(ctx: MarkdownContext, target: LinkTarget): string | null {
   switch (target.kind) {
-    case 'mr': return `Open ${mrRef(forgeOf(ctx.tabId).kind ?? 'gitlab', target.number)} in GitNex`;
+    case 'mr': return `Open ${mrRef(forgeOf(ctx.tabId).kind ?? 'gitlab', target.number)} in GitNexia`;
     case 'commit': return target.webUrl ?? `Select ${target.sha.slice(0, 7)} in the graph`;
     case 'file': return ctx.kind === 'file' ? target.path : browserUrlFor(ctx, target);
     case 'anchor': return `Go to #${target.id.replace(/^user-content-/, '')}`;

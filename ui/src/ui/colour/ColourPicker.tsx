@@ -171,7 +171,7 @@ function Strip({ label, step, value, max, background, onChange }: { label: strin
 }
 
 /**
- * GitNex's colour picker: a portal popover with a Picker tab (an OKLCH chroma × lightness square,
+ * GitNexia's colour picker: a portal popover with a Picker tab (an OKLCH chroma × lightness square,
  * hue, and opacity where `alpha`) and an OKLCH tab of sliders, a hex field, and Old / New swatches.
  * It edits in OKLCH, so lightness and chroma move without shifting the hue, and emits hex or
  * `rgba()`. Every change previews; Enter or a click outside commits; Esc cancels (the caller

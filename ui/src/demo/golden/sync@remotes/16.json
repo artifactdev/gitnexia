@@ -6,7 +6,7 @@
           "id": 12,
           "kind": "branch",
           "label": "add remote alice",
-          "op": 12
+          "op": 17
         }
       ],
       "repo": 1,
@@ -21,7 +21,7 @@
         "id": 12,
         "kind": "branch",
         "label": "add remote alice",
-        "op": 12
+        "op": 17
       },
       "stopped": null,
       "type": "queueChanged"
@@ -30,7 +30,7 @@
       "interactive": true,
       "kind": "branch",
       "label": "add remote alice",
-      "op": 12,
+      "op": 17,
       "repo": 1,
       "type": "opStarted"
     },
@@ -60,7 +60,7 @@
       "command": null,
       "kind": "branch",
       "message": null,
-      "op": 12,
+      "op": 17,
       "outcome": "ok",
       "repo": 1,
       "type": "opFinished"

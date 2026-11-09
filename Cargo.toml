@@ -1,18 +1,18 @@
 [workspace]
 resolver = "3"
-members = ["crates/gitnex-graph", "crates/gitnex-graph-wasm", "crates/gitnex-core", "crates/gitnex-forge", "crates/gitnex-ai", "crates/gitnex-app", "crates/gitnex-harness"]
+members = ["crates/gitnexia-graph", "crates/gitnexia-graph-wasm", "crates/gitnexia-core", "crates/gitnexia-forge", "crates/gitnexia-ai", "crates/gitnexia-app", "crates/gitnexia-harness"]
 
 [workspace.package]
-version = "1.5.3"
+version = "1.6.0"
 edition = "2024"
 publish = false
 license = "MIT"
 
 [workspace.dependencies]
-gitnex-core = { path = "crates/gitnex-core" }
-gitnex-forge = { path = "crates/gitnex-forge" }
-gitnex-ai = { path = "crates/gitnex-ai" }
-gitnex-graph = { path = "crates/gitnex-graph" }
+gitnexia-core = { path = "crates/gitnexia-core" }
+gitnexia-forge = { path = "crates/gitnexia-forge" }
+gitnexia-ai = { path = "crates/gitnexia-ai" }
+gitnexia-graph = { path = "crates/gitnexia-graph" }
 gix = "0.90"
 tokio = { version = "1.53", features = ["rt-multi-thread", "macros", "process", "time", "sync", "fs", "net", "io-util"] }
 tokio-util = "0.7.19"
@@ -53,7 +53,7 @@ insta = "1.48"
 axum = { version = "0.8.9", features = ["ws"] }
 tokio-tungstenite = "0.30"
 # Tauri 3 alpha + the official CEF (Chromium) runtime (Task 14). Pinned exactly: this is an
-# alpha series. See vendor/tauri-runtime-cef/GITNEX-PATCH.md for the vendored runtime patch.
+# alpha series. See vendor/tauri-runtime-cef/GITNEXIA-PATCH.md for the vendored runtime patch.
 tauri = { version = "=3.0.0-alpha.5", features = [] }
 tauri-build = { version = "=3.0.0-alpha.4", features = [] }
 tauri-runtime-cef = "=3.0.0-alpha.6"
@@ -70,7 +70,7 @@ ureq = "3.4.2"
 dirs = "7.0.0"
 # The GLib program name (WM_CLASS) for the app window; already in the tree through gtk4.
 glib = "0.22"
-# GNOME's window button layout for the title bar (gitnex-app chrome.rs), from GSettings.
+# GNOME's window button layout for the title bar (gitnexia-app chrome.rs), from GSettings.
 # Already in the tree through gtk4; same version.
 gio = "0.22"
 # Pre-release: the only line compatible with tauri 3 alpha. Only its free function
@@ -89,16 +89,16 @@ gdk4-x11 = { version = "0.11.5", features = ["xlib"] }
 x11-dl = "2.21"
 # The active-tab file watcher (plan 1C Task 6): inotify on Linux.
 notify = "8.2.0"
-# The system's font families for the font pickers (gitnex-core fonts.rs): reads the font files'
+# The system's font families for the font pickers (gitnexia-core fonts.rs): reads the font files'
 # name tables, and on Linux fontconfig's configuration for the folders, without a C library.
 fontdb = "0.23"
 # Tests only: a constructor that isolates each test process from the host's git config before
-# `main` (gitnex_core::testing::isolate_this_process). Already in the tree through tauri-utils;
+# `main` (gitnexia_core::testing::isolate_this_process). Already in the tree through tauri-utils;
 # same version and features.
 ctor = { version = "1.0.13", default-features = false }
 
 [patch.crates-io]
-# CEF issue #3002 idle-busy-loop workaround; see vendor/tauri-runtime-cef/GITNEX-PATCH.md.
+# CEF issue #3002 idle-busy-loop workaround; see vendor/tauri-runtime-cef/GITNEXIA-PATCH.md.
 tauri-runtime-cef = { path = "vendor/tauri-runtime-cef" }
 
 # Build speed (docs/dev-setup.md, "Build and test speed"). Dev and test builds keep file:line
@@ -117,5 +117,5 @@ debug = false
 incremental = true
 
 # The website demo's WebAssembly graph: small over fast (it downloads with the page).
-[profile.release.package.gitnex-graph-wasm]
+[profile.release.package.gitnexia-graph-wasm]
 opt-level = "s"

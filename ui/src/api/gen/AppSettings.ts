@@ -100,15 +100,15 @@ updateCheck: boolean,
 updatePrereleases: boolean, 
 /**
  * Title bar › System (Settings › Appearance): the window manager's decorations instead of
- * GitNex's own title bar. Read when the window is built, so a change applies after a
- * restart. GitNex has its own title bar on Linux (in a Wayland session), Windows and macOS.
+ * GitNexia's own title bar. Read when the window is built, so a change applies after a
+ * restart. GitNexia has its own title bar on Linux (in a Wayland session), Windows and macOS.
  */
 systemTitleBar: boolean, 
 /**
  * Title bar › Combined (Settings › Appearance), compact mode: no title bar row, the tab bar
  * is the title bar (the window buttons, or macOS's traffic lights, in it), the same on every
  * platform.
- * Only under GitNex's own title bar (not with `system_title_bar`, which wins, nor in an X11
+ * Only under GitNexia's own title bar (not with `system_title_bar`, which wins, nor in an X11
  * session). Read when the window is built, so a change applies after a restart.
  */
 compactTitleBar: boolean, 

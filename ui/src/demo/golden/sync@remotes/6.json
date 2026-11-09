@@ -1,6 +1,6 @@
 {
   "error": {
-    "commandId": 14,
+    "commandId": 17,
     "kind": "NonFastForward",
     "message": "origin/diverged has commits diverged doesn't have",
     "stderr": "To /demo/.origins/sync.git\n ! [rejected]        diverged -> diverged (non-fast-forward)\nerror: failed to push some refs to '/demo/.origins/sync.git'\nhint: Updates were rejected because a pushed branch tip is behind its remote\nhint: counterpart. If you want to integrate the remote changes, use 'git pull'\nhint: before pushing again.\nhint: See the 'Note about fast-forwards' in 'git push --help' for details.\n"
@@ -12,7 +12,7 @@
           "id": 4,
           "kind": "push",
           "label": "push diverged to origin/diverged",
-          "op": 4
+          "op": 7
         }
       ],
       "repo": 1,
@@ -27,7 +27,7 @@
         "id": 4,
         "kind": "push",
         "label": "push diverged to origin/diverged",
-        "op": 4
+        "op": 7
       },
       "stopped": null,
       "type": "queueChanged"
@@ -36,7 +36,7 @@
       "interactive": true,
       "kind": "push",
       "label": "push diverged to origin/diverged",
-      "op": 4,
+      "op": 7,
       "repo": 1,
       "type": "opStarted"
     },
@@ -66,7 +66,7 @@
       "command": null,
       "kind": "push",
       "message": "origin/diverged has commits diverged doesn't have",
-      "op": 4,
+      "op": 7,
       "outcome": "failed",
       "repo": 1,
       "type": "opFinished"

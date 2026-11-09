@@ -30,7 +30,7 @@
 @keyframes sb-update-glow { 50% { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .sb-update::after { animation: none; } .sb-update-bar > span { transition: none; } }
 
-/* GitNex's own version, right of git's. */
+/* GitNexia's own version, right of git's. */
 .sb-version { cursor: default; }
 
 /* The update dialog. */

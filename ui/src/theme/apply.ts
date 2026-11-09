@@ -42,7 +42,7 @@ export function setWindowTheme(kind: ThemeDef['kind']): void {
   windowKind = kind;
   void import('@tauri-apps/api/window').then((m) => m.getCurrentWindow().setTheme(kind)).catch((e: unknown) => {
     if (windowKind === kind) windowKind = null;
-    console.warn('[gitnex] window theme refused', e);
+    console.warn('[gitnexia] window theme refused', e);
   });
 }
 
@@ -55,7 +55,7 @@ export function setWindowTheme(kind: ThemeDef['kind']): void {
  * settings load. `graph` is a built-in's lane overrides, as mirrors written before custom themes
  * carry them (read only: the settings' migration replaces them with a custom theme).
  */
-export const THEME_STORAGE_KEY = 'gitnex.theme.v1';
+export const THEME_STORAGE_KEY = 'gitnexia.theme.v1';
 export interface ThemeMirror { id: string; custom?: CustomTheme; graph?: (string | null)[] }
 
 const isCustomTheme = (v: unknown, id: string): v is CustomTheme => {

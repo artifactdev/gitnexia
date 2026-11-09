@@ -6,7 +6,7 @@
           "id": 6,
           "kind": "pull",
           "label": "pull diverged",
-          "op": 6
+          "op": 9
         }
       ],
       "repo": 1,
@@ -21,7 +21,7 @@
         "id": 6,
         "kind": "pull",
         "label": "pull diverged",
-        "op": 6
+        "op": 9
       },
       "stopped": null,
       "type": "queueChanged"
@@ -30,7 +30,7 @@
       "interactive": true,
       "kind": "pull",
       "label": "pull diverged",
-      "op": 6,
+      "op": 9,
       "repo": 1,
       "type": "opStarted"
     },
@@ -87,7 +87,7 @@
       "command": null,
       "kind": "pull",
       "message": null,
-      "op": 6,
+      "op": 9,
       "outcome": "ok",
       "repo": 1,
       "type": "opFinished"
@@ -124,7 +124,7 @@
     },
     "outcome": {
       "branch": "diverged",
-      "op": 6,
+      "op": 9,
       "result": {
         "commits": 1,
         "status": "rebased"

@@ -9,7 +9,7 @@ import type { DemoRuntime } from './transport';
 
 export async function bootDemo(): Promise<DemoRuntime> {
   // The build's rev of its data (ui/build/demoDataRev.ts); none on the dev server.
-  const rev = (import.meta.env.VITE_GITNEX_DEMO_DATA_REV as string | undefined) ?? '';
+  const rev = (import.meta.env.VITE_GITNEXIA_DEMO_DATA_REV as string | undefined) ?? '';
   const data = httpData(new URL('demo-data/', document.baseURI), rev);
   const [manifest, graph] = await Promise.all([data.manifest(), loadGraphWasm()]);
   const rt = createRuntime({ manifest, data, graph, width: window.innerWidth });

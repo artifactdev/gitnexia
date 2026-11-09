@@ -2353,25 +2353,25 @@ dependencies = [
 ]
 
 [[package]]
-name = "gitnex-ai"
-version = "1.5.3"
+name = "gitnexia-ai"
+version = "1.6.0"
 dependencies = [
- "gitnex-core",
+ "gitnexia-core",
  "serde_json",
  "tempfile",
  "ureq",
 ]
 
 [[package]]
-name = "gitnex-app"
-version = "1.5.3"
+name = "gitnexia-app"
+version = "1.6.0"
 dependencies = [
  "block2",
  "gdk4-x11",
  "gio 0.22.10",
- "gitnex-ai",
- "gitnex-core",
- "gitnex-forge",
+ "gitnexia-ai",
+ "gitnexia-core",
+ "gitnexia-forge",
  "glib 0.22.10",
  "objc2-foundation",
  "raw-window-handle",
@@ -2389,8 +2389,8 @@ dependencies = [
 ]
 
 [[package]]
-name = "gitnex-core"
-version = "1.5.3"
+name = "gitnexia-core"
+version = "1.6.0"
 dependencies = [
  "base64 0.23.1",
  "block2",
@@ -2401,7 +2401,7 @@ dependencies = [
  "encoding_rs",
  "fontdb",
  "futures-util",
- "gitnex-graph",
+ "gitnexia-graph",
  "gix",
  "insta",
  "nix",
@@ -2428,11 +2428,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "gitnex-forge"
-version = "1.5.3"
+name = "gitnexia-forge"
+version = "1.6.0"
 dependencies = [
  "base64 0.23.1",
- "gitnex-core",
+ "gitnexia-core",
  "gix",
  "httpdate",
  "keyring",
@@ -2447,8 +2447,8 @@ dependencies = [
 ]
 
 [[package]]
-name = "gitnex-graph"
-version = "1.5.3"
+name = "gitnexia-graph"
+version = "1.6.0"
 dependencies = [
  "serde",
  "serde_json",
@@ -2456,25 +2456,25 @@ dependencies = [
 ]
 
 [[package]]
-name = "gitnex-graph-wasm"
-version = "1.5.3"
+name = "gitnexia-graph-wasm"
+version = "1.6.0"
 dependencies = [
- "gitnex-graph",
+ "gitnexia-graph",
  "serde_json",
  "wasm-bindgen",
 ]
 
 [[package]]
-name = "gitnex-harness"
-version = "1.5.3"
+name = "gitnexia-harness"
+version = "1.6.0"
 dependencies = [
  "axum",
  "base64 0.23.1",
  "ctor",
  "flate2",
  "futures-util",
- "gitnex-core",
- "gitnex-forge",
+ "gitnexia-core",
+ "gitnexia-forge",
  "serde",
  "serde_json",
  "sha2 0.11.0",

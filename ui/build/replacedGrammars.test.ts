@@ -5,15 +5,15 @@ import { replacedGrammars } from './replacedGrammars';
 type Hook = (this: unknown, ...args: unknown[]) => unknown;
 const call = (hook: unknown, ...args: unknown[]) => (hook as Hook).call({}, ...args);
 
-describe("the plugin that swaps Shiki's replaced grammars for GitNex's files", () => {
+describe("the plugin that swaps Shiki's replaced grammars for GitNexia's files", () => {
   const root = '/repo/ui';
   const plugin = replacedGrammars({ root, ids: ['glsl', 'tcl'] });
   const langs = '/repo/ui/node_modules/@shikijs/langs/dist';
 
-  it("resolves a Shiki grammar's import of a replaced one (cpp embeds glsl) to GitNex's file", () => {
-    expect(call(plugin.resolveId, './glsl.mjs', `${langs}/cpp.mjs`)).toBe('\0gitnex-grammar:glsl');
-    expect(call(plugin.resolveId, 'shiki/langs/tcl.mjs', '/repo/ui/src/x.ts')).toBe('\0gitnex-grammar:tcl');
-    expect(call(plugin.resolveId, '@shikijs/langs/glsl', '/repo/ui/src/x.ts')).toBe('\0gitnex-grammar:glsl');
+  it("resolves a Shiki grammar's import of a replaced one (cpp embeds glsl) to GitNexia's file", () => {
+    expect(call(plugin.resolveId, './glsl.mjs', `${langs}/cpp.mjs`)).toBe('\0gitnexia-grammar:glsl');
+    expect(call(plugin.resolveId, 'shiki/langs/tcl.mjs', '/repo/ui/src/x.ts')).toBe('\0gitnexia-grammar:tcl');
+    expect(call(plugin.resolveId, '@shikijs/langs/glsl', '/repo/ui/src/x.ts')).toBe('\0gitnexia-grammar:glsl');
   });
 
   it('leaves every other import alone', () => {
@@ -23,8 +23,8 @@ describe("the plugin that swaps Shiki's replaced grammars for GitNex's files", (
     expect(call(plugin.resolveId, './glsl.mjs', undefined)).toBeNull();
   });
 
-  it("loads the replacement as a Shiki grammar module made of GitNex's JSON", () => {
-    const code = call(plugin.load, '\0gitnex-grammar:glsl') as string;
+  it("loads the replacement as a Shiki grammar module made of GitNexia's JSON", () => {
+    const code = call(plugin.load, '\0gitnexia-grammar:glsl') as string;
     expect(code).toContain(`import grammar from ${JSON.stringify(join(root, 'src/diff/grammars/glsl.json'))}`);
     expect(code).toContain('export default [grammar]');
     expect(call(plugin.load, '/repo/ui/src/x.ts')).toBeNull();

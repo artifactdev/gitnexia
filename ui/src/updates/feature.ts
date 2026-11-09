@@ -10,7 +10,7 @@ const offs = [
   registerAppSlot('overlay', 'updates.dialog', UpdateDialog),
   registerActions([
     {
-      id: 'help.checkUpdates', label: 'Check for updates', group: 'Help', icon: RefreshCw, tooltip: "Ask GitHub for a newer GitNex release (GitNex's own; nothing about your repositories)",
+      id: 'help.checkUpdates', label: 'Check for updates', group: 'Help', icon: RefreshCw, tooltip: "Ask GitHub for a newer GitNexia release (GitNexia's own; nothing about your repositories)",
       run: () => {
         useAbout.getState().setOpen(true);
         void useUpdates.getState().check();

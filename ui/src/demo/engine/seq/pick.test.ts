@@ -71,7 +71,7 @@ describe('cherry-pick and revert', () => {
     await expect(pickHandlers.cherryPick({ repo: id, worktree: wt, oids: [], expect: NO_EXPECT, confirm }, ctx)).rejects.toMatchObject({ message: 'Nothing to cherry-pick' });
     await expect(pickHandlers.revert({ repo: id, worktree: wt, oids: [], expect: NO_EXPECT, confirm }, ctx)).rejects.toMatchObject({ message: 'Nothing to revert' });
     const m = await t.commit('Merge', undefined, { parents: [await t.rev('main'), oids[2]] });
-    await expect(pickHandlers.cherryPick({ repo: id, worktree: wt, oids: [m], expect: NO_EXPECT, confirm }, ctx)).rejects.toMatchObject({ message: `${m.slice(0, 7)} is a merge commit: GitNex doesn't cherry-pick or revert merges` });
+    await expect(pickHandlers.cherryPick({ repo: id, worktree: wt, oids: [m], expect: NO_EXPECT, confirm }, ctx)).rejects.toMatchObject({ message: `${m.slice(0, 7)} is a merge commit: GitNexia doesn't cherry-pick or revert merges` });
     await expect(pickHandlers.cherryPick({ repo: id, worktree: wt, oids: ['a'.repeat(40)], expect: NO_EXPECT, confirm }, ctx)).rejects.toMatchObject({ kind: 'NotFound' });
     await expect(pickHandlers.cherryPick({ repo: id, worktree: wt, oids: ['nope'], expect: NO_EXPECT, confirm }, ctx)).rejects.toMatchObject({ message: 'not an object id: nope' });
     await t.checkout(await t.rev('main'));

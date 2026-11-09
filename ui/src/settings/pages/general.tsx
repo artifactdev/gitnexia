@@ -10,7 +10,7 @@ function GeneralBody({ ctx }: { ctx: SettingsCtx }) {
 }
 
 const offs = [
-  registerSettingsPage({ id: 'general', label: 'General', scope: 'app', order: 10, icon: Settings, summary: 'How GitNex behaves day to day.', Body: GeneralBody }),
+  registerSettingsPage({ id: 'general', label: 'General', scope: 'app', order: 10, icon: Settings, summary: 'How GitNexia behaves day to day.', Body: GeneralBody }),
   registerSettings([
     {
       id: 'advanceAfterStage', label: 'After staging a file, show the next one', page: 'general', group: 'Staging',

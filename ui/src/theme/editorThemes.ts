@@ -21,7 +21,7 @@ export const SHIKI_THEMES: Record<(typeof SHIKI_BUNDLED_THEMES)[number], Dynamic
 
 /**
  * The first theme for each editor theme: its overlay is the one registered under the base name.
- * Two built-ins can share a Shiki base (GitNex Dark and GitHub Dark both use
+ * Two built-ins can share a Shiki base (GitNexia Dark and GitHub Dark both use
  * `github-dark-default`); the others get a name per overlay.
  */
 const canonicalByEditorTheme = new Map<string, ThemeId>();
@@ -33,7 +33,7 @@ for (const id of THEME_IDS) {
 /**
  * Every theme's Shiki registration with its per-theme overlay (monaco/theme.ts) layered on, for
  * the highlighter's `themes` option. One registration per editor theme: two app themes can share
- * a Shiki base (GitNex Dark and GitHub Dark do), and the first one's overlay is the base name's;
+ * a Shiki base (GitNexia Dark and GitHub Dark do), and the first one's overlay is the base name's;
  * the other gets a name per overlay (`editorThemeName`). They all load up front because
  * `shikiToMonaco` defines Monaco themes only for themes already loaded when it runs, and wraps
  * `monaco.editor.setTheme` once: a theme loaded later would never reach Monaco.

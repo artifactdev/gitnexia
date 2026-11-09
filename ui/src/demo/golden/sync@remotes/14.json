@@ -6,7 +6,7 @@
           "id": 10,
           "kind": "push",
           "label": "push feature/new to origin/feature/new",
-          "op": 10
+          "op": 15
         }
       ],
       "repo": 1,
@@ -21,7 +21,7 @@
         "id": 10,
         "kind": "push",
         "label": "push feature/new to origin/feature/new",
-        "op": 10
+        "op": 15
       },
       "stopped": null,
       "type": "queueChanged"
@@ -30,7 +30,7 @@
       "interactive": true,
       "kind": "push",
       "label": "push feature/new to origin/feature/new",
-      "op": 10,
+      "op": 15,
       "repo": 1,
       "type": "opStarted"
     },
@@ -82,7 +82,7 @@
       "command": null,
       "kind": "push",
       "message": null,
-      "op": 10,
+      "op": 15,
       "outcome": "ok",
       "repo": 1,
       "type": "opFinished"
@@ -122,7 +122,7 @@
       "branch": "feature/new",
       "dst": "feature/new",
       "forced": null,
-      "op": 10,
+      "op": 15,
       "remote": "origin",
       "server": {
         "lines": 1,

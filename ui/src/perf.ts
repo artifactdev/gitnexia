@@ -5,11 +5,11 @@ export const perf = {
   start(name: string): void {
     started.set(name, performance.now());
   },
-  /** Logs `[gitnex] <name> ready in N ms` after the next paint, once per `start`. */
+  /** Logs `[gitnexia] <name> ready in N ms` after the next paint, once per `start`. */
   done(name: string): void {
     const t0 = started.get(name);
     if (t0 === undefined) return;
     started.delete(name);
-    requestAnimationFrame(() => console.info(`[gitnex] ${name} ready in ${Math.round(performance.now() - t0)} ms`));
+    requestAnimationFrame(() => console.info(`[gitnexia] ${name} ready in ${Math.round(performance.now() - t0)} ms`));
   },
 };

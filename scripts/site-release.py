@@ -38,13 +38,13 @@ def packages(v):
     order the site lists them: docs/releasing.md's "Asset names are an API"."""
     pkgver = version.deb(v).replace("~", "")  # as scripts/arch-pkg.py: 0.1.0-alpha.1 -> 0.1.0alpha.1
     return [
-        ("linux", "deb", "x86_64", f"GitNex_{v}_amd64.deb"),
-        ("linux", "rpm", "x86_64", f"GitNex-{v}-1.x86_64.rpm"),
-        ("linux", "arch", "x86_64", f"GitNex-{pkgver}-1-x86_64.pkg.tar.zst"),
-        ("macos", "dmg", "aarch64", f"GitNex_{v}_aarch64.dmg"),
-        ("macos", "dmg", "x86_64", f"GitNex_{v}_x64.dmg"),
-        ("windows", "nsis", "x86_64", f"GitNex_{v}_x64-setup.exe"),
-        ("windows", "msi", "x86_64", f"GitNex_{v}_x64.msi"),
+        ("linux", "deb", "x86_64", f"GitNexia_{v}_amd64.deb"),
+        ("linux", "rpm", "x86_64", f"GitNexia-{v}-1.x86_64.rpm"),
+        ("linux", "arch", "x86_64", f"GitNexia-{pkgver}-1-x86_64.pkg.tar.zst"),
+        ("macos", "dmg", "aarch64", f"GitNexia_{v}_aarch64.dmg"),
+        ("macos", "dmg", "x86_64", f"GitNexia_{v}_x64.dmg"),
+        ("windows", "nsis", "x86_64", f"GitNexia_{v}_x64-setup.exe"),
+        ("windows", "msi", "x86_64", f"GitNexia_{v}_x64.msi"),
     ]
 
 

@@ -22,7 +22,7 @@ export interface Grammar { tokenizeLine2(line: string, state: RuleStack | null, 
 
 export interface Grammars {
   init(themes: ThemeRegistration[]): Promise<ThemeInfo[]>;
-  /** Shiki ships it (in GitNex's registry, shikiLanguages.ts). */
+  /** Shiki ships it (in GitNexia's registry, shikiLanguages.ts). */
   has(lang: string): boolean;
   loaded(lang: string): boolean;
   /** Loads a grammar (and the ones it embeds); resolves to every loaded language id. */

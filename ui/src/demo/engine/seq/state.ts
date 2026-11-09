@@ -80,7 +80,7 @@ export interface SeqState {
   noted?: { key: string; left: [string, string | null][] };
 }
 
-export const SEQ_FILE = 'gitnex-demo-seq.json';
+export const SEQ_FILE = 'gitnexia-demo-seq.json';
 
 const fileOf = (gitdir: string) => `${gitdir}/${SEQ_FILE}`;
 
@@ -159,7 +159,7 @@ export function seqInProgress(fs: MemFs, gitdir: string, headMessage: string | n
   const file = (pick: boolean) => normalise(stop === null ? '' : pick && stop.reason === 'conflict' && stop.conflicts?.length ? withConflicts(stop.message, stop.conflicts) : stop.message);
   if (s.kind === 'cherryPick') return { kind: 'cherryPick', head: stop!.at, message: file(true), conflicted: n };
   if (s.kind === 'revert') return { kind: 'revert', head: stop!.at, message: file(true), conflicted: n };
-  // GitNex's Edit stop is the core's soft-reset one (`EDIT_STAGED`): HEAD on the made commit's parent.
+  // GitNexia's Edit stop is the core's soft-reset one (`EDIT_STAGED`): HEAD on the made commit's parent.
   const edit = stop?.reason === 'edit' ? stop : null;
   const fold = atFold(s);
   const editStop = edit?.made ?? (fold ? s.head : null);
@@ -178,7 +178,7 @@ export function seqInProgress(fs: MemFs, gitdir: string, headMessage: string | n
     editChanged: edit !== null && indexDiffers(fs, gitdir, edit.madeFiles),
     editConflict: editStop === null && last?.op === 'pick' && last.edit === true,
     messageFailed: null,
-    gitnex: s.interactive,
+    gitnexia: s.interactive,
     conflicted: n,
     message,
   };

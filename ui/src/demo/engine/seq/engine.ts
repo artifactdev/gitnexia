@@ -540,7 +540,7 @@ export async function skipSeq(cx: WriteCx, which: SeqWhich): Promise<SeqEnd> {
 export async function abortSeq(cx: WriteCx, which: SeqWhich): Promise<Aborted> {
   const s = await current(cx, which);
   const now = await headNow(cx);
-  // An Abort of GitNex's interactive rebase keeps the work done at its stops first, at any stop
+  // An Abort of GitNexia's interactive rebase keeps the work done at its stops first, at any stop
   // (the core's `keep_work`): new commits on a work branch, new edits in a stash.
   const session = isRebase(s) && s.interactive ? pausedSession(cx) : null;
   // git's refusal over an untracked file in the way comes first: nothing is kept or reset then.

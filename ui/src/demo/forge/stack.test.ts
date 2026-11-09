@@ -14,7 +14,7 @@ const stack = ['feature/stack-a', 'feature/stack-b'];
 describe('stacked MRs', () => {
   it('renders the table with the current row bold and splices it in place', () => {
     const block = renderBlock([{ number: 4, title: 'Add the cargo hold', state: 'open' }, { number: 5, title: 'Give | the *hold*', state: 'open' }], 5, '\n');
-    expect(block).toBe([MARK_START, '**Stack** (kept up to date by GitNex)', '', '| # | MR | Title | State |', '|---|---|---|---|', '| 1 | !4 | Add the cargo hold | Open |', '| **2** | **!5** | **Give \\| the \\*hold\\*** | **Open** |', MARK_END].join('\n'));
+    expect(block).toBe([MARK_START, '**Stack** (kept up to date by GitNexia)', '', '| # | MR | Title | State |', '|---|---|---|---|', '| 1 | !4 | Add the cargo hold | Open |', '| **2** | **!5** | **Give \\| the \\*hold\\*** | **Open** |', MARK_END].join('\n'));
     const once = spliceBlock('Intro.', block);
     expect(once).toBe(`Intro.\n\n${block}`);
     expect(spliceBlock(once, block)).toBe(once);

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Usage: ./measure-mem.sh — total PSS (MB) of gitnex and ALL of its CEF processes (browser,
+# Usage: ./measure-mem.sh — total PSS (MB) of gitnexia and ALL of its CEF processes (browser,
 # zygotes, renderers, GPU, utility/network, setuid sandbox helper). Adapted from the CEF spike's
 # measure-mem.sh (spike-cef/measure-mem.sh); process discovery differs because CEF re-executes
 # the app binary for every helper (see proc-tree.sh).
@@ -11,9 +11,9 @@
 # double-counts shared pages, so its sum is an upper bound, not comparable to PSS).
 set -euo pipefail
 . "$(dirname "$0")/proc-tree.sh"
-pids=$(gitnex_pids) || { echo "measure-mem.sh: no gitnex process found" >&2; exit 1; }
+pids=$(gitnexia_pids) || { echo "measure-mem.sh: no gitnexia process found" >&2; exit 1; }
 if [ -z "$pids" ]; then
-  echo "measure-mem.sh: no gitnex process found" >&2
+  echo "measure-mem.sh: no gitnexia process found" >&2
   exit 1
 fi
 total=0; missing=0; rss_total=0
@@ -25,6 +25,6 @@ for p in $pids; do
   else
     missing=$((missing + 1)); pss="PSS unreadable"
   fi
-  echo "$p [$(gitnex_role "$p")] PSS=$pss RSS=${rss}kB"
+  echo "$p [$(gitnexia_role "$p")] PSS=$pss RSS=${rss}kB"
 done
 echo "total PSS: $((total / 1024)) MB ($missing process(es) with unreadable PSS not included); sum RSS: $((rss_total / 1024)) MB"

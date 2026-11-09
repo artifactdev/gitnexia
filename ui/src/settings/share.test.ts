@@ -3,7 +3,7 @@ import { exportFileName, MAX_SHARE_BYTES, parseShareJson, toShareJson, uniqueNam
 
 describe('share envelope', () => {
   it('round-trips a body', () => {
-    const text = toShareJson('theme', 1, { name: 'Nord', gitnex: 'x', version: 9 });
+    const text = toShareJson('theme', 1, { name: 'Nord', gitnexia: 'x', version: 9 });
     expect(parseShareJson(text, 'theme', 1)).toEqual({ ok: true, version: 1, body: { name: 'Nord' } });
   });
 
@@ -15,10 +15,15 @@ describe('share envelope', () => {
     expect(bad('null')).toBe(false);
     expect(bad('"theme"')).toBe(false);
     expect(bad(toShareJson('branch-preset', 1, {}))).toBe(false);
-    expect(bad('{"gitnex":"theme"}')).toBe(false);
-    expect(bad('{"gitnex":"theme","version":1.5}')).toBe(false);
-    expect(bad('{"gitnex":"theme","version":"1"}')).toBe(false);
+    expect(bad('{"gitnexia":"theme"}')).toBe(false);
+    expect(bad('{"gitnexia":"theme","version":1.5}')).toBe(false);
+    expect(bad('{"gitnexia":"theme","version":"1"}')).toBe(false);
     expect(bad(toShareJson('theme', 2, {}))).toBe(false);
+  });
+
+  it('reads the envelope marker older versions wrote', () => {
+    expect(parseShareJson('{"gitnex":"theme","version":1,"name":"A"}', 'theme', 1)).toEqual({ ok: true, version: 1, body: { name: 'A' } });
+    expect(parseShareJson('{"gitnex":"branch-preset","version":1}', 'theme', 1).ok).toBe(false);
   });
 
   it('tolerates whitespace and a json fence', () => {
@@ -42,7 +47,7 @@ describe('uniqueName', () => {
 
 describe('exportFileName', () => {
   it('slugs the name', () => {
-    expect(exportFileName('Nord (Custom)', 'theme')).toBe('nord-custom.gitnex-theme.json');
-    expect(exportFileName('!!!', 'branch-preset')).toBe('branch-preset.gitnex-branch-preset.json');
+    expect(exportFileName('Nord (Custom)', 'theme')).toBe('nord-custom.gitnexia-theme.json');
+    expect(exportFileName('!!!', 'branch-preset')).toBe('branch-preset.gitnexia-branch-preset.json');
   });
 });

@@ -90,7 +90,7 @@ export function pushIntent(o: { branch: string; target?: PushTarget; setUpstream
       const dst = `refs/heads/${target.branch}`;
       const tracking = await trackingOf(demo, target.remote, dst);
       if (tracking !== null) watchRefs(cx, [[tracking, readRef(demo, tracking)]]);
-      // §12.3: a branch GitNex rewrote since its last push forces with the lease recorded then,
+      // §12.3: a branch GitNexia rewrote since its last push forces with the lease recorded then,
       // when a plain push would be refused. An explicit force keeps its own lease.
       const mark = o.lease !== undefined ? null : await leaseFor(cx.read, o.branch, target);
       const lease = o.lease !== undefined ? o.lease.oid : mark ? mark.mark.leaseOid : undefined;

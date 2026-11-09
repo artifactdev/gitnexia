@@ -93,7 +93,7 @@ export async function loadStaging(repo: number, worktree: string): Promise<void>
   try {
     useStaging.getState().set(repo, worktree, await api.stagingState(repo, worktree));
   } catch (e) {
-    console.warn('[gitnex] staging state', e);
+    console.warn('[gitnexia] staging state', e);
   }
 }
 

@@ -3,7 +3,7 @@
 # table and its unknown-name failure), then a synthetic .deb through the whole script (the file
 # name, the header's fields, Requires, the payload's modes and links, the license flags, the
 # system directories left out, chrome-sandbox root:root 4755), read back with rpm-pkg.py's own
-# reader. With GITNEX_TEST_DOCKER=1, rpm itself checks it in fedora:latest (rpm -K, the query
+# reader. With GITNEXIA_TEST_DOCKER=1, rpm itself checks it in fedora:latest (rpm -K, the query
 # tags, and an install without dependencies plus rpm -V).
 set -euo pipefail
 here=$(cd "$(dirname "$0")" && pwd)
@@ -29,34 +29,34 @@ command -v dpkg-deb >/dev/null || { echo "test-package-rpm: pure parts OK; packa
 umask 022
 work=$(mktemp -d); trap 'rm -rf "$work"' EXIT
 pkg="$work/pkg"
-mkdir -p "$pkg/DEBIAN" "$pkg/usr/share/GitNex/locales" "$pkg/usr/bin" "$pkg/usr/share/applications" "$pkg/usr/share/icons/hicolor/32x32/apps"
-cp /usr/bin/true "$pkg/usr/share/GitNex/gitnex"
-printf '#!/bin/sh\n' > "$pkg/usr/share/GitNex/chrome-sandbox"
-chmod 4755 "$pkg/usr/share/GitNex/chrome-sandbox"
-printf 'pak' > "$pkg/usr/share/GitNex/locales/en-US.pak"
-printf '[Desktop Entry]\n' > "$pkg/usr/share/applications/GitNex.desktop"
-printf 'png' > "$pkg/usr/share/icons/hicolor/32x32/apps/gitnex.png"
-ln -s ../share/GitNex/gitnex "$pkg/usr/bin/gitnex"
+mkdir -p "$pkg/DEBIAN" "$pkg/usr/share/GitNexia/locales" "$pkg/usr/bin" "$pkg/usr/share/applications" "$pkg/usr/share/icons/hicolor/32x32/apps"
+cp /usr/bin/true "$pkg/usr/share/GitNexia/gitnexia"
+printf '#!/bin/sh\n' > "$pkg/usr/share/GitNexia/chrome-sandbox"
+chmod 4755 "$pkg/usr/share/GitNexia/chrome-sandbox"
+printf 'pak' > "$pkg/usr/share/GitNexia/locales/en-US.pak"
+printf '[Desktop Entry]\n' > "$pkg/usr/share/applications/GitNexia.desktop"
+printf 'png' > "$pkg/usr/share/icons/hicolor/32x32/apps/gitnexia.png"
+ln -s ../share/GitNexia/gitnexia "$pkg/usr/bin/gitnexia"
 notices="LICENSE THIRD-PARTY-NOTICES-rust.txt THIRD-PARTY-NOTICES-ui.txt CEF-LICENSE.txt CHROMIUM-CREDITS.html.gz DICTIONARY-en-US-LICENSE.txt"
-mkdir -p "$pkg/usr/share/doc/gitnex"
-for f in $notices; do printf 'notice %s\n' "$f" > "$pkg/usr/share/doc/gitnex/$f"; done
-printf "Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/\n" > "$pkg/usr/share/doc/gitnex/copyright"
+mkdir -p "$pkg/usr/share/doc/gitnexia"
+for f in $notices; do printf 'notice %s\n' "$f" > "$pkg/usr/share/doc/gitnexia/$f"; done
+printf "Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/\n" > "$pkg/usr/share/doc/gitnexia/copyright"
 printf 'Rust notices\n\nSummary\n-------\n  MIT          40\n  Apache-2.0    2\n\n\nMIT\n' \
-  > "$pkg/usr/share/doc/gitnex/THIRD-PARTY-NOTICES-rust.txt"
+  > "$pkg/usr/share/doc/gitnexia/THIRD-PARTY-NOTICES-rust.txt"
 printf 'UI notices\n\nSummary\n-------\n  MIT     9\n  ISC     3\n\n\nMIT\n' \
-  > "$pkg/usr/share/doc/gitnex/THIRD-PARTY-NOTICES-ui.txt"
+  > "$pkg/usr/share/doc/gitnexia/THIRD-PARTY-NOTICES-ui.txt"
 mkdir -p "$pkg/usr/share/metainfo"
-printf '<component>\n  <id>com.gitnex.desktop</id>\n  <pkgname>gitnex</pkgname>\n</component>\n' \
-  > "$pkg/usr/share/metainfo/com.gitnex.desktop.metainfo.xml"
-mkdir -p "$pkg/usr/share/GitNex/dictionaries"
-printf 'BDic' > "$pkg/usr/share/GitNex/dictionaries/en-US-10-2.bdic"
-printf 'deb\n' > "$pkg/usr/share/GitNex/install-kind"
+printf '<component>\n  <id>com.gitnexia.desktop</id>\n  <pkgname>gitnexia</pkgname>\n</component>\n' \
+  > "$pkg/usr/share/metainfo/com.gitnexia.desktop.metainfo.xml"
+mkdir -p "$pkg/usr/share/GitNexia/dictionaries"
+printf 'BDic' > "$pkg/usr/share/GitNexia/dictionaries/en-US-10-2.bdic"
+printf 'deb\n' > "$pkg/usr/share/GitNexia/install-kind"
 cat > "$pkg/DEBIAN/control" <<'EOT'
-Package: gitnex
+Package: gitnexia
 Version: 0.1.0~alpha.1+202610051325.ab4dbf9e
 Architecture: amd64
 Maintainer: package-rpm self-test <test@example.invalid>
-Homepage: https://gitnex.example.invalid
+Homepage: https://gitnexia.example.invalid
 Depends: libgtk-4-1 (>= 4.13.8), libc6 (>= 2.39), git (>= 1:2.40)
 Description: A fast desktop Git client
  First paragraph.
@@ -65,7 +65,7 @@ Description: A fast desktop Git client
 EOT
 dpkg-deb --root-owner-group -Zgzip -b "$pkg" "$work/t.deb" >/dev/null
 SOURCE_DATE_EPOCH='' "$here/package-rpm.sh" "$work/t.deb" "$work/out" >/dev/null
-out="$work/out/GitNex-0.1.0-alpha.1+202610051325.ab4dbf9e-1.x86_64.rpm"
+out="$work/out/GitNexia-0.1.0-alpha.1+202610051325.ab4dbf9e-1.x86_64.rpm"
 [ -f "$out" ] || fail "no package: $(ls "$work/out")"
 
 # What the header says, through the reader package-rpm.sh's verify uses.
@@ -80,28 +80,35 @@ print("summary", h[1004]); print("description", h[1005].replace("\n", "|")); pri
 print("buildtime", h[1006][0])
 for n, f, v in zip(h[1049], h[1048], h[1050]):
     print("require", n, f, v)
+for n, f, v in zip(h[1047], h[1112], h[1113]):
+    print("provide", n, f, v)
+for n, f, v in zip(h[1090], h[1114], h[1115]):
+    print("obsolete", n, f, v)
 for path, mode, link, flags, user in zip(files, h[1030], h[1036], h[1037], h[1039]):
     print("file", oct(mode), user, flags, path, link)
 EOP
 }
 info=$(dump)
 stamp=$(date -u -d '2026-10-05 13:25' +%s)
-for kv in 'name gitnex' 'version 0.1.0~alpha.1+202610051325.ab4dbf9e' 'release 1' 'arch x86_64' \
+for kv in 'name gitnexia' 'version 0.1.0~alpha.1+202610051325.ab4dbf9e' 'release 1' 'arch x86_64' \
           'summary A fast desktop Git client' 'description First paragraph.||Second paragraph.' \
-          'url https://gitnex.example.invalid' 'license MIT AND Apache-2.0 AND BSD-3-Clause AND ISC AND LicenseRef-SCOWL' \
+          'url https://gitnexia.example.invalid' 'license MIT AND Apache-2.0 AND BSD-3-Clause AND ISC AND LicenseRef-SCOWL' \
           "buildtime $stamp" 'require git-core 12 2.40' 'require libgtk-4.so.1()(64bit) 0 ' \
           'require libc.so.6()(64bit) 0 ' 'require rpmlib(TildeInVersions) 16777226 4.10.0-1' \
           'require rpmlib(PayloadIsZstd) 16777226 5.4.18-1' \
-          'file 0o104755 root 0 /usr/share/GitNex/chrome-sandbox ' \
-          'file 0o120777 root 0 /usr/bin/gitnex ../share/GitNex/gitnex' \
-          'file 0o40755 root 0 /usr/share/GitNex ' 'file 0o40755 root 0 /usr/share/GitNex/locales ' \
-          'file 0o40755 root 0 /usr/share/doc/gitnex ' \
-          'file 0o120777 root 0 /usr/share/licenses/gitnex ../doc/gitnex' \
-          'file 0o100644 root 0 /usr/share/icons/hicolor/32x32/apps/gitnex.png '; do
+          'provide gitnexia 8 0.1.0~alpha.1+202610051325.ab4dbf9e-1' \
+          'provide gitnexia(x86-64) 8 0.1.0~alpha.1+202610051325.ab4dbf9e-1' \
+          'provide gitnex 8 0.1.0~alpha.1+202610051325.ab4dbf9e-1' 'obsolete gitnex 0 ' \
+          'file 0o104755 root 0 /usr/share/GitNexia/chrome-sandbox ' \
+          'file 0o120777 root 0 /usr/bin/gitnexia ../share/GitNexia/gitnexia' \
+          'file 0o40755 root 0 /usr/share/GitNexia ' 'file 0o40755 root 0 /usr/share/GitNexia/locales ' \
+          'file 0o40755 root 0 /usr/share/doc/gitnexia ' \
+          'file 0o120777 root 0 /usr/share/licenses/gitnexia ../doc/gitnexia' \
+          'file 0o100644 root 0 /usr/share/icons/hicolor/32x32/apps/gitnexia.png '; do
   grep -qxF "$kv" <<<"$info" || fail "the header lacks '$kv': $info"
 done
 for f in $notices copyright; do
-  grep -qxF "file 0o100644 root 130 /usr/share/doc/gitnex/$f " <<<"$info" || fail "$f isn't a %license file: $info"
+  grep -qxF "file 0o100644 root 130 /usr/share/doc/gitnexia/$f " <<<"$info" || fail "$f isn't a %license file: $info"
 done
 # The system's directories stay the system's.
 for d in /usr /usr/bin /usr/share /usr/share/applications /usr/share/icons/hicolor/32x32/apps /usr/share/licenses; do
@@ -122,40 +129,40 @@ for name, mode, uid, gid, size, body in m.cpio_entries(raw):
 EOP
 }
 payload=$(zstd_payload)
-grep -qxF './usr/share/GitNex/install-kind rpm|' <<<"$payload" || fail "install-kind isn't rpm: $payload"
-grep -qF '<pkgname>gitnex</pkgname>' <<<"$payload" || fail "the metainfo doesn't name gitnex: $payload"
+grep -qxF './usr/share/GitNexia/install-kind rpm|' <<<"$payload" || fail "install-kind isn't rpm: $payload"
+grep -qF '<pkgname>gitnexia</pkgname>' <<<"$payload" || fail "the metainfo doesn't name gitnexia: $payload"
 
 # rpm's own reading of it, when Docker is there to run it.
-if [ "${GITNEX_TEST_DOCKER:-}" = 1 ]; then
+if [ "${GITNEXIA_TEST_DOCKER:-}" = 1 ]; then
   docker run --rm -v "$out:/t.rpm:ro" fedora:latest bash -c '
     set -euo pipefail
     rpm -Kv /t.rpm
-    rpm -qp --qf "%{NAME} %{VERSION} %{RELEASE} %{ARCH}\n" /t.rpm | grep -qx "gitnex 0.1.0~alpha.1+202610051325.ab4dbf9e 1 x86_64"
+    rpm -qp --qf "%{NAME} %{VERSION} %{RELEASE} %{ARCH}\n" /t.rpm | grep -qx "gitnexia 0.1.0~alpha.1+202610051325.ab4dbf9e 1 x86_64"
     rpm -qplv /t.rpm
-    rpm -qpL /t.rpm | grep -qx /usr/share/doc/gitnex/LICENSE
+    rpm -qpL /t.rpm | grep -qx /usr/share/doc/gitnexia/LICENSE
     rpm -i --nodeps /t.rpm
-    rpm -V --nodeps gitnex
-    [ "$(stat -c "%U:%G %a" /usr/share/GitNex/chrome-sandbox)" = "root:root 4755" ]
-    [ -s /usr/share/licenses/gitnex/LICENSE ]
+    rpm -V --nodeps gitnexia
+    [ "$(stat -c "%U:%G %a" /usr/share/GitNexia/chrome-sandbox)" = "root:root 4755" ]
+    [ -s /usr/share/licenses/gitnexia/LICENSE ]
     echo "rpm read it: OK"' || fail "rpm rejected the package"
 fi
 
 # A .deb without a license notice, the dictionary or install-kind fails, as does an unknown
-# dependency or a directory that is neither GitNex's nor the system's.
-: > "$pkg/usr/share/doc/gitnex/CEF-LICENSE.txt"
+# dependency or a directory that is neither GitNexia's nor the system's.
+: > "$pkg/usr/share/doc/gitnexia/CEF-LICENSE.txt"
 dpkg-deb --root-owner-group -Zgzip -b "$pkg" "$work/n.deb" >/dev/null
 "$here/package-rpm.sh" "$work/n.deb" "$work/out3" 2>/dev/null && fail "package-rpm accepted an empty CEF-LICENSE.txt"
-printf 'notice\n' > "$pkg/usr/share/doc/gitnex/CEF-LICENSE.txt"
-mv "$pkg/usr/share/GitNex/dictionaries/en-US-10-2.bdic" "$work/dict"
+printf 'notice\n' > "$pkg/usr/share/doc/gitnexia/CEF-LICENSE.txt"
+mv "$pkg/usr/share/GitNexia/dictionaries/en-US-10-2.bdic" "$work/dict"
 dpkg-deb --root-owner-group -Zgzip -b "$pkg" "$work/n.deb" >/dev/null
 "$here/package-rpm.sh" "$work/n.deb" "$work/out3" 2>/dev/null && fail "package-rpm accepted a .deb without the dictionary"
-mv "$work/dict" "$pkg/usr/share/GitNex/dictionaries/en-US-10-2.bdic"
-rm "$pkg/usr/share/GitNex/install-kind"
+mv "$work/dict" "$pkg/usr/share/GitNexia/dictionaries/en-US-10-2.bdic"
+rm "$pkg/usr/share/GitNexia/install-kind"
 dpkg-deb --root-owner-group -Zgzip -b "$pkg" "$work/n.deb" >/dev/null
 "$here/package-rpm.sh" "$work/n.deb" "$work/out3" 2>/dev/null && fail "package-rpm accepted a .deb without install-kind"
-printf 'deb\n' > "$pkg/usr/share/GitNex/install-kind"
-mkdir -p "$pkg/usr/lib/gitnex"
-printf 'x' > "$pkg/usr/lib/gitnex/x"
+printf 'deb\n' > "$pkg/usr/share/GitNexia/install-kind"
+mkdir -p "$pkg/usr/lib/gitnexia"
+printf 'x' > "$pkg/usr/lib/gitnexia/x"
 dpkg-deb --root-owner-group -Zgzip -b "$pkg" "$work/n.deb" >/dev/null
 err=$("$here/package-rpm.sh" "$work/n.deb" "$work/out3" 2>&1 >/dev/null) && fail "package-rpm accepted an unknown directory"
 grep -q 'usr/lib.*OWNED_DIRS or SYSTEM_DIRS' <<<"$err" || fail "unclear unknown-directory message: $err"

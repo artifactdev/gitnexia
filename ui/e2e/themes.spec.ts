@@ -21,8 +21,8 @@ const dialog = (page: Page) => page.getByRole('dialog', { name: 'Settings' });
 
 // Each `test.step` below was a test of its own, paying for a page load; they run in an order
 // where each starts from what it needs (a step that needs a plain URL loads it).
-test('themes: GitNex Dark by default; a lane edit makes a custom theme; ?theme=; the palette, saved and mirrored; the hamburger opens the picker', async ({ page }) => {
-  await test.step('GitNex Dark by default', async () => {
+test('themes: GitNexia Dark by default; a lane edit makes a custom theme; ?theme=; the palette, saved and mirrored; the hamburger opens the picker', async ({ page }) => {
+  await test.step('GitNexia Dark by default', async () => {
     await page.goto(openUrl(fixtures.basic));
     await expect(grid(page)).toBeVisible();
     expect(await theme(page)).toBe('default-dark');
@@ -75,7 +75,7 @@ test('themes: GitNex Dark by default; a lane edit makes a custom theme; ?theme=;
     await expect.poll(laneColor).toBe('#123456');
     await expect.poll(() => canvasHash(page)).not.toBe(before);
     // Saved, and mirrored with the custom theme itself for the first paint.
-    await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem('gitnex.theme.v1') ?? 'null')?.custom?.name)).toBe('Nord (Custom)');
+    await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem('gitnexia.theme.v1') ?? 'null')?.custom?.name)).toBe('Nord (Custom)');
     await page.reload();
     await expect(grid(page)).toBeVisible();
     await expect(page.locator('html')).toHaveAttribute('data-theme', /^custom-[0-9a-f]{8}$/);
@@ -126,7 +126,7 @@ test('themes: GitNex Dark by default; a lane edit makes a custom theme; ?theme=;
     await expect(page.locator('body')).toHaveCSS('background-color', rgb(THEMES['solarized-light'].colors['app-bg0']));
     await expect.poll(() => canvasHash(page)).not.toBe(before);
     // Saved (the backend's settings), and mirrored for the first paint (R3).
-    await expect.poll(() => page.evaluate(() => localStorage.getItem('gitnex.theme.v1'))).toBe(JSON.stringify({ id: 'solarized-light', kind: 'light', bg: THEMES['solarized-light'].colors['app-bg0'] }));
+    await expect.poll(() => page.evaluate(() => localStorage.getItem('gitnexia.theme.v1'))).toBe(JSON.stringify({ id: 'solarized-light', kind: 'light', bg: THEMES['solarized-light'].colors['app-bg0'] }));
     await page.reload();
     await expect(grid(page)).toBeVisible();
     expect(await theme(page)).toBe('solarized-light');
@@ -146,7 +146,7 @@ test('themes: GitNex Dark by default; a lane edit makes a custom theme; ?theme=;
 });
 
 test("index.html paints the mirrored theme's background and scheme on its own, before the app's module runs (I1)", async ({ page }) => {
-  await page.addInitScript((bg) => localStorage.setItem('gitnex.theme.v1', JSON.stringify({ id: 'light', kind: 'light', bg })), THEMES.light.colors['app-bg0']);
+  await page.addInitScript((bg) => localStorage.setItem('gitnexia.theme.v1', JSON.stringify({ id: 'light', kind: 'light', bg })), THEMES.light.colors['app-bg0']);
   // No app module at all: only the inline <head> script can have set these.
   // (The dev server's /src/main.tsx, or the production build's entry chunk.)
   await page.route(/\/(src\/main\.tsx|assets\/index-[^/]*\.js)(\?|$)/, (r) => r.abort());
@@ -176,7 +176,7 @@ test('the open editor: a theme switch repaints it without re-creating it (R6); S
     await openDiff(page);
     const host = diffRegion(page).locator('.monaco-host').first();
     await host.evaluate((el) => { (el as HTMLElement).dataset.keep = '1'; });
-    await expect.poll(() => editorBg(page)).toBe(rgb(THEMES['default-dark'].colors['app-bg0'])); // GitNex Dark's near-black ground
+    await expect.poll(() => editorBg(page)).toBe(rgb(THEMES['default-dark'].colors['app-bg0'])); // GitNexia Dark's near-black ground
     const keyword = diffRegion(page).locator('.editor.modified .view-line span span').filter({ hasText: /^function$/ }).first();
     await expect(keyword).toHaveCSS('color', 'rgb(255, 123, 114)'); // github-dark-default keyword
     await page.keyboard.press('Control+P');
@@ -261,7 +261,7 @@ test('the open editor: a theme switch repaints it without re-creating it (R6); S
 test.describe('theme screenshots', () => {
   // Pixel baselines: opt-in (`just e2e-shots`), recorded on one machine; fonts and antialiasing
   // elsewhere would fail the gate (W2-A review).
-  test.skip(!process.env.GITNEX_E2E_SHOTS, 'pixel baselines run with GITNEX_E2E_SHOTS=1 (just e2e-shots)');
+  test.skip(!process.env.GITNEXIA_E2E_SHOTS, 'pixel baselines run with GITNEXIA_E2E_SHOTS=1 (just e2e-shots)');
   test.skip(({ browserName }) => browserName !== 'chromium', 'screenshot baselines are Chromium-only');
   for (const id of THEME_IDS) {
     test(`${id}: graph, details, split diff`, async ({ page }) => {

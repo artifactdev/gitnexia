@@ -94,7 +94,7 @@ describe('editing branch presets', () => {
     const got = importInto(d, presetToJson(preset('x', { name: 'Quiet', otherwise: 'collapse' })), 'n9');
     expect(got && [got.id, got.name]).toEqual(['n9', 'Quiet (2)']);
     expect(got?.doc.settings.branchPresets?.map((p) => [p.id, p.scope, p.otherwise])).toEqual([['g1', 'all', 'show'], ['n9', 'all', 'collapse']]);
-    expect(importInto(d, '{"gitnex":"theme","version":1}', 'n9')).toBeNull();
+    expect(importInto(d, '{"gitnexia":"theme","version":1}', 'n9')).toBeNull();
   });
 
   it('the live counts ask about the preset as edited, with its picks and the trunk patterns', () => {

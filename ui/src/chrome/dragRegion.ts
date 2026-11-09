@@ -36,7 +36,7 @@ export function beginWindowDrag(press: Press, ops: WindowOps = windowOps, target
     if (Math.hypot(e.clientX - press.clientX, e.clientY - press.clientY) < DRAG_THRESHOLD) return;
     stop();
     onDrag?.();
-    void ops.startDragging().catch((err: unknown) => console.warn('[gitnex] window move refused', err));
+    void ops.startDragging().catch((err: unknown) => console.warn('[gitnexia] window move refused', err));
   };
   const stop = () => {
     target.removeEventListener('mousemove', move, true);

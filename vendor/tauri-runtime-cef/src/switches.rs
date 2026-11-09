@@ -40,7 +40,7 @@ pub(crate) const REPLACING_SWITCHES: &[(&str, &str)] = &[
   ("js-flags", "Cef::javascript_flags"),
 ];
 
-/// GitNex patch: sends Chromium's zygote host straight to the setuid `chrome-sandbox`
+/// GitNexia patch: sends Chromium's zygote host straight to the setuid `chrome-sandbox`
 /// helper, skipping its user-namespace probe. The runtime appends it itself under
 /// AppArmor's user-namespace restriction (`crate::sandbox::SandboxDecision::KeepSetuidOnly`).
 pub(crate) const DISABLE_NAMESPACE_SANDBOX: &str = "disable-namespace-sandbox";
@@ -70,7 +70,7 @@ const DANGEROUS_SWITCHES: &[&str] = &[
   "disable-gpu-sandbox",
   "disable-setuid-sandbox",
   "disable-seccomp-filter-sandbox",
-  // GitNex patch: not `disable-namespace-sandbox`. It picks the setuid sandbox over the
+  // GitNexia patch: not `disable-namespace-sandbox`. It picks the setuid sandbox over the
   // namespace one, and without the helper Chromium aborts ("No usable sandbox!") rather
   // than run unsandboxed.
   "disable-landlock-sandbox",
@@ -170,9 +170,9 @@ pub(crate) fn warn_about_replacing_switches(args: &[(String, Option<String>)]) {
   }
 }
 
-/// GitNex: a `--host-resolver-rules` value that only blocks name resolution (`MAP * ~NOTFOUND`,
+/// GitNexia: a `--host-resolver-rules` value that only blocks name resolution (`MAP * ~NOTFOUND`,
 /// with `EXCLUDE` exceptions) can't redirect traffic anywhere, so it isn't the boundary the warning
-/// is about: GitNex sets exactly this to stop Chromium's own background requests (PRIVACY.md).
+/// is about: GitNexia sets exactly this to stop Chromium's own background requests (PRIVACY.md).
 fn only_blocks_resolution(key: &str, value: Option<&str>) -> bool {
   key == "host-resolver-rules"
     && value.is_some_and(|v| {

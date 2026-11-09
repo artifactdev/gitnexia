@@ -8,14 +8,14 @@ Subcommands (errors go to stderr with exit status 2):
                                             first, version and date) and @TAG@ replaced by the
                                             newest one's tag (v<version>), which pins the
                                             screenshot's URL to a release
-  copyright <LICENSE> <out>                 /usr/share/doc/gitnex/copyright in Debian's
+  copyright <LICENSE> <out>                 /usr/share/doc/gitnexia/copyright in Debian's
                                             machine-readable format (DEP-5), with LICENSE's text
 """
 import re
 import sys
 from xml.sax.saxutils import quoteattr
 
-REPO = "https://github.com/artifactdev/gitvolt"
+REPO = "https://github.com/artifactdev/gitnexia"
 RELEASE = re.compile(r"## \[(\d+\.\d+\.\d+(?:-[0-9A-Za-z.]+)?)\] - (\d{4}-\d{2}-\d{2})\s*")
 
 
@@ -58,7 +58,7 @@ def copyright(license_text):
     body = license_text.split(m.group(0), 1)[1].strip("\n")
     text = "\n".join(f" {line}" if line.strip() else " ." for line in body.split("\n"))
     return f"""Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-Upstream-Name: GitNex
+Upstream-Name: GitNexia
 Upstream-Contact: {REPO}/issues
 Source: {REPO}
 Comment: The binary also contains Rust crates and npm packages under their own licenses; each
@@ -69,16 +69,16 @@ Files: *
 Copyright: {m.group(1)}
 License: MIT
 
-Files: usr/share/GitNex/*.so usr/share/GitNex/*.so.* usr/share/GitNex/*.pak
- usr/share/GitNex/locales/* usr/share/GitNex/chrome-sandbox usr/share/GitNex/icudtl.dat
- usr/share/GitNex/v8_context_snapshot.bin usr/share/GitNex/vk_swiftshader_icd.json
+Files: usr/share/GitNexia/*.so usr/share/GitNexia/*.so.* usr/share/GitNexia/*.pak
+ usr/share/GitNexia/locales/* usr/share/GitNexia/chrome-sandbox usr/share/GitNexia/icudtl.dat
+ usr/share/GitNexia/v8_context_snapshot.bin usr/share/GitNexia/vk_swiftshader_icd.json
 Copyright: 2008-2020 Marshall A. Greenblatt
            2006-2009 Google Inc.
 License: BSD-3-Clause
 Comment: The Chromium Embedded Framework (CEF) and Chromium. CEF's license is in CEF-LICENSE.txt;
  Chromium's, and those of the projects it bundles, are in CHROMIUM-CREDITS.html.gz.
 
-Files: usr/share/GitNex/dictionaries/*
+Files: usr/share/GitNexia/dictionaries/*
 Copyright: 2000-2018 Kevin Atkinson, and others
 License: SCOWL
 Comment: Chromium's en-US Hunspell dictionary, derived from SCOWL.

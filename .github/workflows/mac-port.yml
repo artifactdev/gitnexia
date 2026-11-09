@@ -66,7 +66,7 @@ jobs:
 
       - name: Tests
         id: tests
-        run: cargo nextest run --profile ci --no-fail-fast -p gitnex-core -p gitnex-forge -p gitnex-harness
+        run: cargo nextest run --profile ci --no-fail-fast -p gitnexia-core -p gitnexia-forge -p gitnexia-harness
 
       - name: Summary
         if: always()
@@ -127,7 +127,7 @@ jobs:
       - name: UI placeholder
         run: |
           mkdir -p ui/dist
-          [ -f ui/dist/index.html ] || echo '<!doctype html><title>GitNex</title>' > ui/dist/index.html
+          [ -f ui/dist/index.html ] || echo '<!doctype html><title>GitNexia</title>' > ui/dist/index.html
 
       - name: Check
         id: check
@@ -230,7 +230,7 @@ jobs:
 
       # The `fixture` command, for the repositories the app opens.
       - name: Build the harness
-        run: cargo build -p gitnex-harness
+        run: cargo build -p gitnexia-harness
 
       - name: Save the CEF archive
         if: steps.cef.outputs.cache-hit != 'true'
@@ -243,29 +243,29 @@ jobs:
         with:
           tool: nextest
 
-      # The vendored runtime's own tests (GITNEX-PATCH.md), on macOS.
+      # The vendored runtime's own tests (GITNEXIA-PATCH.md), on macOS.
       - name: Runtime tests
         id: runtime-tests
         run: cargo nextest run -p tauri-runtime-cef --lib --no-fail-fast 2>&1 | tee "$RUNNER_TEMP/runtime-tests.log"
 
       # A debug build with the UI embedded (`cargo tauri build` turns on tauri/custom-protocol),
-      # bundled as GitNex.app: the framework and the helper apps by the Tauri CLI's bundler,
+      # bundled as GitNexia.app: the framework and the helper apps by the Tauri CLI's bundler,
       # ad-hoc signed (tauri.macos.conf.json).
-      - name: Build GitNex.app (debug)
+      - name: Build GitNexia.app (debug)
         id: build
-        working-directory: crates/gitnex-app
+        working-directory: crates/gitnexia-app
         run: cargo tauri build --debug --bundles app --verbose 2>&1 | tee "$RUNNER_TEMP/build.log"
 
       - name: The bundle
         id: bundle
         if: always() && steps.build.outcome == 'success'
         run: |
-          app=target/debug/bundle/macos/GitNex.app
+          app=target/debug/bundle/macos/GitNexia.app
           echo "app=$app" >> "$GITHUB_OUTPUT"
           mkdir -p out
           {
             echo '## Layout'
-            find "$app" -maxdepth 4 -not -path '*/Resources/*' | sed "s|^$app|GitNex.app|" | sort
+            find "$app" -maxdepth 4 -not -path '*/Resources/*' | sed "s|^$app|GitNexia.app|" | sort
             echo
             echo '## Info.plist'
             plutil -p "$app/Contents/Info.plist"
@@ -274,7 +274,7 @@ jobs:
             ls -R "$app/Contents/Resources"
             echo
             echo '## Helper Info.plist'
-            plutil -p "$app/Contents/Frameworks/GitNex Helper (Renderer).app/Contents/Info.plist"
+            plutil -p "$app/Contents/Frameworks/GitNexia Helper (Renderer).app/Contents/Info.plist"
             echo
             echo '## Signatures'
             codesign -dv --entitlements - "$app" 2>&1
@@ -294,11 +294,11 @@ jobs:
         run: |
           root="$RUNNER_TEMP/gb"
           mkdir -p "$root" out/shots
-          repo=$(target/debug/gitnex-harness fixture basic "$root/basic")
-          second=$(target/debug/gitnex-harness fixture sync "$root/sync")
-          third=$(target/debug/gitnex-harness fixture stack "$root/stack")
-          export GITNEX_DEV_DIRS="$root/dirs" GITNEX_DEV_CDP_PORT=9333 RUST_LOG=info
-          exe="$APP/Contents/MacOS/GitNex"
+          repo=$(target/debug/gitnexia-harness fixture basic "$root/basic")
+          second=$(target/debug/gitnexia-harness fixture sync "$root/sync")
+          third=$(target/debug/gitnexia-harness fixture stack "$root/stack")
+          export GITNEXIA_DEV_DIRS="$root/dirs" GITNEXIA_DEV_CDP_PORT=9333 RUST_LOG=info
+          exe="$APP/Contents/MacOS/GitNexia"
           "$exe" "$repo" > out/app.log 2>&1 &
           echo $! > out/app.pid
           sleep 5
@@ -318,13 +318,13 @@ jobs:
             ps -axo pid,ppid,args | grep -E '[G]itBolt' | cut -c1-400
             echo
             echo '## sandbox_check (1: sandboxed)'
-            for pid in $(pgrep -f 'GitNex'); do
+            for pid in $(pgrep -f 'GitNexia'); do
               python3 -c 'import ctypes,sys; l=ctypes.CDLL("/usr/lib/libSystem.B.dylib"); l.sandbox_check.argtypes=[ctypes.c_int,ctypes.c_char_p,ctypes.c_int]; print(sys.argv[1], l.sandbox_check(int(sys.argv[1]), None, 0), sys.argv[2])' "$pid" "$(ps -o args= -p "$pid" | cut -c1-200)"
             done
           } > out/sandbox.txt 2>&1 || true
           cat out/sandbox.txt
 
-      # GitNex's own title bar, with real mouse and key events (ui/scripts/mac-titlebar.mjs) on
+      # GitNexia's own title bar, with real mouse and key events (ui/scripts/mac-titlebar.mjs) on
       # the app the drive step left running. Last: it ends by closing the window.
       - name: Title bar
         id: titlebar
@@ -334,15 +334,15 @@ jobs:
         run: |
           swiftc -O -o "$RUNNER_TEMP/mac-window" ui/scripts/mac-window.swift
           # The drive step's, so a second launch finds the running app.
-          export GITNEX_DEV_DIRS="$RUNNER_TEMP/gb/dirs" GITNEX_DEV_CDP_PORT=9333 RUST_LOG=info
-          node ui/scripts/mac-titlebar.mjs 9333 out/titlebar "$RUNNER_TEMP/mac-window" "$(cat out/app.pid)" "$PWD/$APP/Contents/MacOS/GitNex" | tee out/titlebar.txt
+          export GITNEXIA_DEV_DIRS="$RUNNER_TEMP/gb/dirs" GITNEXIA_DEV_CDP_PORT=9333 RUST_LOG=info
+          node ui/scripts/mac-titlebar.mjs 9333 out/titlebar "$RUNNER_TEMP/mac-window" "$(cat out/app.pid)" "$PWD/$APP/Contents/MacOS/GitNexia" | tee out/titlebar.txt
 
       - name: Stop the app
         if: always()
         run: |
           [ -f out/app.pid ] && kill "$(cat out/app.pid)" 2>/dev/null || true
           sleep 3
-          pkill -f 'GitNex.app' || true
+          pkill -f 'GitNexia.app' || true
           tail -n 200 out/app.log 2>/dev/null || true
 
       - name: Summary
@@ -465,7 +465,7 @@ jobs:
           MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
         run: scripts/macos-keychain.sh import
 
-      # The release package, as release.yml builds it: the notices, the release GitNex.app and
+      # The release package, as release.yml builds it: the notices, the release GitNexia.app and
       # the .dmg, and their checks (scripts/package-macos.sh).
       - name: Build the .dmg
         id: build
@@ -482,12 +482,12 @@ jobs:
           path: ${{ env.CEF_PATH }}/${{ steps.version.outputs.cef }}/cef_binary_*.tar.bz2
           key: ${{ steps.cef.outputs.cache-primary-key }}
 
-      # What a user does: mount it, check it, copy GitNex.app to /Applications.
+      # What a user does: mount it, check it, copy GitNexia.app to /Applications.
       - name: The .dmg
         id: dmg
         if: always() && steps.build.outcome == 'success'
         run: |
-          dmg=$(ls target/release/bundle/dmg/GitNex_*_aarch64.dmg)
+          dmg=$(ls target/release/bundle/dmg/GitNexia_*_aarch64.dmg)
           echo "dmg=$dmg" >> "$GITHUB_OUTPUT"
           mkdir -p out/shots
           mnt=$(mktemp -d)
@@ -499,32 +499,32 @@ jobs:
             echo
             echo '## Its volume'
             ls -la "$mnt"
-            du -sh "$mnt/GitNex.app"
+            du -sh "$mnt/GitNexia.app"
             echo
             echo '## codesign --verify --deep --strict'
-            codesign --verify --deep --strict --verbose=2 "$mnt/GitNex.app" 2>&1
+            codesign --verify --deep --strict --verbose=2 "$mnt/GitNexia.app" 2>&1
             echo
             echo '## codesign -dv'
-            codesign -dv --verbose=2 "$mnt/GitNex.app" 2>&1
+            codesign -dv --verbose=2 "$mnt/GitNexia.app" 2>&1
             echo
             echo '## codesign -d -r- (the designated requirement)'
-            codesign -d -r- "$mnt/GitNex.app" 2>&1
+            codesign -d -r- "$mnt/GitNexia.app" 2>&1
             echo
             echo '## spctl --assess (not notarized: expect "rejected")'
-            spctl --assess --type execute --verbose=4 "$mnt/GitNex.app" 2>&1 || echo "(exit $?)"
+            spctl --assess --type execute --verbose=4 "$mnt/GitNexia.app" 2>&1 || echo "(exit $?)"
             spctl --assess --type open --context context:primary-signature --verbose=4 "$dmg" 2>&1 || echo "(exit $?)"
             echo
             echo '## Info.plist'
-            plutil -p "$mnt/GitNex.app/Contents/Info.plist"
+            plutil -p "$mnt/GitNexia.app/Contents/Info.plist"
             echo
             echo '## Contents/Resources'
-            ls -R "$mnt/GitNex.app/Contents/Resources"
+            ls -R "$mnt/GitNexia.app/Contents/Resources"
             echo
             echo '## Extended attributes (the .dmg, then the app)'
             xattr -l "$dmg" || true
-            xattr -lr "$mnt/GitNex.app" | grep -v 'com.apple.cs.' | head -20 || true
+            xattr -lr "$mnt/GitNexia.app" | grep -v 'com.apple.cs.' | head -20 || true
           } > out/dmg.txt 2>&1
-          ditto "$mnt/GitNex.app" /Applications/GitNex.app
+          ditto "$mnt/GitNexia.app" /Applications/GitNexia.app
           hdiutil detach "$mnt"
           cat out/dmg.txt
 
@@ -545,13 +545,13 @@ jobs:
             git init -q -b main "$root/$n"
             git -C "$root/$n" commit -q --allow-empty -m "The $n repository"
           done
-          open -a /Applications/GitNex.app "$root/first"
+          open -a /Applications/GitNexia.app "$root/first"
           sleep 25
           screencapture -x out/shots/01-cold-open.png || echo "screencapture failed"
-          open -a /Applications/GitNex.app "$root/second"
+          open -a /Applications/GitNexia.app "$root/second"
           sleep 10
           screencapture -x out/shots/02-open-a-running.png || echo "screencapture failed"
-          support="$HOME/Library/Application Support/GitNex"
+          support="$HOME/Library/Application Support/GitNexia"
           {
             echo '## Profile tabs'
             for p in "$support"/profiles/*/profile.json; do
@@ -559,7 +559,7 @@ jobs:
             done
             echo
             echo '## Log'
-            cat "$HOME"/Library/Caches/GitNex/logs/* | grep -E 'asked to open|sandbox|ERROR|WARN' | head -40
+            cat "$HOME"/Library/Caches/GitNexia/logs/* | grep -E 'asked to open|sandbox|ERROR|WARN' | head -40
           } > out/launch.txt 2>&1 || true
           cat out/launch.txt
           ok=1
@@ -578,14 +578,14 @@ jobs:
             ps -axo pid,ppid,args | grep -E '[G]itBolt' | cut -c1-300
             echo
             echo '## sandbox_check (1: sandboxed)'
-            for pid in $(pgrep -f 'GitNex'); do
+            for pid in $(pgrep -f 'GitNexia'); do
               python3 -c 'import ctypes,sys; l=ctypes.CDLL("/usr/lib/libSystem.B.dylib"); l.sandbox_check.argtypes=[ctypes.c_int,ctypes.c_char_p,ctypes.c_int]; print(sys.argv[1], l.sandbox_check(int(sys.argv[1]), None, 0), sys.argv[2])' "$pid" "$(ps -o args= -p "$pid" | cut -c1-160)"
             done
           } > out/sandbox.txt 2>&1 || true
           cat out/sandbox.txt
           grep -E '^[0-9]+ 1 .*Renderer' out/sandbox.txt >/dev/null || { echo "::error::No sandboxed renderer"; exit 1; }
 
-      # The updater's install, for real: core's DMG_INSTALL script (crates/gitnex-core/src/
+      # The updater's install, for real: core's DMG_INSTALL script (crates/gitnexia-core/src/
       # updates/install.rs) over the running app in /Applications, from this .dmg; then Restart's
       # way of starting it again, and the new bundle's signature.
       - name: Update in place
@@ -594,23 +594,23 @@ jobs:
         env:
           DMG: ${{ steps.dmg.outputs.dmg }}
         run: |
-          script=$(awk '/^pub const DMG_INSTALL/ { f = 1; sub(/.*r#"/, ""); print; next } f { if (/"#;$/) { sub(/"#;$/, ""); print; exit } print }' crates/gitnex-core/src/updates/install.rs)
-          before=$(stat -f %i /Applications/GitNex.app)
-          /bin/sh -c "$script" gitnex-update "$PWD/$DMG" /Applications/GitNex.app
-          after=$(stat -f %i /Applications/GitNex.app)
+          script=$(awk '/^pub const DMG_INSTALL/ { f = 1; sub(/.*r#"/, ""); print; next } f { if (/"#;$/) { sub(/"#;$/, ""); print; exit } print }' crates/gitnexia-core/src/updates/install.rs)
+          before=$(stat -f %i /Applications/GitNexia.app)
+          /bin/sh -c "$script" gitnexia-update "$PWD/$DMG" /Applications/GitNexia.app
+          after=$(stat -f %i /Applications/GitNexia.app)
           [ "$before" != "$after" ] || { echo "::error::The bundle wasn't replaced"; exit 1; }
-          find /Applications -maxdepth 1 -iname '*gitnex*'
-          if hdiutil info | grep -q gitnex-update; then echo "::error::Still mounted"; exit 1; fi
-          codesign --verify --deep --strict --verbose=2 /Applications/GitNex.app
-          if xattr -lr /Applications/GitNex.app | grep -q quarantine; then echo "::error::Quarantined"; exit 1; fi
-          pgrep -f '/Applications/GitNex.app/Contents/MacOS/GitNex' >/dev/null && echo "The running app is still up."
+          find /Applications -maxdepth 1 -iname '*gitnexia*'
+          if hdiutil info | grep -q gitnexia-update; then echo "::error::Still mounted"; exit 1; fi
+          codesign --verify --deep --strict --verbose=2 /Applications/GitNexia.app
+          if xattr -lr /Applications/GitNexia.app | grep -q quarantine; then echo "::error::Quarantined"; exit 1; fi
+          pgrep -f '/Applications/GitNexia.app/Contents/MacOS/GitNexia' >/dev/null && echo "The running app is still up."
           # Restart: quit, then start the replaced bundle.
-          pkill -f '/Applications/GitNex.app/Contents/MacOS/GitNex' || true
+          pkill -f '/Applications/GitNexia.app/Contents/MacOS/GitNexia' || true
           sleep 3
-          open -a /Applications/GitNex.app
+          open -a /Applications/GitNexia.app
           sleep 20
           screencapture -x out/shots/03-after-update.png || echo "screencapture failed"
-          pgrep -f '/Applications/GitNex.app/Contents/MacOS/GitNex' >/dev/null || { echo "::error::It didn't start again"; exit 1; }
+          pgrep -f '/Applications/GitNexia.app/Contents/MacOS/GitNexia' >/dev/null || { echo "::error::It didn't start again"; exit 1; }
 
       # The title bar checks (ui/scripts/mac-titlebar.mjs) on the installed app Update in place
       # restarted: a release build refuses CDP, so only what the window server and Accessibility
@@ -620,17 +620,17 @@ jobs:
         if: always() && steps.update.outcome == 'success'
         run: |
           swiftc -O -o "$RUNNER_TEMP/mac-window" ui/scripts/mac-window.swift
-          exe=/Applications/GitNex.app/Contents/MacOS/GitNex
+          exe=/Applications/GitNexia.app/Contents/MacOS/GitNexia
           node ui/scripts/mac-titlebar.mjs none out/titlebar "$RUNNER_TEMP/mac-window" "$(pgrep -f "$exe" | head -1)" "$exe" | tee out/titlebar.txt
 
       - name: Stop the app
         if: always()
         run: |
-          pkill -f 'GitNex.app' || true
+          pkill -f 'GitNexia.app' || true
           sleep 3
-          pkill -9 -f 'GitNex.app' || true
+          pkill -9 -f 'GitNexia.app' || true
           mkdir -p out
-          cp "$HOME"/Library/Caches/GitNex/logs/* out/ 2>/dev/null || true
+          cp "$HOME"/Library/Caches/GitNexia/logs/* out/ 2>/dev/null || true
 
       - name: Summary
         if: always()

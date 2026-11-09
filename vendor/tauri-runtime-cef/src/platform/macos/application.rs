@@ -113,7 +113,7 @@ define_class!(
   impl CefWinitApplication {
     #[unsafe(method(sendEvent:))]
     unsafe fn send_event(&self, event: &NSEvent) {
-      // GitNex patch: a press makes a window a title bar drag left movable immovable again.
+      // GitNexia patch: a press makes a window a title bar drag left movable immovable again.
       super::window::before_send_event(event);
       let was_handling = self.ivars().handling_send_event.get();
       self.ivars().handling_send_event.set(Bool::YES);

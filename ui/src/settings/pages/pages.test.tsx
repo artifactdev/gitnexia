@@ -85,7 +85,7 @@ describe('settings pages', () => {
     expect(groupTitles(dialog)).toEqual(['Logs', 'Reset']);
   });
 
-  it('Reset all arms in place, then resets the GitNex settings only', async () => {
+  it('Reset all arms in place, then resets the GitNexia settings only', async () => {
     useAppState.getState().setSettings({ prune: false });
     useDensity.getState().setDensity('compact');
     useAppState.getState().updateProfile((p) => ({ ...p, reposFolder: '/srv/repos', repos: { [PATH]: { ...EMPTY_REPO_SETTINGS, editor: { kind: 'custom', template: 'zed {file}' } } } }));
@@ -98,7 +98,7 @@ describe('settings pages', () => {
       show('resetAll');
       act(() => press(screen.getByRole('button', { name: 'Reset all settings…' })));
       const overlay = () => document.querySelector<HTMLElement>('[data-arm-overlay]');
-      expect(overlay()).toHaveTextContent('Click again to reset every GitNex setting');
+      expect(overlay()).toHaveTextContent('Click again to reset every GitNexia setting');
       expect(useAppState.getState().settings.prune).toBe(false);
       clock.settle();
       await act(async () => { press(overlay()!); });

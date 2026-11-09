@@ -27,7 +27,7 @@ export function ResizeEdges({ platform }: { platform: string }) {
           onMouseDown={(e) => {
             if (e.button !== 0) return;
             e.preventDefault();
-            void windowOps.startResizeDragging(direction).catch((err: unknown) => console.warn('[gitnex] window resize refused', err));
+            void windowOps.startResizeDragging(direction).catch((err: unknown) => console.warn('[gitnexia] window resize refused', err));
           }}
         />
       ))}

@@ -1,15 +1,15 @@
 # Usage: powershell -File scripts/package-windows.ps1   (`just package-windows`, on Windows)
 #
 # The Windows installers, from one release build packaged twice: an NSIS per-user installer
-# (GitNex_<version>_x64-setup.exe) and a per-machine MSI (GitNex_<version>_x64.msi), in
+# (GitNexia_<version>_x64-setup.exe) and a per-machine MSI (GitNexia_<version>_x64.msi), in
 # target\release\bundle\windows\. Steps:
 #   1. the license notices (scripts/licenses.sh, in Git for Windows' bash), then the UI build;
-#   2. gitnex-app as a DLL, release, with the UI embedded;
-#   3. the staged layout, target\release\windows\GitNex\: CEF's bootstrap.exe as GitNex.exe
+#   2. gitnexia-app as a DLL, release, with the UI embedded;
+#   3. the staged layout, target\release\windows\GitNexia\: CEF's bootstrap.exe as GitNexia.exe
 #      (from the same CEF build as the one linked: checked) with our icon, version information
-#      and manifest, the DLL as GitNex.dll (the bootstrap loads <its name>.dll and runs it
+#      and manifest, the DLL as GitNexia.dll (the bootstrap loads <its name>.dll and runs it
 #      sandboxed), the CEF runtime files, the spell-check dictionary and the notices in licenses\;
-#   4. the installers from that folder (packaging\windows\gitnex.nsi and gitnex.wxs).
+#   4. the installers from that folder (packaging\windows\gitnexia.nsi and gitnexia.wxs).
 # The packaging tools (NSIS, WiX, rcedit) are pinned and downloaded into target\windows-tools on
 # first use; nothing is installed system-wide. Needs Rust, Node with ui\node_modules (npm ci),
 # Git for Windows, Python 3 ($env:PYTHON, else python3 or python on PATH), cargo-about 0.9.2,
@@ -17,13 +17,13 @@
 # (the CEF wrapper).
 #
 # Versions follow scripts/package-version.sh: tauri.conf.json's version with a build stamp
-# (<version>+<UTC YYYYMMDDHHMM>.<commit>), or GITNEX_RELEASE_VERSION for a release, which must
+# (<version>+<UTC YYYYMMDDHHMM>.<commit>), or GITNEXIA_RELEASE_VERSION for a release, which must
 # equal it. Windows' numeric versions (the MSI's ProductVersion, the files' FILEVERSION) are
 # X.Y.Z.0 for all of them: see docs/releasing.md.
 #
-# Signing (none yet): set GITNEX_SIGN_COMMAND to a command that signs the file path appended to
+# Signing (none yet): set GITNEXIA_SIGN_COMMAND to a command that signs the file path appended to
 # it in place, e.g. `signtool sign /fd sha256 /tr <timestamp url> /td sha256 /f <cert>`. It then
-# signs GitNex.exe and GitNex.dll (the bootstrap only loads a DLL signed with its own
+# signs GitNexia.exe and GitNexia.dll (the bootstrap only loads a DLL signed with its own
 # certificate once it is signed itself), the NSIS installer and its uninstaller, and the MSI.
 [CmdletBinding()]
 param()
@@ -34,9 +34,9 @@ $ProgressPreference = 'SilentlyContinue' # Expand-Archive's progress bar slows i
 $root = Split-Path -Parent $PSScriptRoot
 $target = if ($env:CARGO_TARGET_DIR) { $env:CARGO_TARGET_DIR } else { Join-Path $root 'target' }
 $tools = Join-Path $target 'windows-tools'
-$stage = Join-Path $target 'release\windows\GitNex'
+$stage = Join-Path $target 'release\windows\GitNexia'
 $out = Join-Path $target 'release\bundle\windows'
-$conf = Get-Content -Raw (Join-Path $root 'crates\gitnex-app\tauri.conf.json') | ConvertFrom-Json
+$conf = Get-Content -Raw (Join-Path $root 'crates\gitnexia-app\tauri.conf.json') | ConvertFrom-Json
 
 function Fail([string]$msg) { throw "package-windows: $msg" }
 
@@ -140,10 +140,10 @@ function Get-Python {
 
 $python = Get-Python
 $base = $conf.version
-if ($env:GITNEX_RELEASE_VERSION) {
-  Run $python (Join-Path $root 'scripts\version.py') check $env:GITNEX_RELEASE_VERSION
-  if ($env:GITNEX_RELEASE_VERSION -ne $base) {
-    Fail "GITNEX_RELEASE_VERSION=$env:GITNEX_RELEASE_VERSION doesn't match tauri.conf.json's $base"
+if ($env:GITNEXIA_RELEASE_VERSION) {
+  Run $python (Join-Path $root 'scripts\version.py') check $env:GITNEXIA_RELEASE_VERSION
+  if ($env:GITNEXIA_RELEASE_VERSION -ne $base) {
+    Fail "GITNEXIA_RELEASE_VERSION=$env:GITNEXIA_RELEASE_VERSION doesn't match tauri.conf.json's $base"
   }
   $version = $base
 } else {
@@ -167,7 +167,7 @@ if ($lock -notmatch 'name = "cef"\r?\nversion = "[^+"]*\+([^"]+)"') { Fail "no C
 $cefVersion = $Matches[1]
 if (-not $env:CEF_PATH) { $env:CEF_PATH = Join-Path $env:LOCALAPPDATA 'tauri-cef' }
 $cefDir = Join-Path $env:CEF_PATH "$cefVersion\cef_windows_x86_64"
-Write-Host "GitNex $version (Windows $numeric), CEF $cefVersion"
+Write-Host "GitNexia $version (Windows $numeric), CEF $cefVersion"
 
 # A CARGO_INCREMENTAL=0 from the caller would override the release profile's (Cargo.toml).
 Remove-Item Env:CARGO_INCREMENTAL -ErrorAction SilentlyContinue
@@ -195,14 +195,14 @@ Step 'UI build (npm run build)'
 Push-Location (Join-Path $root 'ui')
 try { Run npm.cmd run build } finally { Pop-Location }
 
-Step 'gitnex-app as a DLL, release, with the UI embedded'
+Step 'gitnexia-app as a DLL, release, with the UI embedded'
 # The version the app shows and compares updates against (the status bar, the update check).
-$env:GITNEX_BUILD_VERSION = $version
+$env:GITNEXIA_BUILD_VERSION = $version
 Push-Location $root
 try {
-  Run cargo rustc -p gitnex-app --lib --release --locked --crate-type cdylib --features tauri/custom-protocol
+  Run cargo rustc -p gitnexia-app --lib --release --locked --crate-type cdylib --features tauri/custom-protocol
 } finally { Pop-Location }
-$dll = Join-Path $target 'release\gitnex_app.dll'
+$dll = Join-Path $target 'release\gitnexia_app.dll'
 if (-not (Test-Path $dll)) { Fail "the build made no $dll" }
 
 # --- Stage --------------------------------------------------------------------------------------
@@ -217,15 +217,15 @@ if ($bootVer -ne $libVer -or -not $libVer.StartsWith("$cefVersion+")) {
 }
 if (Test-Path $stage) { Remove-Item -Recurse -Force $stage }
 New-Item -ItemType Directory -Force $stage, (Join-Path $stage 'dictionaries'), (Join-Path $stage 'licenses') | Out-Null
-Copy-Item (Join-Path $cefDir 'bootstrap.exe') (Join-Path $stage 'GitNex.exe')
-Copy-Item $dll (Join-Path $stage 'GitNex.dll')
+Copy-Item (Join-Path $cefDir 'bootstrap.exe') (Join-Path $stage 'GitNexia.exe')
+Copy-Item $dll (Join-Path $stage 'GitNexia.dll')
 # CEF's runtime: its DLLs, resources and locales; not its headers, wrapper sources, import
 # library, bootstrap executables or credits (those ship as notices).
 Get-ChildItem $cefDir -File | Where-Object {
   $_.Extension -in '.dll', '.pak', '.dat', '.bin' -or $_.Name -eq 'vk_swiftshader_icd.json'
 } | Copy-Item -Destination $stage
 Copy-Item -Recurse (Join-Path $cefDir 'locales') $stage
-Copy-Item (Join-Path $root 'crates\gitnex-app\dictionaries\en-US-10-2.bdic') (Join-Path $stage 'dictionaries')
+Copy-Item (Join-Path $root 'crates\gitnexia-app\dictionaries\en-US-10-2.bdic') (Join-Path $stage 'dictionaries')
 $licenses = Join-Path $target 'licenses'
 foreach ($f in 'LICENSE', 'THIRD-PARTY-NOTICES-rust.txt', 'CEF-LICENSE.txt', 'CHROMIUM-CREDITS.html.gz', 'DICTIONARY-en-US-LICENSE.txt') {
   Copy-Item (Join-Path $licenses $f) (Join-Path $stage 'licenses')
@@ -235,7 +235,7 @@ Get-ChildItem (Join-Path $stage 'licenses') | ForEach-Object { if ($_.Length -eq
 
 Step 'resources: icon, version information, manifest'
 $rcedit = Get-Rcedit
-$icon = Join-Path $root 'crates\gitnex-app\icons\icon.ico'
+$icon = Join-Path $root 'crates\gitnexia-app\icons\icon.ico'
 $common = @(
   '--set-file-version', $numeric, '--set-product-version', $numeric,
   '--set-version-string', 'ProductName', $product,
@@ -245,28 +245,28 @@ $common = @(
   '--set-version-string', 'LegalCopyright', $copyright,
   '--set-version-string', 'Comments', $conf.bundle.shortDescription
 )
-Run $rcedit (Join-Path $stage 'GitNex.exe') @common --set-icon $icon `
+Run $rcedit (Join-Path $stage 'GitNexia.exe') @common --set-icon $icon `
   --set-version-string FileDescription $product `
-  --set-version-string InternalName GitNex --set-version-string OriginalFilename GitNex.exe `
-  --application-manifest (Join-Path $root 'packaging\windows\GitNex.exe.manifest')
-Run $rcedit (Join-Path $stage 'GitNex.dll') @common `
+  --set-version-string InternalName GitNexia --set-version-string OriginalFilename GitNexia.exe `
+  --application-manifest (Join-Path $root 'packaging\windows\GitNexia.exe.manifest')
+Run $rcedit (Join-Path $stage 'GitNexia.dll') @common `
   --set-version-string FileDescription "$product application library" `
-  --set-version-string InternalName GitNex --set-version-string OriginalFilename GitNex.dll
+  --set-version-string InternalName GitNexia --set-version-string OriginalFilename GitNexia.dll
 
 function Invoke-Sign([string]$path) {
-  if (-not $env:GITNEX_SIGN_COMMAND) { return }
+  if (-not $env:GITNEXIA_SIGN_COMMAND) { return }
   Write-Host "signing $path"
-  & cmd.exe /d /c "$env:GITNEX_SIGN_COMMAND `"$path`""
-  if ($LASTEXITCODE -ne 0) { Fail "GITNEX_SIGN_COMMAND failed on $path" }
+  & cmd.exe /d /c "$env:GITNEXIA_SIGN_COMMAND `"$path`""
+  if ($LASTEXITCODE -ne 0) { Fail "GITNEXIA_SIGN_COMMAND failed on $path" }
 }
 # The same certificate for both: a signed bootstrap refuses a DLL signed by another.
-Invoke-Sign (Join-Path $stage 'GitNex.exe')
-Invoke-Sign (Join-Path $stage 'GitNex.dll')
+Invoke-Sign (Join-Path $stage 'GitNexia.exe')
+Invoke-Sign (Join-Path $stage 'GitNexia.dll')
 
 # --- Installers ---------------------------------------------------------------------------------
 
 New-Item -ItemType Directory -Force $out | Out-Null
-Get-ChildItem $out -Filter 'GitNex_*' | Remove-Item -Force
+Get-ChildItem $out -Filter 'GitNexia_*' | Remove-Item -Force
 $files = Get-ChildItem -Recurse -File $stage
 $size = ($files | Measure-Object -Sum Length).Sum
 
@@ -279,26 +279,26 @@ $dirs = Get-ChildItem -Recurse -Directory $stage | Sort-Object { $_.FullName.Len
 foreach ($d in $dirs) { $list += "RMDir `"`$INSTDIR\$($d.FullName.Substring($stage.Length + 1))`"" }
 $uninstallList = Join-Path $work 'uninstall-files.nsh'
 [IO.File]::WriteAllLines($uninstallList, $list, (New-Object Text.UTF8Encoding $true))
-$setup = Join-Path $out "GitNex_${version}_x64-setup.exe"
+$setup = Join-Path $out "GitNexia_${version}_x64-setup.exe"
 $nsisArgs = @(
   '/V2', '/INPUTCHARSET', 'UTF8',
   "/DVERSION=$version", "/DVERSION_NUMERIC=$numeric", "/DPUBLISHER=$publisher", "/DCOPYRIGHT=$copyright",
   "/DSTAGE=$stage", "/DUNINSTALL_LIST=$uninstallList", "/DICON=$icon", "/DOUTFILE=$setup",
   "/DESTIMATED_SIZE_KB=$([math]::Ceiling($size / 1KB))"
 )
-if ($env:GITNEX_SIGN_COMMAND) { $nsisArgs += "/DSIGN_COMMAND=$env:GITNEX_SIGN_COMMAND" }
-Run (Get-Nsis) @nsisArgs (Join-Path $root 'packaging\windows\gitnex.nsi')
+if ($env:GITNEXIA_SIGN_COMMAND) { $nsisArgs += "/DSIGN_COMMAND=$env:GITNEXIA_SIGN_COMMAND" }
+Run (Get-Nsis) @nsisArgs (Join-Path $root 'packaging\windows\gitnexia.nsi')
 Invoke-Sign $setup
 
 Step 'MSI (per machine)'
-$msi = Join-Path $out "GitNex_${version}_x64.msi"
+$msi = Join-Path $out "GitNexia_${version}_x64.msi"
 Run (Get-Wix) build -nologo -arch x64 -d "Version=$numeric" -d "DisplayVersion=$version" `
   -d "Publisher=$publisher" -d "Icon=$icon" -d "InstallKind=$(Join-Path $root 'packaging\windows\install-kind-msi')" -bindpath "stage=$stage" `
-  -intermediatefolder (Join-Path $work 'wix') -o $msi (Join-Path $root 'packaging\windows\gitnex.wxs')
+  -intermediatefolder (Join-Path $work 'wix') -o $msi (Join-Path $root 'packaging\windows\gitnexia.wxs')
 Remove-Item -Force -ErrorAction SilentlyContinue ([IO.Path]::ChangeExtension($msi, '.wixpdb'))
 # Windows Installer's own consistency checks (ICE). ICE61 only notes AllowSameVersionUpgrades.
 Run (Get-Wix) msi validate -nologo -sice ICE61 $msi
-# The update check finds its installer by the MSI's install-kind file (crates/gitnex-core/src/updates/install.rs).
+# The update check finds its installer by the MSI's install-kind file (crates/gitnexia-core/src/updates/install.rs).
 $decompiled = Join-Path $work 'decompiled.wxs'
 Run (Get-Wix) msi decompile $msi -o $decompiled
 if (-not (Select-String -Quiet -SimpleMatch 'Name="install-kind"' $decompiled)) { Fail "the MSI has no install-kind file" }
@@ -306,4 +306,4 @@ Invoke-Sign $msi
 
 Step 'done'
 Write-Host ("staged: {0} files, {1:N0} MB" -f $files.Count, ($size / 1MB))
-Get-ChildItem $out -Filter 'GitNex_*' | ForEach-Object { Write-Host ("{0}  {1:N1} MB" -f $_.FullName, ($_.Length / 1MB)) }
+Get-ChildItem $out -Filter 'GitNexia_*' | ForEach-Object { Write-Host ("{0}  {1:N1} MB" -f $_.FullName, ($_.Length / 1MB)) }

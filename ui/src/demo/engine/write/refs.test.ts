@@ -16,7 +16,7 @@ describe('refs', () => {
     expect(readRef(demo, 'refs/heads/topic')).toBe(one);
     casRefs(demo, [{ name: 'refs/heads/topic', old: one, new: two }]);
     expect(readRef(demo, 'refs/heads/topic')).toBe(two);
-    expect(() => casRefs(demo, [{ name: 'refs/heads/topic', old: one, new: two }])).toThrowError(expect.objectContaining({ kind: 'RefMoved', message: 'topic changed outside GitNex' }));
+    expect(() => casRefs(demo, [{ name: 'refs/heads/topic', old: one, new: two }])).toThrowError(expect.objectContaining({ kind: 'RefMoved', message: 'topic changed outside GitNexia' }));
     // A packed ref (bundles pack them all) goes from packed-refs too, with its peeled line.
     t.memfs.writeFileSync(`${demo.gitdir}/packed-refs`, `# pack-refs with: peeled fully-peeled sorted \n${one} refs/tags/old\n^${two}\n${two} refs/tags/keep\n`);
     expect(readRef(demo, 'refs/tags/old')).toBe(one);

@@ -187,7 +187,7 @@ describe('FileColoursPage', () => {
 
     it('Ctrl+V pastes scopes', () => {
       three();
-      const json = JSON.stringify({ gitnex: 'file-colours', version: 1, scopes: [{ name: 'A', tint: 'blue', patterns: ['*.x'], startCollapsed: false }] });
+      const json = JSON.stringify({ gitnexia: 'file-colours', version: 1, scopes: [{ name: 'A', tint: 'blue', patterns: ['*.x'], startCollapsed: false }] });
       act(() => settingsPasteHandler()?.(json));
       expect(names()).toEqual(['A', 'B', 'C', 'A (2)']);
     });

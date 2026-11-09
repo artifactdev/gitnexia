@@ -12,9 +12,9 @@ export function UpdateStatus({ onShow }: { onShow?: () => void }) {
   let text: string | null = null;
   if (checking) text = 'Checking for updates…';
   else if (checkError) text = `Couldn't check for updates: ${checkError}`;
-  else if (state.state === 'upToDate') text = 'GitNex is up to date.';
-  else if (release && state.state === 'installed') text = `GitNex ${release.version} is installed: restart to use it.`;
-  else if (release) text = `GitNex ${release.version} is available.`;
+  else if (state.state === 'upToDate') text = 'GitNexia is up to date.';
+  else if (release && state.state === 'installed') text = `GitNexia ${release.version} is installed: restart to use it.`;
+  else if (release) text = `GitNexia ${release.version} is available.`;
   return (
     <div className="update-about">
       <p className={checkError ? 'update-message error' : 'update-message'} role="status">{text ?? ' '}</p>

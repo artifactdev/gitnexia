@@ -17,7 +17,7 @@ interface NavProps {
 
 const SCOPES: SettingsScope[] = ['app', 'profile', 'repo'];
 
-/** Settings' nav: the pages in three groups (GitNex, the profile, the repository). Its keys
+/** Settings' nav: the pages in three groups (GitNexia, the profile, the repository). Its keys
  * (arrows, Home/End, typing to search) are the overlay's, which owns every key while it's open. */
 export function SettingsNav({ pages, current, roving, counts, ctx, profile, onFocusItem, navRef }: NavProps) {
   return (

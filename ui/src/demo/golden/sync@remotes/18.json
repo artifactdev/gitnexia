@@ -6,7 +6,7 @@
           "id": 14,
           "kind": "branch",
           "label": "remove remote alice",
-          "op": 14
+          "op": 19
         }
       ],
       "repo": 1,
@@ -21,7 +21,7 @@
         "id": 14,
         "kind": "branch",
         "label": "remove remote alice",
-        "op": 14
+        "op": 19
       },
       "stopped": null,
       "type": "queueChanged"
@@ -30,7 +30,7 @@
       "interactive": true,
       "kind": "branch",
       "label": "remove remote alice",
-      "op": 14,
+      "op": 19,
       "repo": 1,
       "type": "opStarted"
     },
@@ -78,7 +78,7 @@
       "command": null,
       "kind": "branch",
       "message": null,
-      "op": 14,
+      "op": 19,
       "outcome": "ok",
       "repo": 1,
       "type": "opFinished"

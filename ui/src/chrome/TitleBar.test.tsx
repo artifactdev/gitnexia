@@ -22,7 +22,7 @@ const bar = () => document.querySelector<HTMLElement>('.title-bar')!;
 const title = () => document.querySelector<HTMLElement>('.title-bar-title span')!;
 const show = (info: WindowChromeInfo | null) => { act(() => useWindowChrome.setState({ info, maximized: false, fullscreen: false })); return render(<TitleBar />); };
 
-beforeEach(() => { document.title = 'GitNex — orbital'; window.__gbWindowCalls = []; });
+beforeEach(() => { document.title = 'GitNexia — orbital'; window.__gbWindowCalls = []; });
 afterEach(() => { act(() => { useWindowChrome.setState({ info: null, maximized: false, fullscreen: false }); useMenu.getState().close(); }); });
 
 describe('the title bar', () => {
@@ -38,13 +38,13 @@ describe('the title bar', () => {
     show(linux('appmenu:close'));
     const buttons = within(bar()).getAllByRole('button');
     expect(buttons.map((b) => b.getAttribute('aria-label'))).toEqual(['Menu', 'Close']);
-    expect(title()).toHaveTextContent('GitNex — orbital');
+    expect(title()).toHaveTextContent('GitNexia — orbital');
   });
 
   it('follows the title as it changes', async () => {
     show(linux('appmenu:close'));
-    act(() => { document.title = 'GitNex — casino'; });
-    await waitFor(() => expect(title()).toHaveTextContent('GitNex — casino'));
+    act(() => { document.title = 'GitNexia — casino'; });
+    await waitFor(() => expect(title()).toHaveTextContent('GitNexia — casino'));
   });
 
   it('a left-side layout puts the buttons first, with ☰ right of them', () => {
@@ -127,7 +127,7 @@ describe('the title bar', () => {
     expect(calls()).toEqual(['windowManager:lower']);
   });
 
-  it("a right click asks for the window manager's menu, and shows GitNex's when it has none", async () => {
+  it("a right click asks for the window manager's menu, and shows GitNexia's when it has none", async () => {
     show(linux('appmenu:close'));
     fireEvent.contextMenu(title(), { clientX: 200, clientY: 12 });
     expect(calls()).toEqual(['windowManager:menu']);
@@ -211,7 +211,7 @@ describe('on Windows', () => {
     show(windows());
     expect(bar()).toHaveClass('platform-windows');
     expect(within(bar()).getAllByRole('button').map((b) => b.getAttribute('aria-label'))).toEqual(['Menu', 'Minimize', 'Maximize', 'Close']);
-    expect(title()).toHaveTextContent('GitNex — orbital');
+    expect(title()).toHaveTextContent('GitNexia — orbital');
     // Windows' own glyphs: a full-box square, then two squares to restore.
     expect(glyph('Maximize')).toBe('<rect x="0.5" y="0.5" width="9" height="9"></rect>');
     act(() => useWindowChrome.setState({ maximized: true }));
@@ -240,7 +240,7 @@ describe('on Windows', () => {
     expect(calls()).toEqual(['toggleMaximize', 'windowManager:menu']);
   });
 
-  it('Alt+Space opens the window menu for the keyboard, under GitNex\'s title bar only', async () => {
+  it('Alt+Space opens the window menu for the keyboard, under GitNexia\'s title bar only', async () => {
     const { WINDOW_MENU } = await import('./feature');
     expect(WINDOW_MENU.shortcuts).toEqual(['Alt+Space']);
     expect(WINDOW_MENU.when!()).toBe(false);

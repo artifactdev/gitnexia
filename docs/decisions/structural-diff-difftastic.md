@@ -1,6 +1,6 @@
 # No structural diff (difftastic)
 
-**Decision:** GitNex doesn't ship a structural diff mode. One was built on
+**Decision:** GitNexia doesn't ship a structural diff mode. One was built on
 [difftastic](https://difftastic.wilfred.me.uk/) in October 2026 and dropped before release: it
 added about 57 MB to every install and a separate binary to build, check and ship on every
 platform, and on real changes it was rarely better than Monaco's own diff, and sometimes worse.
@@ -19,7 +19,7 @@ Staging had to keep working on git's real lines.
 
 - **difft, compiled in:** the `difftastic` crate (0.71.0, MIT) has no library API, only the `difft`
   binary, so it was built from the crates.io source (pinned, checksum-checked, `--locked`) by a
-  script and shipped beside `gitnex` in every package (deb, rpm, Arch, NSIS, MSI, the macOS app),
+  script and shipped beside `gitnexia` in every package (deb, rpm, Arch, NSIS, MSI, the macOS app),
   cached in the release workflow.
 - **Licences:** one grammar, `tree-sitter-newick`, is CeCILL-C (copyleft), so a build-time patch
   removed it. Every other crate in difft's tree (about 140) was MIT, Apache-2.0, BSD, Zlib or

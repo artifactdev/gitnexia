@@ -47,7 +47,7 @@ export function pasteTheme(text: string): void {
   const customs = useAppState.getState().settings.customThemes ?? [];
   const theme = themeFromJson(text, customs);
   if (!theme) {
-    toast("The clipboard doesn't hold a GitNex theme");
+    toast("The clipboard doesn't hold a GitNexia theme");
     return;
   }
   useAppState.getState().setSettings({ customThemes: [...customs, theme], theme: theme.id });

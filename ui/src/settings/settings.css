@@ -65,7 +65,7 @@
 .setting-control input[aria-invalid="true"] { border-color: var(--status-deleted); }
 .setting-control button:not(.select):not(.switch):not(.icon-button):not(.clearable-clear):not(.primary):not([role="radio"]) { font: inherit; padding: 5px 12px; border-radius: 4px; border: 1px solid var(--section-border); background: var(--panel-bg1); color: var(--text-selected); cursor: pointer; }
 .setting-control button:hover:not(:disabled):not(.select):not(.switch):not(.icon-button):not(.primary):not([role="radio"]) { background: var(--hover-row); }
-/* The one action a setting leads to (Restart GitNex), in the theme editor's primary colour. */
+/* The one action a setting leads to (Restart GitNexia), in the theme editor's primary colour. */
 .setting-control button.primary { font: inherit; padding: 5px 12px; border-radius: 4px; border: 1px solid var(--button-primary); background: var(--button-primary); color: var(--text-on-accent); cursor: pointer; }
 .setting-control button.primary:hover:not(:disabled) { filter: brightness(1.1); }
 .setting-control button.primary:focus-visible { outline: 2px solid var(--blue); outline-offset: 1px; }

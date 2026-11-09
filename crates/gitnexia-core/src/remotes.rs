@@ -1,0 +1,551 @@
+//! Remote URL parsing and forge host detection (no network).
+
+pub use gitnexia_graph::HostKind;
+use gix::bstr::ByteSlice;
+use gix::remote::Direction;
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RemoteUrl {
+    pub host: String,
+    pub path: String,
+}
+
+pub(crate) fn encode_path_segment(segment: &str) -> String {
+    segment
+        .bytes()
+        .map(|b| {
+            if b.is_ascii_alphanumeric() || matches!(b, b'-' | b'_' | b'.' | b'~') {
+                (b as char).to_string()
+            } else {
+                format!("%{b:02X}")
+            }
+        })
+        .collect()
+}
+
+/// git for Windows reads `C:…` (a drive) and a path with `\` as local paths, never `host:path`
+/// (`has_dos_drive_prefix`); elsewhere `c:path` is host `c`.
+pub(crate) fn is_local_on_windows(url: &str) -> bool {
+    let b = url.as_bytes();
+    cfg!(windows)
+        && ((b.len() >= 2 && b[0].is_ascii_alphabetic() && b[1] == b':')
+            || url.split(':').next().is_some_and(|l| l.contains('\\')))
+}
+
+pub fn parse_remote_url(url: &str) -> Option<RemoteUrl> {
+    let url = url.trim();
+    let (host_part, path) = if let Some((scheme, rest)) = url.split_once("://") {
+        if scheme.eq_ignore_ascii_case("file") {
+            return None;
+        }
+        let (authority, path) = rest.split_once('/')?;
+        let host = authority.rsplit('@').next()?;
+        (host.split(':').next()?.to_string(), path)
+    } else {
+        // scp-like: [user@]host:path — but not a local path
+        if url.starts_with('/') || url.starts_with('.') || is_local_on_windows(url) {
+            return None;
+        }
+        let (left, path) = url.split_once(':')?;
+        if left.contains('/') {
+            return None;
+        }
+        (left.rsplit('@').next()?.to_string(), path)
+    };
+    let path = path.trim_matches('/');
+    let path = path.strip_suffix(".git").unwrap_or(path).to_string();
+    if host_part.is_empty() || path.is_empty() {
+        return None;
+    }
+    let host = host_part.to_ascii_lowercase();
+    if host == "dev.azure.com" || host == "ssh.dev.azure.com" || host.ends_with(".visualstudio.com")
+    {
+        let parts: Vec<_> = path.split('/').collect();
+        let (org, project, repo) = if host == "dev.azure.com" {
+            match parts.as_slice() {
+                [org, project, "_git", repo] => (*org, *project, *repo),
+                [org, "_git", repo] => (*org, *repo, *repo),
+                _ => return None,
+            }
+        } else if host == "ssh.dev.azure.com" || host == "vs-ssh.visualstudio.com" {
+            match parts.as_slice() {
+                ["v3", org, project, repo] => (*org, *project, *repo),
+                _ => return None,
+            }
+        } else {
+            let org = host.strip_suffix(".visualstudio.com")?;
+            match parts.as_slice() {
+                [project, "_git", repo] | ["DefaultCollection", project, "_git", repo] => {
+                    (org, *project, *repo)
+                }
+                ["_git", repo] => (org, *repo, *repo),
+                _ => return None,
+            }
+        };
+        let host =
+            crate::forge::accounts::normalize_azure_host(&format!("dev.azure.com/{org}")).ok()?;
+        let project = crate::forge::provider::percent_decode(project)?;
+        let repo = crate::forge::provider::percent_decode(repo)?;
+        if [&project, &repo].iter().any(|s| {
+            s.is_empty()
+                || s.contains(['/', '\\'])
+                || s == &"."
+                || s == &".."
+                || s.chars().any(char::is_control)
+        }) {
+            return None;
+        }
+        return Some(RemoteUrl {
+            host,
+            path: format!("{project}/{repo}"),
+        });
+    }
+    Some(RemoteUrl { host, path })
+}
+
+/// The host a forge account for `url` is named by (spec #4 §3.3): `parse_remote_url`'s, plus an
+/// http(s) URL's non-default port (`gitlab.example.com:8443`), since the web and API are there.
+/// An SSH or scp-style URL's port says nothing about the web's: it's dropped.
+pub fn forge_host(url: &str) -> Option<String> {
+    let host = parse_remote_url(url)?.host;
+    let Some((scheme, rest)) = url.trim().split_once("://") else {
+        return Some(host);
+    };
+    let default = match scheme.to_ascii_lowercase().as_str() {
+        "https" => "443",
+        "http" => "80",
+        _ => return Some(host),
+    };
+    let authority = rest.split('/').next().unwrap_or("");
+    let port = authority
+        .rsplit('@')
+        .next()
+        .and_then(|h| h.split_once(':'))
+        .map(|(_, p)| p)
+        .filter(|p| !p.is_empty() && *p != default && p.chars().all(|c| c.is_ascii_digit()));
+    Some(match port {
+        Some(p) => format!("{host}:{p}"),
+        None => host,
+    })
+}
+
+/// `remote`'s effective URL for `direction`, with `url.<base>.insteadOf`/`pushInsteadOf` rewrites
+/// applied (gix's `Remote::url`, via `find_remote`). Reading `remote.<name>.url` straight out of
+/// the config, as the rest of this codebase used to, silently skips a rewritten alias (e.g. `gh:`
+/// standing in for `https://github.com/`), so that remote gets no forge links (deferred Rust minor
+/// #13). `None` when the remote doesn't exist, or has no URL for that direction.
+pub fn remote_url(repo: &gix::Repository, remote: &str, direction: Direction) -> Option<String> {
+    let remote = repo.find_remote(remote).ok()?;
+    remote
+        .url(direction)
+        .map(|u| u.to_bstring().to_str_lossy().into_owned())
+}
+
+/// The scp-style SSH URL for an `https://[user@]host[:port]/path[.git]` remote (a credential
+/// prompt's "Use SSH instead", spec §5.4): `git@host:path.git`. The user and the port go (an
+/// https port says nothing about SSH's); the path stays, nested groups and all. `None` for
+/// anything else: another scheme, no path, a query or fragment.
+pub fn ssh_url_from_https(url: &str) -> Option<String> {
+    let url = url.trim();
+    let (scheme, rest) = url.split_once("://")?;
+    if !scheme.eq_ignore_ascii_case("https") || rest.contains(['?', '#']) {
+        return None;
+    }
+    if let Some(r) = parse_remote_url(url)
+        && let Some(org) = r.host.strip_prefix("dev.azure.com/")
+    {
+        return Some(format!(
+            "git@ssh.dev.azure.com:v3/{org}/{}",
+            r.path
+                .split('/')
+                .map(encode_path_segment)
+                .collect::<Vec<_>>()
+                .join("/")
+        ));
+    }
+    let (authority, path) = rest.split_once('/')?;
+    let host = authority.rsplit('@').next()?.split(':').next()?;
+    let path = path.trim_matches('/');
+    let path = path.strip_suffix(".git").unwrap_or(path);
+    let ok = |s: &str| {
+        !s.is_empty()
+            && !s.starts_with('-')
+            && !s.chars().any(|c| c.is_whitespace() || c.is_control())
+    };
+    (ok(host) && ok(path) && !host.contains(['[', ']'])).then(|| format!("git@{host}:{path}.git"))
+}
+
+/// The remotes in the order git's config lists them (`git fetch --all`'s order); a name once.
+pub fn remote_names_in_order(repo: &gix::Repository) -> Vec<String> {
+    let mut out: Vec<String> = Vec::new();
+    for s in repo
+        .config_snapshot()
+        .plumbing()
+        .sections_by_name("remote")
+        .into_iter()
+        .flatten()
+    {
+        if let Some(name) = s
+            .header()
+            .subsection_name()
+            .map(|n| n.to_str_lossy().into_owned())
+            && !out.contains(&name)
+        {
+            out.push(name);
+        }
+    }
+    out
+}
+
+/// Each of `names` with its URL for `direction` (rewrites applied), for an op's credential
+/// prompts. `settable`: that URL is `remote.<name>.url` itself, which `git remote set-url`
+/// changes (not a `pushurl` or an `insteadOf` rewrite). A remote without a URL is left out.
+pub fn op_remotes(
+    repo: &gix::Repository,
+    names: &[String],
+    direction: Direction,
+) -> Vec<crate::ops::OpRemote> {
+    let config = repo.config_snapshot();
+    names
+        .iter()
+        .filter_map(|name| {
+            let url = remote_url(repo, name, direction)?;
+            let raw = config
+                .string(format!("remote.{name}.url").as_str())
+                .map(|v| v.to_str_lossy().into_owned());
+            Some(crate::ops::OpRemote {
+                name: name.clone(),
+                settable: raw.as_deref() == Some(url.as_str()),
+                url,
+                account: None,
+            })
+        })
+        .collect()
+}
+
+/// The forge a host runs, by its name; a profile's host overrides (spec §14.4) cover the rest.
+/// Forgejo's: Codeberg, and a label naming Forgejo or Gitea (whose API Forgejo keeps).
+pub fn host_kind(host: &str) -> HostKind {
+    let host = host.to_ascii_lowercase();
+    let name = host.split(':').next().unwrap_or_default();
+    if host == "dev.azure.com"
+        || host.starts_with("dev.azure.com/")
+        || host == "ssh.dev.azure.com"
+        || host.ends_with(".visualstudio.com")
+    {
+        HostKind::AzureDevOps
+    } else if host == "github.com" || host.ends_with(".github.com") {
+        HostKind::GitHub
+    } else if host == "gitlab.com" || host.split('.').any(|label| label.contains("gitlab")) {
+        HostKind::GitLab
+    } else if name == "codeberg.org"
+        || name
+            .split('.')
+            .any(|label| label.contains("forgejo") || label.contains("gitea"))
+    {
+        HostKind::Forgejo
+    } else {
+        HostKind::Generic
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn azure_remotes_share_an_organization_scoped_identity() {
+        for url in [
+            "https://dev.azure.com/Orbital/Space%20Tools/_git/Orbit%20App",
+            "git@ssh.dev.azure.com:v3/orbital/Space%20Tools/Orbit%20App",
+            "ssh://git@ssh.dev.azure.com:22/v3/orbital/Space%20Tools/Orbit%20App",
+            "https://orbital.visualstudio.com/DefaultCollection/Space%20Tools/_git/Orbit%20App",
+            "git@vs-ssh.visualstudio.com:v3/orbital/Space%20Tools/Orbit%20App",
+        ] {
+            assert_eq!(
+                p(url),
+                Some((
+                    "dev.azure.com/orbital".into(),
+                    "Space Tools/Orbit App".into()
+                )),
+                "{url}"
+            );
+            assert_eq!(forge_host(url).as_deref(), Some("dev.azure.com/orbital"));
+        }
+        assert_eq!(
+            p("https://dev.azure.com/orbital/_git/Orbit"),
+            Some(("dev.azure.com/orbital".into(), "Orbit/Orbit".into()))
+        );
+        assert_eq!(host_kind("dev.azure.com/orbital"), HostKind::AzureDevOps);
+        for url in [
+            "https://dev.azure.com/orbital/Space%2FTools/_git/Orbit",
+            "https://dev.azure.com/orbital/%2e%2e/_git/Orbit",
+            "https://dev.azure.com/orbital/Space/_git/%zz",
+            "git@ssh.dev.azure.com:v3/orbital/Space",
+        ] {
+            assert!(parse_remote_url(url).is_none(), "{url}");
+        }
+        assert_eq!(
+            ssh_url_from_https("https://dev.azure.com/orbital/Space%20Tools/_git/Orbit%20App")
+                .as_deref(),
+            Some("git@ssh.dev.azure.com:v3/orbital/Space%20Tools/Orbit%20App")
+        );
+    }
+
+    fn p(url: &str) -> Option<(String, String)> {
+        parse_remote_url(url).map(|u| (u.host, u.path))
+    }
+
+    #[test]
+    fn parses_common_remote_url_shapes() {
+        assert_eq!(
+            p("https://gitlab.example.com/Acme/shop.git"),
+            Some(("gitlab.example.com".into(), "Acme/shop".into()))
+        );
+        assert_eq!(
+            p("git@github.com:owner/repo.git"),
+            Some(("github.com".into(), "owner/repo".into()))
+        );
+        assert_eq!(
+            p("ssh://git@gitlab.com:2222/a/b/c.git"),
+            Some(("gitlab.com".into(), "a/b/c".into()))
+        );
+        assert_eq!(
+            p("https://user:tok@github.com/o/r/"),
+            Some(("github.com".into(), "o/r".into()))
+        );
+        assert_eq!(p("/tmp/origin.git"), None);
+        assert_eq!(p("file:///tmp/origin.git"), None);
+    }
+
+    /// A drive letter is a local path on Windows, as git for Windows reads it; elsewhere git
+    /// reads `c:path` as scp-like host `c`.
+    #[test]
+    fn a_drive_letter_is_a_local_path_on_windows_only() {
+        let drive = p("C:/Users/ada/origin.git");
+        let backslash = p(r"C:\Users\ada\origin.git");
+        if cfg!(windows) {
+            assert_eq!((drive, backslash), (None, None));
+        } else {
+            assert_eq!(drive, Some(("c".into(), "Users/ada/origin".into())));
+        }
+        assert_eq!(
+            p("git@github.com:owner/repo.git"),
+            Some(("github.com".into(), "owner/repo".into())),
+            "a host is still a host"
+        );
+    }
+
+    #[test]
+    fn an_https_remote_keeps_its_port_for_forge_matching_and_ssh_drops_it() {
+        assert_eq!(
+            forge_host("https://gitlab.example.com:8443/group/project.git").as_deref(),
+            Some("gitlab.example.com:8443")
+        );
+        assert_eq!(
+            forge_host("https://user:tok@GitLab.example.com:8443/group/project.git").as_deref(),
+            Some("gitlab.example.com:8443")
+        );
+        assert_eq!(
+            forge_host("https://gitlab.example.com:443/group/project.git").as_deref(),
+            Some("gitlab.example.com")
+        );
+        assert_eq!(
+            forge_host("http://gitlab.example.com:8080/group/project.git").as_deref(),
+            Some("gitlab.example.com:8080")
+        );
+        assert_eq!(
+            forge_host("ssh://git@gitlab.example.com:2222/group/project.git").as_deref(),
+            Some("gitlab.example.com")
+        );
+        assert_eq!(
+            forge_host("git@gitlab.example.com:group/project.git").as_deref(),
+            Some("gitlab.example.com")
+        );
+        assert_eq!(forge_host("/tmp/origin.git"), None);
+        // Everyone else still sees the host alone.
+        assert_eq!(
+            parse_remote_url("https://gitlab.example.com:8443/group/project.git")
+                .unwrap()
+                .host,
+            "gitlab.example.com"
+        );
+    }
+
+    #[test]
+    fn an_https_url_becomes_its_ssh_url() {
+        let ssh = |u: &str| ssh_url_from_https(u);
+        assert_eq!(
+            ssh("https://gitlab.example.com/group/project.git").as_deref(),
+            Some("git@gitlab.example.com:group/project.git")
+        );
+        assert_eq!(
+            ssh("https://gitlab.example.com/group/project").as_deref(),
+            Some("git@gitlab.example.com:group/project.git"),
+            ".git is added"
+        );
+        assert_eq!(
+            ssh("https://ada@gitlab.example.com/group/project.git").as_deref(),
+            Some("git@gitlab.example.com:group/project.git"),
+            "the user goes"
+        );
+        assert_eq!(
+            ssh("https://ada:hunter2@gitlab.example.com/group/project.git").as_deref(),
+            Some("git@gitlab.example.com:group/project.git"),
+            "and a password with it"
+        );
+        assert_eq!(
+            ssh("https://gitlab.example.com:8443/group/project.git").as_deref(),
+            Some("git@gitlab.example.com:group/project.git"),
+            "the https port goes"
+        );
+        assert_eq!(
+            ssh("https://gitlab.example.com/group/sub/deeper/project/").as_deref(),
+            Some("git@gitlab.example.com:group/sub/deeper/project.git"),
+            "nested groups stay"
+        );
+        assert_eq!(
+            ssh("HTTPS://github.com/octo-org/widget").as_deref(),
+            Some("git@github.com:octo-org/widget.git")
+        );
+        for none in [
+            "http://gitlab.example.com/group/project.git",
+            "ssh://git@gitlab.example.com/group/project.git",
+            "git@gitlab.example.com:group/project.git",
+            "/srv/git/project.git",
+            "file:///srv/git/project.git",
+            "https://gitlab.example.com/",
+            "https://gitlab.example.com",
+            "https://gitlab.example.com/a/b?private_token=x",
+            "https://-oProxyCommand=x/a/b",
+        ] {
+            assert_eq!(ssh(none), None, "{none}");
+        }
+    }
+
+    #[test]
+    fn op_remotes_come_in_config_order_and_say_whether_set_url_reaches_them() {
+        let r = crate::testing::TestRepo::new();
+        r.commit("a");
+        r.git(&[
+            "remote",
+            "add",
+            "zed",
+            "https://gitlab.example.com/group/zed.git",
+        ]);
+        r.git(&[
+            "remote",
+            "add",
+            "alpha",
+            "https://gitlab.example.com/group/alpha.git",
+        ]);
+        r.git(&[
+            "remote",
+            "set-url",
+            "--push",
+            "alpha",
+            "https://push.example.com/group/alpha.git",
+        ]);
+        r.git(&["config", "url.https://gitlab.example.com/.insteadOf", "gl:"]);
+        r.git(&["remote", "add", "short", "gl:group/short.git"]);
+        let repo = gix::open(r.path()).unwrap();
+        let names = remote_names_in_order(&repo);
+        assert_eq!(names, ["zed", "alpha", "short"]);
+        let got = |d| {
+            op_remotes(&repo, &names, d)
+                .into_iter()
+                .map(|o| (o.name, o.url, o.settable))
+                .collect::<Vec<_>>()
+        };
+        assert_eq!(
+            got(Direction::Fetch),
+            [
+                (
+                    "zed".into(),
+                    "https://gitlab.example.com/group/zed.git".into(),
+                    true
+                ),
+                (
+                    "alpha".into(),
+                    "https://gitlab.example.com/group/alpha.git".into(),
+                    true
+                ),
+                (
+                    "short".into(),
+                    "https://gitlab.example.com/group/short.git".into(),
+                    false
+                ),
+            ]
+        );
+        assert_eq!(
+            got(Direction::Push)[1],
+            (
+                "alpha".into(),
+                "https://push.example.com/group/alpha.git".into(),
+                false
+            ),
+            "a pushurl isn't what set-url changes"
+        );
+    }
+
+    #[test]
+    fn detects_host_kinds() {
+        assert_eq!(host_kind("github.com"), HostKind::GitHub);
+        assert_eq!(host_kind("gitlab.com"), HostKind::GitLab);
+        assert_eq!(host_kind("gitlab.example.com"), HostKind::GitLab);
+        assert_eq!(host_kind("code.example.com"), HostKind::Generic);
+        assert_eq!(host_kind("codeberg.org"), HostKind::Forgejo);
+        assert_eq!(host_kind("Codeberg.org:443"), HostKind::Forgejo);
+        assert_eq!(host_kind("forgejo.example.com"), HostKind::Forgejo);
+        assert_eq!(host_kind("git.myforgejo.example"), HostKind::Forgejo);
+        assert_eq!(host_kind("gitea.example.com:3000"), HostKind::Forgejo);
+        assert_eq!(
+            host_kind("gitlab.gitea.example.com"),
+            HostKind::GitLab,
+            "GitLab's rule first, as before"
+        );
+        assert_eq!(host_kind("codeberg.example.com"), HostKind::Generic);
+    }
+
+    /// Deferred Rust minor #13: a raw `remote.<name>.url` read skips `url.*.insteadOf`, so a
+    /// remote configured through a rewritten alias gets no forge links at all.
+    #[test]
+    fn remote_url_applies_instead_of_and_push_instead_of_rewrites() {
+        let r = crate::testing::TestRepo::new();
+        r.commit("a");
+        // `insteadOf`: the configured URL itself is an alias, rewritten for both directions.
+        r.git(&["config", "url.https://github.com/.insteadOf", "gh:"]);
+        r.git(&["remote", "add", "origin", "gh:owner/repo.git"]);
+        // `pushInsteadOf`: only the push direction is rewritten; fetch is untouched.
+        r.git(&[
+            "config",
+            "url.git@internal.example.com:.pushInsteadOf",
+            "https://github.com/",
+        ]);
+        r.git(&[
+            "remote",
+            "add",
+            "backup",
+            "https://github.com/owner/other.git",
+        ]);
+        let repo = gix::open(r.path()).unwrap();
+        assert_eq!(
+            remote_url(&repo, "origin", Direction::Fetch).as_deref(),
+            Some("https://github.com/owner/repo.git")
+        );
+        assert_eq!(
+            remote_url(&repo, "origin", Direction::Push).as_deref(),
+            Some("https://github.com/owner/repo.git"),
+            "no pushInsteadOf here: push falls back to the fetch URL"
+        );
+        assert_eq!(
+            remote_url(&repo, "backup", Direction::Fetch).as_deref(),
+            Some("https://github.com/owner/other.git")
+        );
+        assert_eq!(
+            remote_url(&repo, "backup", Direction::Push).as_deref(),
+            Some("git@internal.example.com:owner/other.git")
+        );
+        assert_eq!(remote_url(&repo, "nope", Direction::Fetch), None);
+    }
+}

@@ -43,7 +43,7 @@ export interface SettingDef {
 }
 
 const SCOPE_RANK: Record<SettingsScope, number> = { app: 0, profile: 1, repo: 2 };
-/** Nav order: GitNex, then the profile, then the repository; `order` within each. */
+/** Nav order: GitNexia, then the profile, then the repository; `order` within each. */
 export const byNavOrder = (a: SettingsPageDef, b: SettingsPageDef) => SCOPE_RANK[a.scope] - SCOPE_RANK[b.scope] || a.order - b.order;
 
 const pages = new Map<string, SettingsPageDef>();
@@ -98,10 +98,10 @@ export function useSettingsRegistry(): number {
   return useSyncExternalStore(subscribe, getVersion);
 }
 
-/** The nav group's and breadcrumbs' name for a scope: GitNex, `Profile · Work` (`Profile` for
+/** The nav group's and breadcrumbs' name for a scope: GitNexia, `Profile · Work` (`Profile` for
  * a profile without a name), `Repository · orbital`. */
 export function scopeLabel(scope: SettingsScope, profileName: string, repoName: string | null): string {
-  if (scope === 'app') return 'GitNex';
+  if (scope === 'app') return 'GitNexia';
   if (scope === 'profile') return profileName.trim() ? `Profile · ${profileName}` : 'Profile';
   return `Repository · ${repoName ?? ''}`;
 }

@@ -1,4 +1,4 @@
-# Contributing to GitNex
+# Contributing to GitNexia
 
 Thanks for helping. This file covers how to build and test a change, the rules every change
 follows, and how to report a bug. For how the code is organized, read
@@ -15,7 +15,7 @@ dependencies once with `cd ui && npm ci`.
 | Command | What it does |
 |---|---|
 | `just dev [repo]` | Runs the app in development mode (the Vite dev server plus a debug build), optionally opening `repo` |
-| `just playground` | Builds throwaway repositories to try the app on (Orbital, basic, sync, conflicts, …) in `~/gitnex-playground`; more in [docs/playground.md](docs/playground.md) |
+| `just playground` | Builds throwaway repositories to try the app on (Orbital, basic, sync, conflicts, …) in `~/gitnexia-playground`; more in [docs/playground.md](docs/playground.md) |
 | `just test` | The Rust tests, the UI unit tests, the website demo's and the website's tests (needs the wasm toolchain, see [docs/dev-setup.md](docs/dev-setup.md)) and the packaging and release script tests |
 | `just test-rust` | The Rust tests, with cargo-nextest when it's installed |
 | `just test-ui` | All the UI unit tests (vitest) |
@@ -36,13 +36,13 @@ dependencies once with `cd ui && npm ci`.
 | `just gen-types` | Regenerates the TypeScript types in `ui/src/api/gen/` and `ui/src/demo/gen/` from the Rust types |
 
 With [cargo-nextest](https://nexte.st) installed, you can run part of the Rust suite:
-`cargo nextest run -p gitnex-core`, or one area of the harness's integration tests with
-`cargo nextest run -p gitnex-harness -E 'test(/^forge_stacks::/)'`.
+`cargo nextest run -p gitnexia-core`, or one area of the harness's integration tests with
+`cargo nextest run -p gitnexia-harness -E 'test(/^forge_stacks::/)'`.
 
-**Fixture repositories are cached.** Each named fixture (`gitnex_core::testing::fixtures`) is
+**Fixture repositories are cached.** Each named fixture (`gitnexia_core::testing::fixtures`) is
 built once into `target/fixture-cache/`, keyed on the `testing` module's source and the git
-version, and every test (and `gitnex-harness fixture`) gets a copy of it. Set
-`GITNEX_FIXTURE_CACHE=0` to build them fresh, for instance while you debug a fixture.
+version, and every test (and `gitnexia-harness fixture`) gets a copy of it. Set
+`GITNEXIA_FIXTURE_CACHE=0` to build them fresh, for instance while you debug a fixture.
 
 **Pick the cheapest test layer that proves the behavior.** A rule in the core gets a Rust unit
 test; a component's logic or rendering gets a vitest test; a Playwright test is for a real flow
@@ -70,7 +70,7 @@ plus the e2e specs for the areas you changed.
 - **Tests never touch the real keyring or a real forge.** Forge tests talk only to the harness's
   fake GitHub/GitLab, and tokens go in a token store inside a temporary directory, never the
   system Secret Service. Git in tests runs with the isolated environment from
-  `gitnex_core::testing`, never your own config, credentials or ssh agent.
+  `gitnexia_core::testing`, never your own config, credentials or ssh agent.
 - **Tokens never appear** in logs, error messages, the UI, test output, snapshots or committed
   fixtures. Use obviously fake tokens (`glpat-FAKE-…`, `ghp_FAKE-…`), or build real-looking ones at
   run time.
@@ -88,9 +88,9 @@ plus the e2e specs for the areas you changed.
   `tsc --noEmit`. `just lint` runs both.
 - Every write to a repository goes through the write pipeline (`run_write`, see
   [ARCHITECTURE.md](ARCHITECTURE.md#writes)). A new write method is listed in `WRITE_METHODS` in
-  `crates/gitnex-core/src/api.rs`; a new read gets a sample in the API test that checks reads
+  `crates/gitnexia-core/src/api.rs`; a new read gets a sample in the API test that checks reads
   never write.
-- An idle GitNex uses no CPU, so animations are held to a budget:
+- An idle GitNexia uses no CPU, so animations are held to a budget:
   - An animation that never ends (`infinite`) is only for work in progress (a spinner while an
     operation runs), and animates only `transform` or `opacity`. The compositor runs those alone;
     anything else (`box-shadow`, colours, sizes) restyles and repaints on the main thread every
@@ -117,7 +117,7 @@ version rules and the dry run.
 
 ## Licensing
 
-GitNex is MIT licensed (see [LICENSE](LICENSE)). By contributing, you agree that your
+GitNexia is MIT licensed (see [LICENSE](LICENSE)). By contributing, you agree that your
 contribution is licensed under the same terms.
 
 The packages ship the license notices of the third-party code they bundle (Rust crates, npm
@@ -128,16 +128,16 @@ notices in the same change, and check the new dependency's license.
 
 Open an issue on GitHub with:
 - what you did, what you expected, and what happened instead;
-- your distribution and desktop, how you installed GitNex (`.deb`, `.rpm`, Arch package, or built from
+- your distribution and desktop, how you installed GitNexia (`.deb`, `.rpm`, Arch package, or built from
   source), and your git version;
 - the diagnostics: Help → Debug…, then **Copy diagnostics**, and paste the text. It holds the
-  GitNex, Chromium, git and OS versions and your settings, with secrets removed;
+  GitNexia, Chromium, git and OS versions and your settings, with secrets removed;
 - for a crash or an error, the relevant part of the log file. Logs are in
-  `~/.cache/gitnex/logs/` (under `$XDG_CACHE_HOME` if you set it); **Open logs folder** in the
+  `~/.cache/gitnexia/logs/` (under `$XDG_CACHE_HOME` if you set it); **Open logs folder** in the
   Debug dialog opens it. For more detail, turn on Settings › Advanced › Debug logging and
   reproduce the problem.
 
-GitNex keeps tokens out of its logs and diagnostics, but they can contain repository paths,
+GitNexia keeps tokens out of its logs and diagnostics, but they can contain repository paths,
 branch names and remote URLs. Read them before you post, and remove anything you don't want public.
 
 Please report security issues privately, not as public issues.

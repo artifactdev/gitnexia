@@ -2,23 +2,23 @@ import { readFileSync } from 'node:fs';
 import { expect, test } from 'vitest';
 import { OG_IMAGE, siteUrl, socialMarker, socialTags } from './social.ts';
 
-test("the site's address: gitnex.com at / unless the origin or base say otherwise", () => {
-  expect(siteUrl()).toBe('https://gitnex.com/');
-  expect(siteUrl('https://artifactdev.github.io/', '/gitnex/')).toBe('https://artifactdev.github.io/gitnex/');
-  expect(() => siteUrl('gitnex.com')).toThrow(/GITNEX_SITE_ORIGIN/);
-  expect(() => siteUrl('http://gitnex.com')).toThrow(/GITNEX_SITE_ORIGIN/);
-  expect(() => siteUrl('https://gitnex.com/path')).toThrow(/GITNEX_SITE_ORIGIN/);
-  expect(() => siteUrl(undefined, '/gitnex')).toThrow(/GITNEX_SITE_BASE/);
+test("the site's address: artifactdev.github.io/gitnexia/ unless the origin or base say otherwise", () => {
+  expect(siteUrl()).toBe('https://artifactdev.github.io/gitnexia/');
+  expect(siteUrl('https://artifactdev.github.io/', '/gitnexia/')).toBe('https://artifactdev.github.io/gitnexia/');
+  expect(() => siteUrl('artifactdev.github.io')).toThrow(/GITNEXIA_SITE_ORIGIN/);
+  expect(() => siteUrl('http://artifactdev.github.io')).toThrow(/GITNEXIA_SITE_ORIGIN/);
+  expect(() => siteUrl('https://artifactdev.github.io/path')).toThrow(/GITNEXIA_SITE_ORIGIN/);
+  expect(() => siteUrl(undefined, '/gitnexia')).toThrow(/GITNEXIA_SITE_BASE/);
 });
 
 test('the marker writes absolute URLs for the page and its image, with the image size and alt text', () => {
   const html = socialMarker(undefined, '')('meta');
-  expect(html).toContain('<meta property="og:url" content="https://gitnex.com/" />');
-  expect(html).toContain('<meta property="og:image" content="https://gitnex.com/og.jpg" />');
-  expect(html).toContain('<meta name="twitter:image" content="https://gitnex.com/og.jpg" />');
+  expect(html).toContain('<meta property="og:url" content="https://artifactdev.github.io/gitnexia/" />');
+  expect(html).toContain('<meta property="og:image" content="https://artifactdev.github.io/gitnexia/og.jpg" />');
+  expect(html).toContain('<meta name="twitter:image" content="https://artifactdev.github.io/gitnexia/og.jpg" />');
   expect(html).toContain('<meta property="og:image:width" content="1200" />');
   expect(html).toContain('<meta property="og:image:height" content="630" />');
-  expect(socialTags('https://gitnex.com/')).toContain(`<meta property="og:image:alt" content="The GitNex icon and name over the site's lane lines, the line &quot;A fast,`);
+  expect(socialTags('https://artifactdev.github.io/gitnexia/')).toContain(`<meta property="og:image:alt" content="The GitNexia icon and name over the site's lane lines, the line &quot;A fast,`);
   expect(() => socialMarker()('other')).toThrow(/social:other/);
 });
 

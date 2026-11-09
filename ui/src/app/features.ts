@@ -124,7 +124,7 @@ import '../fileColours/feature';
 // Branch presets: Next branch preset and Choose branch preset….
 import '../presets/feature';
 import '../presets/branchMenus';
-// GitNex's own title bar: Alt+Space opens the window menu (Windows).
+// GitNexia's own title bar: Alt+Space opens the window menu (Windows).
 import '../chrome/feature';
 // Create and apply git patches: a commit or the working tree to a .patch file, and git apply.
 import '../patch/feature';

@@ -14,10 +14,10 @@ function OpenLogsControl() {
 function ResetAllControl({ ctx }: { ctx: SettingsCtx }) {
   const reset = async () => {
     const ok = await confirmAction({
-      title: 'Reset GitNex settings?',
-      body: 'Every setting in the GitNex group goes back to its default. Profile and repository settings, custom themes, branch presets and file colours stay.',
+      title: 'Reset GitNexia settings?',
+      body: 'Every setting in the GitNexia group goes back to its default. Profile and repository settings, custom themes, branch presets and file colours stay.',
       confirmLabel: 'Reset',
-      arm: 'Click again to reset every GitNex setting',
+      arm: 'Click again to reset every GitNexia setting',
       danger: true,
     });
     if (ok) resetAppSettings(ctx);
@@ -26,7 +26,7 @@ function ResetAllControl({ ctx }: { ctx: SettingsCtx }) {
 }
 
 const offs = [
-  registerSettingsPage({ id: 'advanced', label: 'Advanced', scope: 'app', order: 80, icon: Terminal, summary: "Logs and resetting GitNex's settings." }),
+  registerSettingsPage({ id: 'advanced', label: 'Advanced', scope: 'app', order: 80, icon: Terminal, summary: "Logs and resetting GitNexia's settings." }),
   registerSettings([
     {
       id: 'debugLogging', label: 'Debug logging', page: 'advanced', group: 'Logs',
@@ -37,13 +37,13 @@ const offs = [
     {
       id: 'openLogs', label: 'Logs folder', page: 'advanced', group: 'Logs', labelFor: 'group',
       keywords: 'log file folder directory diagnostics troubleshooting',
-      description: 'Where GitNex writes its log files.',
+      description: 'Where GitNexia writes its log files.',
       Control: OpenLogsControl,
     },
     {
       id: 'resetAll', label: 'Reset all settings', page: 'advanced', group: 'Reset', labelFor: 'group',
       keywords: 'reset defaults restore factory',
-      description: 'Puts every GitNex setting back to its default. Profile and repository settings and what you made stay.',
+      description: 'Puts every GitNexia setting back to its default. Profile and repository settings and what you made stay.',
       Control: ResetAllControl,
     },
   ]),

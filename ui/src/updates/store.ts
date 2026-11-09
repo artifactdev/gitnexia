@@ -47,7 +47,7 @@ export const useUpdates = create<UpdatesStore>((set, get) => {
       if (listening) return;
       listening = true;
       onEvent((ev) => { if (ev.type === 'updateChanged') get().setState(ev.state); });
-      Promise.resolve().then(() => api.updateStatus()).then((s) => get().setState(s), (e: unknown) => console.warn('[gitnex] update status', errorMessage(e)));
+      Promise.resolve().then(() => api.updateStatus()).then((s) => get().setState(s), (e: unknown) => console.warn('[gitnexia] update status', errorMessage(e)));
     },
     async check() {
       set({ checkError: null });

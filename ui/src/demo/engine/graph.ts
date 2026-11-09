@@ -1,12 +1,12 @@
-// The graph pipeline compiled from crates/gitnex-graph (gitnex-graph-wasm): loaded once, one
+// The graph pipeline compiled from crates/gitnexia-graph (gitnexia-graph-wasm): loaded once, one
 // engine (a commit store) per repository. JSON in and out, the payload as the core's.
-import init, { GraphEngine } from 'gitnex-graph-wasm';
+import init, { GraphEngine } from 'gitnexia-graph-wasm';
 import { gunzipIfNeeded } from './bundle';
 import { gbError } from './errors';
 import type { GraphFactory } from './layout';
 
 // Gzipped at build time: GitHub Pages doesn't compress .wasm (spec §5.3).
-const WASM_URL = new URL('../wasm/gitnex_graph_wasm_bg.wasm.gz', import.meta.url);
+const WASM_URL = new URL('../wasm/gitnexia_graph_wasm_bg.wasm.gz', import.meta.url);
 
 /** `bytes`: the .wasm (tests read it from disk); fetched next to this module otherwise. */
 export async function loadGraphWasm(bytes?: Uint8Array): Promise<GraphFactory> {

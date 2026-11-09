@@ -55,7 +55,7 @@ export function PendingReview({ tabId, kind, mr, session, ask, children }: { tab
           </HoverTooltip>
         </div>
       )}
-      {on && kind === 'bitbucket' && <p className="mr-dim">Pending comments are kept locally for this session, not on Bitbucket. Submit them before restarting GitNex.</p>}
+      {on && kind === 'bitbucket' && <p className="mr-dim">Pending comments are kept locally for this session, not on Bitbucket. Submit them before restarting GitNexia.</p>}
       {on && rows.length > 0 && (
         <ul className="mr-pending-list" aria-label="Pending comments">
           {rows.map(({ draft, at }) => (

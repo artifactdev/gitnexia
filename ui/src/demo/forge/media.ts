@@ -8,7 +8,7 @@ import { base64 } from '../engine/read/bytes';
 import { WEB } from './fakeGitlab';
 import { forgeOf, forgeRemotes, mrTarget } from './hub';
 
-// The core's limits (gitnex-forge http.rs MAX_IMAGE / MAX_VIDEO).
+// The core's limits (gitnexia-forge http.rs MAX_IMAGE / MAX_VIDEO).
 const MAX_IMAGE = 1024 * 1024;
 const MAX_VIDEO = 100 * 1024 * 1024;
 
@@ -66,6 +66,6 @@ export async function forgeMedia(ctx: DemoContext, repo: number, url: string, us
   }
   if (bytes.length > (video ? MAX_VIDEO : MAX_IMAGE)) return missing(`larger than ${(video ? MAX_VIDEO : MAX_IMAGE) / (1024 * 1024)} MB`);
   const mime = (video ? videoMime : imageMime)(bytes);
-  if (!mime) return missing(video ? 'not a video GitNex plays (application/octet-stream)' : 'not an image GitNex shows (application/octet-stream)');
+  if (!mime) return missing(video ? 'not a video GitNexia plays (application/octet-stream)' : 'not an image GitNexia shows (application/octet-stream)');
   return { kind: 'found', mime, base64: base64(bytes) };
 }

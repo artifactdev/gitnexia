@@ -11,7 +11,7 @@ import type { Monaco } from './setup';
 export type { CodeTokens } from '../highlight/protocol';
 
 // Shiki's grammars and the Oniguruma WASM run in the highlight worker (diff/highlight/), started
-// with the first diff (spec §10.3). Every theme carries its GitNex editor colours (theme.ts), and
+// with the first diff (spec §10.3). Every theme carries its GitNexia editor colours (theme.ts), and
 // its token colours in the worker's numbering (`encodedTokensColors`), so the worker's tokens show
 // in Monaco as they are.
 let themed: Promise<void> | undefined;
@@ -37,7 +37,7 @@ export function defineEditorTheme(monaco: Monaco, def: ThemeDef): string {
     monaco.editor.defineTheme(name, { ...base, colors: { ...base.colors, ...editorColors(def) } });
   } catch (e) {
     customFailed.add(name);
-    console.warn(`[gitnex] editor theme ${name}: using ${def.editorTheme}`, e);
+    console.warn(`[gitnexia] editor theme ${name}: using ${def.editorTheme}`, e);
     return def.editorTheme;
   }
   customDefined.add(name);
@@ -57,7 +57,7 @@ export function setAppEditorTheme(monaco: Monaco): void {
     if (name === def.editorTheme) throw e;
     customFailed.add(name);
     customDefined.delete(name);
-    console.warn(`[gitnex] editor theme ${name}: using ${def.editorTheme}`, e);
+    console.warn(`[gitnexia] editor theme ${name}: using ${def.editorTheme}`, e);
     monaco.editor.setTheme(def.editorTheme);
   }
 }
@@ -103,7 +103,7 @@ async function load(monaco: Monaco, lang: string): Promise<string> {
 }
 
 /** Loads a language's grammar the first time a file of that language opens. Resolves to the
- * Monaco language id to use (`plaintext` for anything Shiki doesn't ship, or GitNex dropped). */
+ * Monaco language id to use (`plaintext` for anything Shiki doesn't ship, or GitNexia dropped). */
 export function ensureLanguage(monaco: Monaco, lang: string): Promise<string> {
   if (!Object.hasOwn(bundledLanguages, lang)) return Promise.resolve('plaintext');
   let p = languages.get(lang);

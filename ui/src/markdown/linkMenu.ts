@@ -13,7 +13,7 @@ type Action = Extract<MenuRow, { kind: 'action' }>;
 const row = (r: Omit<Action, 'kind'>): MenuRow => ({ kind: 'action', ...r });
 const copy = (text: string) => { copyText(text).then(() => useToast.getState().show('Copied'), () => useToast.getState().show('Copy failed', { error: true })); };
 
-/** The target opens inside GitNex: an MR/PR, a loaded commit, a file 5B shows. */
+/** The target opens inside GitNexia: an MR/PR, a loaded commit, a file 5B shows. */
 function inApp(t: LinkMenuTarget): boolean {
   switch (t.target.kind) {
     case 'mr': return true;
@@ -28,7 +28,7 @@ export const offLinkMenus: Array<() => void> = [
     id: 'link.open', kind: 'link', group: 'open', order: 0,
     rows: (t) => {
       const rows: MenuRow[] = [];
-      if (inApp(t)) rows.push(row({ id: 'link.openInApp', label: 'Open in GitNex', icon: t.target.kind === 'commit' ? ICONS.graph : t.target.kind === 'file' ? ICONS.file : ICONS.mr, tooltip: linkTooltip(t.ctx, t.target) ?? 'Open in GitNex', run: () => { void openLinkTarget(t.ctx, t.target); } }));
+      if (inApp(t)) rows.push(row({ id: 'link.openInApp', label: 'Open in GitNexia', icon: t.target.kind === 'commit' ? ICONS.graph : t.target.kind === 'file' ? ICONS.file : ICONS.mr, tooltip: linkTooltip(t.ctx, t.target) ?? 'Open in GitNexia', run: () => { void openLinkTarget(t.ctx, t.target); } }));
       const url = browserUrlFor(t.ctx, t.target);
       if (url) rows.push(row({ id: 'link.openInBrowser', label: 'Open in browser', icon: ICONS.browser, tooltip: url, run: () => openExternal(url) }));
       return rows;

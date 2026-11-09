@@ -13,10 +13,10 @@ import './fileColoursSettings.css';
 const toast = (m: string) => useToast.getState().show(m);
 const plural = (n: number) => `${n} scope${n === 1 ? '' : 's'}`;
 
-/** Appends the scopes in `text` (GitNex file colours JSON); anything else only shows a toast. */
+/** Appends the scopes in `text` (GitNexia file colours JSON); anything else only shows a toast. */
 export function pasteScopes(text: string, scopes: readonly FileScope[], onChange: (next: FileScope[]) => void): void {
   const incoming = parseScopesJson(text);
-  if (!incoming || incoming.length === 0) { toast("That isn't GitNex file colours"); return; }
+  if (!incoming || incoming.length === 0) { toast("That isn't GitNexia file colours"); return; }
   onChange(appendScopes(scopes, incoming));
   toast(`Added ${plural(incoming.length)}`);
 }

@@ -40,7 +40,7 @@ export function loadLfsStatus(repo: number, force = false, recheck = false): Pro
     (s) => useLfs.setState((st) => (JSON.stringify(st.status[repo]) === JSON.stringify(s) ? st : { status: { ...st.status, [repo]: s } })),
     (e: unknown) => {
       failed.add(repo);
-      console.warn('[gitnex] LFS status', e);
+      console.warn('[gitnexia] LFS status', e);
     },
   );
   loading.set(repo, p);
@@ -78,7 +78,7 @@ function flush() {
         const key = trackedKey(repo, worktree);
         useLfs.setState((st) => ({ tracked: { ...st.tracked, [key]: { ...st.tracked[key], ...Object.fromEntries(asked.map((p) => [p, yes.has(p)])) } } }));
       },
-      (e: unknown) => console.warn('[gitnex] LFS paths', e),
+      (e: unknown) => console.warn('[gitnexia] LFS paths', e),
     );
   }
 }

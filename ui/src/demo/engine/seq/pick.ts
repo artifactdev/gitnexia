@@ -35,7 +35,7 @@ async function pickable(read: ReadRepo, hex: string): Promise<void> {
   const short = shortOid(hex);
   if (!/^[0-9a-f]{40}$/.test(hex)) fail('InvalidInput', `not an object id: ${hex}`);
   const c = (await readCommitOrNull(read, hex)) ?? fail('NotFound', `${short} isn't a commit in this repository`);
-  if (c.parents.length > 1) fail('InvalidInput', `${short} is a merge commit: GitNex doesn't cherry-pick or revert merges`);
+  if (c.parents.length > 1) fail('InvalidInput', `${short} is a merge commit: GitNexia doesn't cherry-pick or revert merges`);
 }
 
 /** The paths `hex` changes against its first parent (a root commit: its whole tree). */

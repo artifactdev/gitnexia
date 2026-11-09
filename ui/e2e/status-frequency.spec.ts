@@ -5,10 +5,10 @@ import { selectWip } from './wip';
 import { expect, test, type Page } from './test';
 
 // How many git processes the app runs while files change (the status-frequency lane): opt-in, it
-// takes minutes. `GITNEX_MEASURE_STATUS=1 npx playwright test --project=chromium
-// e2e/status-frequency.spec.ts`; GITNEX_MEASURE_OUT=<file> also writes the counts as JSON.
-const on = !!process.env.GITNEX_MEASURE_STATUS;
-test.skip(!on, 'a measurement: run with GITNEX_MEASURE_STATUS=1');
+// takes minutes. `GITNEXIA_MEASURE_STATUS=1 npx playwright test --project=chromium
+// e2e/status-frequency.spec.ts`; GITNEXIA_MEASURE_OUT=<file> also writes the counts as JSON.
+const on = !!process.env.GITNEXIA_MEASURE_STATUS;
+test.skip(!on, 'a measurement: run with GITNEXIA_MEASURE_STATUS=1');
 
 type Entry = { id: number; args: string[]; cwd: string };
 
@@ -119,6 +119,6 @@ for (const mode of ['wip', 'commit'] as const) {
       await page.getByRole('button', { name: 'Fetch', exact: true }).click();
     });
 
-    if (process.env.GITNEX_MEASURE_OUT) writeFileSync(`${process.env.GITNEX_MEASURE_OUT}.${mode}.json`, JSON.stringify(results, null, 2));
+    if (process.env.GITNEXIA_MEASURE_OUT) writeFileSync(`${process.env.GITNEXIA_MEASURE_OUT}.${mode}.json`, JSON.stringify(results, null, 2));
   });
 }

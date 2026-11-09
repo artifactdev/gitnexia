@@ -14,9 +14,9 @@ export const EMPTY_DRAFT: WipDraft = Object.freeze({ summary: '', description: '
 export const WIP_DRAFT_COUNTER_FROM = 60;
 /** …and turns to the warning colour past this many. Longer is allowed: nothing is truncated. */
 export const WIP_DRAFT_WARN_FROM = 72;
-export const DRAFT_STORAGE_KEY = 'gitnex.wipDraft.v2';
-const V1_PREFIX = 'gitnex.wipDraft.v1:';
-const BODY_V1_PREFIX = 'gitnex.wipBody.v1:';
+export const DRAFT_STORAGE_KEY = 'gitnexia.wipDraft.v2';
+const V1_PREFIX = 'gitnexia.wipDraft.v1:';
+const BODY_V1_PREFIX = 'gitnexia.wipBody.v1:';
 const PERSIST_MS = 300;
 
 /** The draft's key: the tab's repo path and the worktree path (the v1 key's suffix too). */

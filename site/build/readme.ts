@@ -11,7 +11,7 @@ export interface Bullet { lead: string; text: string }
 export interface Section { title: string; level: 3 | 4; bullets: Bullet[]; lines: string[] }
 export interface Highlight { lead: string; kicker: string; lane: Lane; shot: ShotId }
 
-const REPO = 'https://github.com/artifactdev/gitnex';
+const REPO = 'https://github.com/artifactdev/gitnexia';
 
 /** The page's highlights, in README.md's order: code review, then the things used all day
  * (worktrees, branch visibility, context menus), the diffs and file colours, then history and forges. The README's "Free and MIT

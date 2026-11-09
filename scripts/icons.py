@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Renders the app's icon set (crates/gitnex-app/icons) from source.svg."""
+"""Renders the app's icon set (crates/gitnexia-app/icons) from source.svg."""
 import subprocess
 from pathlib import Path
 
-ICONS = Path(__file__).resolve().parent.parent / "crates" / "gitnex-app" / "icons"
+ICONS = Path(__file__).resolve().parent.parent / "crates" / "gitnexia-app" / "icons"
 
 
 def main() -> None:

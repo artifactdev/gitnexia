@@ -49,11 +49,11 @@ describe('the operation in progress', () => {
     put('stopped-sha', 'df342659294cec2619372ad15be4af0009312f01\n');
     const r = readInProgress(t.memfs, g) as Extract<InProgress, { kind: 'rebase' }>;
     expect([r.kind, r.step, r.total, r.editStop, r.editConflict, r.messageFailed, r.message]).toEqual(['rebase', 1, 2, null, true, null, 'third\n\n# Conflicts:\n#\tf\n']);
-    put('gitnex-message-failed', 'edit df342659294cec2619372ad15be4af0009312f01 # third\nhook said no\n');
-    put('gitnex-refused', 'edit df342659294cec2619372ad15be4af0009312f01 # third\n' + head + '\nrefused text\r\n');
+    put('gitnexia-message-failed', 'edit df342659294cec2619372ad15be4af0009312f01 # third\nhook said no\n');
+    put('gitnexia-refused', 'edit df342659294cec2619372ad15be4af0009312f01 # third\n' + head + '\nrefused text\r\n');
     const f = readInProgress(t.memfs, g) as Extract<InProgress, { kind: 'rebase' }>;
     expect([f.messageFailed, f.message]).toEqual(['hook said no', 'refused text\n']);
-    t.memfs.unlinkSync(`${dir}/gitnex-message-failed`);
+    t.memfs.unlinkSync(`${dir}/gitnexia-message-failed`);
     put('amend', `${head}\n`);
     const e = readInProgress(t.memfs, g, 'Head msg\r\n') as Extract<InProgress, { kind: 'rebase' }>;
     expect([e.editStop, e.editConflict, e.message]).toEqual([head, false, 'Head msg\n']);

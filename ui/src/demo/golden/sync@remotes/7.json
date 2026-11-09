@@ -6,7 +6,7 @@
           "id": 5,
           "kind": "checkout",
           "label": "checkout diverged",
-          "op": 5
+          "op": 8
         }
       ],
       "repo": 1,
@@ -21,7 +21,7 @@
         "id": 5,
         "kind": "checkout",
         "label": "checkout diverged",
-        "op": 5
+        "op": 8
       },
       "stopped": null,
       "type": "queueChanged"
@@ -30,7 +30,7 @@
       "interactive": true,
       "kind": "checkout",
       "label": "checkout diverged",
-      "op": 5,
+      "op": 8,
       "repo": 1,
       "type": "opStarted"
     },
@@ -77,7 +77,7 @@
       "command": null,
       "kind": "checkout",
       "message": null,
-      "op": 5,
+      "op": 8,
       "outcome": "ok",
       "repo": 1,
       "type": "opFinished"

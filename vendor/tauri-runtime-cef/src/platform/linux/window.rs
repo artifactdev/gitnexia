@@ -44,9 +44,9 @@ pub(crate) struct CefX11Host {
   background_color_provider: RefCell<Option<gtk::CssProvider>>,
   /// Whether the host is mapped; created mapped, unmapped while it only hosts offscreen webviews.
   mapped: Cell<bool>,
-  /// GitNex patch: answers the window manager's `WM_TAKE_FOCUS` by focusing a browser.
+  /// GitNexia patch: answers the window manager's `WM_TAKE_FOCUS` by focusing a browser.
   _take_focus: Option<super::focus::TakeFocusRedirect>,
-  /// GitNex patch: notices the pointer leaving, which Chromium misses under GPU compositing.
+  /// GitNexia patch: notices the pointer leaving, which Chromium misses under GPU compositing.
   pointer_leave: Option<super::pointer::PointerLeaveWatch>,
 }
 
@@ -163,7 +163,7 @@ impl CefX11Host {
       .and_then(super::pointer::PointerLeaveWatch::take_left_at)
   }
 
-  /// GitNex patch: whether a browser's X window is still in the host. Chromium destroys it (and
+  /// GitNexia patch: whether a browser's X window is still in the host. Chromium destroys it (and
   /// the GPU process's child window in it) on a task of its own after the browser's
   /// `on_before_close`, so the host must outlive it: destroying the host destroys them with it,
   /// under a GPU process still presenting into them and a Chrome window still being torn down.
@@ -306,13 +306,13 @@ impl AppWindow {
     taskbar::set_progress_bar(state);
   }
 
-  /// GitNex patch: has the window manager move the window (`edge` is `None`) or resize it from
+  /// GitNexia patch: has the window manager move the window (`edge` is `None`) or resize it from
   /// `edge`, following the pointer while button 1 is held (`chrome.rs`).
   pub(crate) fn begin_move_resize(&self, edge: Option<tauri_runtime::ResizeDirection>) -> bool {
     chrome::begin_move_resize(self.xid(), edge)
   }
 
-  /// GitNex patch: whether the window manager was asked (`chrome.rs`). It takes Alt+Space
+  /// GitNexia patch: whether the window manager was asked (`chrome.rs`). It takes Alt+Space
   /// itself, so the keyboard's menu is never asked for here.
   pub(crate) fn window_manager_request(&self, request: WindowManagerRequest) -> bool {
     match request {

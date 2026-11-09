@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Usage: scripts/package-macos.sh   (`just package-macos`, on a Mac)
 #
-# The macOS package: target/release/bundle/dmg/GitNex_<version>_<arch>.dmg (arch: aarch64 on
-# Apple Silicon, x64 on Intel), holding GitNex.app and a link to /Applications.
+# The macOS package: target/release/bundle/dmg/GitNexia_<version>_<arch>.dmg (arch: aarch64 on
+# Apple Silicon, x64 on Intel), holding GitNexia.app and a link to /Applications.
 #
 # 1. The license notices (scripts/licenses.sh: the Rust crates of this Mac's target, CEF and
 #    Chromium), failing on a license outside about.toml's allow-list.
@@ -13,17 +13,17 @@
 #    `install-kind` marker (`dmg`, for the updater) and the notices in `licenses/`.
 # 3. Checks: the signature (`codesign --verify --deep --strict`, the hardened runtime, CEF's
 #    entitlements, the designated requirement, the helpers'), the marker, the notices and the
-#    folder document type in the bundle, then the .dmg mounted read-only: GitNex.app, signed,
+#    folder document type in the bundle, then the .dmg mounted read-only: GitNexia.app, signed,
 #    and the Applications link.
 #
-# The signature: with GITNEX_MACOS_SIGNING_IDENTITY (a code-signing identity in the keychain
+# The signature: with GITNEXIA_MACOS_SIGNING_IDENTITY (a code-signing identity in the keychain
 # search list, by SHA-1 or name: the release's self-signed certificate, which
 # scripts/macos-keychain.sh imports), that identity; without it, ad-hoc. Either way each helper
 # app gets its own identifier (scripts/macos-codesign/codesign). See docs/releasing.md, "macOS
 # signing".
 #
 # The version follows scripts/package-version.sh: a stamped one for local builds, the plain one
-# with GITNEX_RELEASE_VERSION (the release workflow). CARGO_BUILD_JOBS defaults to 4. Needs
+# with GITNEXIA_RELEASE_VERSION (the release workflow). CARGO_BUILD_JOBS defaults to 4. Needs
 # Xcode's command line tools, CMake, Ninja, Node, cargo-about and the pinned Tauri CLI
 # (docs/dev-setup.md).
 set -euo pipefail
@@ -39,18 +39,18 @@ esac
 
 cd "$root"
 scripts/licenses.sh
-app_dir=crates/gitnex-app
+app_dir=crates/gitnexia-app
 v=$(scripts/package-version.sh "$app_dir/tauri.conf.json")
 bundle=target/release/bundle
-app=$bundle/macos/GitNex.app
-dmg=$bundle/dmg/GitNex_${v}_${arch}.dmg
-identity=${GITNEX_MACOS_SIGNING_IDENTITY:--}
+app=$bundle/macos/GitNexia.app
+dmg=$bundle/dmg/GitNexia_${v}_${arch}.dmg
+identity=${GITNEXIA_MACOS_SIGNING_IDENTITY:--}
 bundle_id=$(node -p "require(\"./$app_dir/tauri.conf.json\").identifier")
 # APPLE_SIGNING_IDENTITY overrides tauri.macos.conf.json's "-"; the bundler signs inside out (the
 # helper apps, the framework's libraries and the framework, the main binary, then the bundle) and,
 # with an identity, the .dmg too.
 tauri() {
-  (cd "$app_dir" && env -u CARGO_INCREMENTAL CARGO_BUILD_JOBS="${CARGO_BUILD_JOBS:-4}" GITNEX_BUILD_VERSION="$v" \
+  (cd "$app_dir" && env -u CARGO_INCREMENTAL CARGO_BUILD_JOBS="${CARGO_BUILD_JOBS:-4}" GITNEXIA_BUILD_VERSION="$v" \
     APPLE_SIGNING_IDENTITY="$identity" PATH="$here/macos-codesign:$PATH" \
     cargo tauri "$@" --config packaging/macos/dmg.conf.json --config "{\"version\":\"$v\"}")
 }
@@ -142,9 +142,9 @@ check_app "$app"
 codesign -dvv "$app" 2>&1 | grep -E '^(Identifier|Authority|TeamIdentifier|Signature|CodeDirectory)[= ]'
 echo "designated => $(designated "$app")"
 
-mnt=$(mktemp -d "${TMPDIR:-/tmp}/gitnex-dmg.XXXXXX")
+mnt=$(mktemp -d "${TMPDIR:-/tmp}/gitnexia-dmg.XXXXXX")
 trap 'hdiutil detach -quiet "$mnt" 2>/dev/null || hdiutil detach -quiet -force "$mnt" 2>/dev/null || true; rmdir "$mnt" 2>/dev/null || true' EXIT
 hdiutil attach -nobrowse -readonly -noautoopen -mountpoint "$mnt" "$dmg" >/dev/null
-check_app "$mnt/GitNex.app"
+check_app "$mnt/GitNexia.app"
 [ "$(readlink "$mnt/Applications")" = /Applications ] || fail "$dmg: no link to /Applications"
-echo "package-macos: $dmg ($(du -h "$dmg" | cut -f1); GitNex.app $(du -sh "$app" | cut -f1)), version $v"
+echo "package-macos: $dmg ($(du -h "$dmg" | cut -f1); GitNexia.app $(du -sh "$app" | cut -f1)), version $v"

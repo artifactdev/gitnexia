@@ -19,7 +19,7 @@ describe('the highlight queue', () => {
     expect(worker.code).toHaveBeenCalledWith('const a', 'ts', expect.any(String));
   });
 
-  it('a language Shiki lacks (or GitNex dropped) is plain without asking; a cancelled block never asks', async () => {
+  it('a language Shiki lacks (or GitNexia dropped) is plain without asking; a cancelled block never asks', async () => {
     worker.code.mockClear();
     expect(await queueHighlight('x', 'klingon').result).toBeNull();
     expect(await queueHighlight('x', 'racket').result).toBeNull();

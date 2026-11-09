@@ -44,8 +44,8 @@ function envelopeBody(text: string): Record<string, unknown> | null {
   if (new TextEncoder().encode(text).length <= MAX_SHARE_BYTES) return null;
   const raw = text.trim().replace(/^```(?:json)?[ \t]*\r?\n?/i, '').replace(/\r?\n?```$/, '').trim();
   try {
-    const { gitnex, version, ...body } = JSON.parse(raw) as Record<string, unknown>;
-    return gitnex === 'file-colours' && version === 1 ? body : null;
+    const { gitnexia, version, ...body } = JSON.parse(raw) as Record<string, unknown>;
+    return gitnexia === 'file-colours' && version === 1 ? body : null;
   } catch {
     return null;
   }

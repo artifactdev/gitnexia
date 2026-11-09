@@ -57,22 +57,22 @@ test.describe('shell', () => {
       await expect(graph(page)).toBeVisible();
       await page.evaluate(() => window.__gb!.flush());
       // The reloaded page is the app's window on Linux, for the title bar step below: what the
-      // app's initialization script hands over (gitnex-app chrome.rs). There's no window here,
+      // app's initialization script hands over (gitnexia-app chrome.rs). There's no window here,
       // so its calls are recorded (`window.__gbWindowCalls`).
       await page.addInitScript(() => {
-        window.__GITNEX_WINDOW__ = { frame: 'custom', platform: 'linux', layout: 'appmenu:minimize,maximize,close', doubleClick: 'toggle-maximize', middleClick: 'lower', rightClick: 'menu' };
+        window.__GITNEXIA_WINDOW__ = { frame: 'custom', platform: 'linux', layout: 'appmenu:minimize,maximize,close', doubleClick: 'toggle-maximize', middleClick: 'lower', rightClick: 'menu' };
       });
       await page.goto('/');
       await expect(graph(page)).toBeVisible();
       await expect(page.getByText("Merge branch 'feature/login'")).toBeVisible();
       await expect(page.locator('.tab-page')).toHaveCount(1);
     });
-    await test.step("GitNex's own title bar: ☰ moves up into it, its buttons and clicks ask the window", async () => {
+    await test.step("GitNexia's own title bar: ☰ moves up into it, its buttons and clicks ask the window", async () => {
       const bar = page.locator('.title-bar');
       const calls = () => page.evaluate(() => window.__gbWindowCalls?.splice(0) ?? []);
       await expect(bar.getByRole('button', { name: 'Menu' })).toBeVisible();
       await expect(page.locator('.tab-bar').getByRole('button', { name: 'Menu' })).toHaveCount(0);
-      await expect(bar.locator('.title-bar-title')).toHaveText(/^GitNex — /);
+      await expect(bar.locator('.title-bar-title')).toHaveText(/^GitNexia — /);
       // 30 px, right above the tab bar.
       const [title, tabs] = await Promise.all([bar.boundingBox(), page.locator('.tab-bar').boundingBox()]);
       expect([title!.y, title!.height, tabs!.y]).toEqual([0, 30, 30]);
@@ -89,7 +89,7 @@ test.describe('shell', () => {
       expect(await calls()).toEqual(['minimize', 'toggleMaximize', 'toggleMaximize', 'startResizeDragging:SouthEast']);
       // Its title drags the window once the pointer moves; a double click maximizes; a middle
       // click lowers; a right click asks for the window manager's menu and, with none here,
-      // shows GitNex's.
+      // shows GitNexia's.
       const box = (await bar.locator('.title-bar-title').boundingBox())!;
       await page.mouse.move(box.x + box.width / 2, box.y + 15);
       await page.mouse.down();

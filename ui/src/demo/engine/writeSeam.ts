@@ -77,7 +77,7 @@ export interface Pause {
   target: string;
   targetOid: string | null;
   picked: string[];
-  /** GitNex's interactive rebase (its session rides on the paused entry). */
+  /** GitNexia's interactive rebase (its session rides on the paused entry). */
   irebase: boolean;
 }
 export interface WriteCx extends Pre {

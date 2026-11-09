@@ -59,7 +59,7 @@ test.describe('settings', () => {
       await openSettings(page);
       await nav(page, 'General').click();
       const pages = dialog(page).getByRole('navigation', { name: 'Settings pages' });
-      await expect(pages.getByText('GitNex', { exact: true })).toBeVisible();
+      await expect(pages.getByText('GitNexia', { exact: true })).toBeVisible();
       await expect(pages.getByText(/^Profile · /)).toBeVisible();
       await expect(pages.getByText(/^Repository · /)).toBeVisible();
       await expect(dialog(page).getByRole('region', { name: 'General' })).toBeVisible();
@@ -136,7 +136,7 @@ test.describe('settings', () => {
       await pick(page, 'Date format', '09/26/2026 3:14 PM');
       await nav(page, 'Advanced').click();
       await dialog(page).getByRole('button', { name: 'Reset all settings…' }).click();
-      const armed = armedOverlay(page, 'Click again to reset every GitNex setting');
+      const armed = armedOverlay(page, 'Click again to reset every GitNexia setting');
       await expect(armed).toBeVisible();
       await page.keyboard.press('Escape');
       await expect(armed).toBeHidden();
@@ -157,7 +157,7 @@ test.describe('settings', () => {
       await sticky.check();
       await expect(sticky).toBeChecked();
       // Not in localStorage any more: the old key was moved into the app settings and removed.
-      expect(await page.evaluate(() => localStorage.getItem('gitnex.editorSettings.v1'))).toBeNull();
+      expect(await page.evaluate(() => localStorage.getItem('gitnexia.editorSettings.v1'))).toBeNull();
       // The explanation is always shown, under the label.
       await expect(dialog(page).getByText(/Pins the enclosing scope's first line/)).toBeVisible();
     });

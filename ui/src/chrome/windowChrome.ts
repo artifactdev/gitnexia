@@ -5,7 +5,7 @@ import { inTauri } from '../api/transport';
 export type ResizeDirection = 'North' | 'NorthEast' | 'East' | 'SouthEast' | 'South' | 'SouthWest' | 'West' | 'NorthWest';
 
 /**
- * The window's frame and how its title bar behaves, as the app hands it over (gitnex-app
+ * The window's frame and how its title bar behaves, as the app hands it over (gitnexia-app
  * chrome.rs): `custom`, the page draws the title bar; `system`, the window manager's. The
  * clicks are GNOME's `action-*-click-titlebar` values.
  */
@@ -27,13 +27,13 @@ declare global {
   interface Window {
     /** Set before the page's own scripts run, by the app's initialization script (or an e2e
      * test's); absent in a plain browser and the website demo, which have no window to draw. */
-    __GITNEX_WINDOW__?: WindowChromeInfo;
+    __GITNEXIA_WINDOW__?: WindowChromeInfo;
     /** e2e and dev: the window calls a title bar made where there's no window to make them on. */
     __gbWindowCalls?: string[];
   }
 }
 
-/** Must match gitnex-app's `chrome::CHROME_EVENT`. */
+/** Must match gitnexia-app's `chrome::CHROME_EVENT`. */
 export const CHROME_EVENT = 'gb:window-chrome';
 
 interface ChromeState {
@@ -45,7 +45,7 @@ interface ChromeState {
 }
 
 export const useWindowChrome = create<ChromeState>(() => ({
-  info: typeof window === 'undefined' ? null : window.__GITNEX_WINDOW__ ?? null,
+  info: typeof window === 'undefined' ? null : window.__GITNEXIA_WINDOW__ ?? null,
   maximized: false,
   fullscreen: false,
 }));
@@ -58,7 +58,7 @@ export const useCustomTitleBar = () => useWindowChrome((s) => s.info?.frame === 
  * moves the window), as in a browser. */
 export const useCompactTitleBar = () => useWindowChrome((s) => s.info?.frame === 'custom' && !!s.info.compact);
 
-/** gitnex-app's `window_manager` requests. */
+/** gitnexia-app's `window_manager` requests. */
 export type WindowManagerRequest = 'menu' | 'keyboard-menu' | 'lower';
 
 /** What the title bar asks of the window. */
@@ -100,9 +100,9 @@ const tauriOps: WindowOps = {
     let dead = false;
     const keep = (off: () => void) => { if (dead) off(); else offs.push(off); };
     void win().then((w) => w.onResized(() => onResized())).then(keep)
-      .catch((e: unknown) => console.warn('[gitnex] window resize events unavailable', e));
+      .catch((e: unknown) => console.warn('[gitnexia] window resize events unavailable', e));
     void import('@tauri-apps/api/event').then(({ listen }) => listen<WindowChromeInfo>(CHROME_EVENT, (e) => onChrome(e.payload))).then(keep)
-      .catch((e: unknown) => console.warn(`[gitnex] couldn't listen for ${CHROME_EVENT}`, e));
+      .catch((e: unknown) => console.warn(`[gitnexia] couldn't listen for ${CHROME_EVENT}`, e));
     return () => { dead = true; offs.splice(0).forEach((off) => off()); };
   },
 };

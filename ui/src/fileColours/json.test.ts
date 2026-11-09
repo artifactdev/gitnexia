@@ -7,8 +7,8 @@ const sc = (name: string): FileScope => ({ id: `id-${name}`, name, tint: 'green'
 describe('file colours JSON', () => {
   it('scopesToJson writes the documented shape without ids', () => {
     const j = JSON.parse(scopesToJson([sc('Tests')]));
-    expect(j).toEqual({ gitnex: 'file-colours', version: 1, scopes: [{ name: 'Tests', tint: 'green', patterns: ['*.snap'], startCollapsed: true }] });
-    expect(scopesToJson([sc('Tests')])).toContain('\n  "gitnex"');
+    expect(j).toEqual({ gitnexia: 'file-colours', version: 1, scopes: [{ name: 'Tests', tint: 'green', patterns: ['*.snap'], startCollapsed: true }] });
+    expect(scopesToJson([sc('Tests')])).toContain('\n  "gitnexia"');
   });
   it('parseScopesJson round-trips', () => {
     expect(parseScopesJson(scopesToJson([sc('A'), sc('B')]))).toEqual([
@@ -18,21 +18,21 @@ describe('file colours JSON', () => {
   });
   it('rejects other kinds, newer versions and non-arrays', () => {
     expect(parseScopesJson('nope')).toBeNull();
-    expect(parseScopesJson('{"gitnex":"theme","version":1,"scopes":[]}')).toBeNull();
-    expect(parseScopesJson('{"gitnex":"file-colours","version":2,"scopes":[]}')).toBeNull();
-    expect(parseScopesJson('{"gitnex":"file-colours","version":1,"scopes":{}}')).toBeNull();
-    expect(parseScopesJson('{"gitnex":"file-colours","version":1}')).toBeNull();
+    expect(parseScopesJson('{"gitnexia":"theme","version":1,"scopes":[]}')).toBeNull();
+    expect(parseScopesJson('{"gitnexia":"file-colours","version":2,"scopes":[]}')).toBeNull();
+    expect(parseScopesJson('{"gitnexia":"file-colours","version":1,"scopes":{}}')).toBeNull();
+    expect(parseScopesJson('{"gitnexia":"file-colours","version":1}')).toBeNull();
     const many = Array.from({ length: 201 }, (_, i) => ({ name: `n${i}`, patterns: ['a'] }));
-    expect(parseScopesJson(JSON.stringify({ gitnex: 'file-colours', version: 1, scopes: many }))).toBeNull();
-    expect(parseScopesJson(`{"gitnex":"file-colours","version":1,"scopes":[],"pad":"${'x'.repeat(1_000_001)}"}`)).toBeNull();
+    expect(parseScopesJson(JSON.stringify({ gitnexia: 'file-colours', version: 1, scopes: many }))).toBeNull();
+    expect(parseScopesJson(`{"gitnexia":"file-colours","version":1,"scopes":[],"pad":"${'x'.repeat(1_000_001)}"}`)).toBeNull();
   });
   it('accepts texts between 64 KiB and 1 MB', () => {
-    const big = JSON.stringify({ gitnex: 'file-colours', version: 1, scopes: [{ name: 'A', patterns: ['a'] }], pad: 'x'.repeat(100_000) });
+    const big = JSON.stringify({ gitnexia: 'file-colours', version: 1, scopes: [{ name: 'A', patterns: ['a'] }], pad: 'x'.repeat(100_000) });
     expect(parseScopesJson(big)).toHaveLength(1);
   });
   it('drops nameless or empty scopes and maps an unknown tint to gray', () => {
     const text = JSON.stringify({
-      gitnex: 'file-colours', version: 1,
+      gitnexia: 'file-colours', version: 1,
       scopes: [
         { name: '', patterns: ['a'] },
         { name: 'NoPat', patterns: ['  ', ''] },
@@ -47,7 +47,7 @@ describe('file colours JSON', () => {
   });
   it('caps patterns per scope at 200', () => {
     const patterns = Array.from({ length: 250 }, (_, i) => `p${i}`);
-    const out = parseScopesJson(JSON.stringify({ gitnex: 'file-colours', version: 1, scopes: [{ name: 'A', patterns }] }));
+    const out = parseScopesJson(JSON.stringify({ gitnexia: 'file-colours', version: 1, scopes: [{ name: 'A', patterns }] }));
     expect(out?.[0].patterns).toHaveLength(200);
   });
   it('appendScopes renames clashes and gives fresh ids', () => {

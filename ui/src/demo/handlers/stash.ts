@@ -36,7 +36,7 @@ export function forgetKept(cx: WriteCx, oid: string): void {
 const firstLine = (m: string) => (m.split('\n')[0] ?? '').trim();
 
 /** Why a pop whose `after` snapshot failed can't be undone (stash.rs's NO_AFTER). */
-const NO_AFTER = "Can't be undone: GitNex couldn't record what the pop left";
+const NO_AFTER = "Can't be undone: GitNexia couldn't record what the pop left";
 
 /** The core's `relist` lists a multi-line message again by its first line (a drop, then a store),
  *  guarded by a pending kept-stash record that goes once the stash is listed again. The demo's

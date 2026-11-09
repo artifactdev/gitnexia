@@ -47,7 +47,7 @@ pub(crate) struct FullscreenTransitionIvars {
   in_progress: Cell<bool>,
   /// The latest request made during the transition; `Some(None)` is a request to leave.
   pending: Cell<Option<Option<FullscreenTarget>>>,
-  /// Called when a transition ends (GitNex patch: every time, not only while a request is
+  /// Called when a transition ends (GitNexia patch: every time, not only while a request is
   /// pending, so the window can tell its listeners it changed). Runs inside AppKit's
   /// notification dispatch, so it must only post the request for later.
   on_transition_end: Box<dyn Fn()>,
@@ -154,7 +154,7 @@ impl FullscreenTransition {
 
   fn transition_ended(&self) {
     self.ivars().in_progress.set(false);
-    // GitNex patch: whether or not a request is pending.
+    // GitNexia patch: whether or not a request is pending.
     (self.ivars().on_transition_end)();
   }
 

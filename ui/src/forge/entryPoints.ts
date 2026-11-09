@@ -39,7 +39,7 @@ const offMenu = registerMenu<CommitTarget, MenuEnv>({
       id: `commit.openMr.${mr.number}`,
       label: `Open ${mrNoun(kind)} ${mrRef(kind, mr.number)}`,
       icon: GitPullRequest,
-      tooltip: `Show ${mrName(kind).toLowerCase()} ${mrRef(kind, mr.number)} (${mr.title}) in GitNex`,
+      tooltip: `Show ${mrName(kind).toLowerCase()} ${mrRef(kind, mr.number)} (${mr.title}) in GitNexia`,
       run: () => openMrView(tabId, mr.number),
     }));
   },

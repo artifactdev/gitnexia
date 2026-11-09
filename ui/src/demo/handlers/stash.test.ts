@@ -164,7 +164,7 @@ describe('stash intents', () => {
     snap.fail = 1;
     const r = await h.stashApply({ repo: 1, worktree: t.dir, oid: stashList(wt)[0].oid, pop: true }, ctx);
     const e = ctx.writes.journal(t.dir).undoTop()!;
-    expect([r.outcome, stashList(wt), e.after, e.blocked]).toEqual([{ status: 'applied' }, [], null, "Can't be undone: GitNex couldn't record what the pop left"]);
+    expect([r.outcome, stashList(wt), e.after, e.blocked]).toEqual([{ status: 'applied' }, [], null, "Can't be undone: GitNexia couldn't record what the pop left"]);
   });
 
   it("drops a kept autostash's record when its stash is popped", async () => {

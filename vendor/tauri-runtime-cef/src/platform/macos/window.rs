@@ -198,7 +198,7 @@ impl AppWindow {
     nswindow.setBackgroundColor(Some(&nscolor));
   }
 
-  /// GitNex patch: has AppKit move the window with the pointer while the left button is held,
+  /// GitNexia patch: has AppKit move the window with the pointer while the left button is held,
   /// for a page that draws its own title bar (`start_dragging`). False if the button is up
   /// already: the request comes over IPC after the press.
   ///
@@ -235,18 +235,18 @@ impl AppWindow {
 }
 
 thread_local! {
-  /// GitNex patch: a window made movable for a drag that outlasted
+  /// GitNexia patch: a window made movable for a drag that outlasted
   /// `performWindowDragWithEvent:`, to make immovable again before the next press reaches it.
   static MOVABLE_UNTIL_NEXT_PRESS: std::cell::RefCell<Option<Retained<NSWindow>>> =
     const { std::cell::RefCell::new(None) };
 }
 
-/// GitNex patch: whether the left button is down in `NSEvent.pressedMouseButtons`' mask.
+/// GitNexia patch: whether the left button is down in `NSEvent.pressedMouseButtons`' mask.
 pub(crate) fn left_button_held(pressed: usize) -> bool {
   pressed & 1 != 0
 }
 
-/// GitNex patch: whether an event of this type is a mouse button press.
+/// GitNexia patch: whether an event of this type is a mouse button press.
 pub(crate) fn is_press(kind: NSEventType) -> bool {
   matches!(
     kind,
@@ -254,7 +254,7 @@ pub(crate) fn is_press(kind: NSEventType) -> bool {
   )
 }
 
-/// GitNex patch: called by the application's `sendEvent:` before AppKit dispatches `event`. A
+/// GitNexia patch: called by the application's `sendEvent:` before AppKit dispatches `event`. A
 /// press makes the window a drag left movable ([`AppWindow::begin_window_drag`]) immovable
 /// again, before the window can take the press as the start of a drag of its own.
 pub(crate) fn before_send_event(event: &NSEvent) {
@@ -266,7 +266,7 @@ pub(crate) fn before_send_event(event: &NSEvent) {
   }
 }
 
-/// GitNex patch: a left-button press at the pointer in `nswindow`, for
+/// GitNexia patch: a left-button press at the pointer in `nswindow`, for
 /// `performWindowDragWithEvent:`.
 fn press_at_pointer(nswindow: &NSWindow) -> Option<Retained<NSEvent>> {
   NSEvent::mouseEventWithType_location_modifierFlags_timestamp_windowNumber_context_eventNumber_clickCount_pressure(
@@ -309,7 +309,7 @@ fn inset_traffic_lights(nswindow: &NSWindow, x: f64, y: f64) {
   for (index, button) in [close, miniaturize, zoom].into_iter().enumerate() {
     let mut origin = button.frame().origin;
     origin.x = x + (index as f64 * space_between);
-    // GITNEX: centred in the title bar, whose height `y` sets, rather than left where AppKit put
+    // GITNEXIA: centred in the title bar, whose height `y` sets, rather than left where AppKit put
     // them, which changed between releases (macOS 26 puts them ~4 px higher than macOS 15).
     origin.y = (title_bar_frame_height - button.frame().size.height) / 2.0;
     button.setFrameOrigin(origin);

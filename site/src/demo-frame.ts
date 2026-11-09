@@ -32,7 +32,7 @@ export interface HeroDemo { readonly state: DemoState; readonly frame: HTMLIFram
 export function demoReport(e: MessageEvent, frame: HTMLIFrameElement | null, origin: string): { type: 'ready' } | { type: 'failed'; message: string } | null {
   if (!frame || e.source !== frame.contentWindow || e.origin !== origin) return null;
   const d = e.data as { source?: unknown; type?: unknown; message?: unknown } | null;
-  if (typeof d !== 'object' || d === null || d.source !== 'gitnex-demo') return null;
+  if (typeof d !== 'object' || d === null || d.source !== 'gitnexia-demo') return null;
   if (d.type === 'ready') return { type: 'ready' };
   if (d.type === 'failed') return { type: 'failed', message: typeof d.message === 'string' ? d.message : '' };
   return null;
@@ -82,7 +82,7 @@ export function initHeroDemo(root: HTMLElement, options: Partial<HeroDemoOptions
     frame?.remove();
     frame = root.ownerDocument.createElement('iframe');
     frame.className = 'demo-live';
-    frame.title = 'GitNex live demo';
+    frame.title = 'GitNexia live demo';
     frame.src = src;
     stage.append(frame);
     show('loading');

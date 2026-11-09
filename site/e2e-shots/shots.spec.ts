@@ -1,5 +1,5 @@
 // The site's screenshots (`just site-shots`; spec §2 decision 6, §6.2): each scene on the demo
-// build at device scale 2, into GITNEX_SITE_SHOTS_RAW as <id>@<2x width>.png, which
+// build at device scale 2, into GITNEXIA_SITE_SHOTS_RAW as <id>@<2x width>.png, which
 // scripts/site-shots.py turns into site/shots/<id>.webp and <id>-1x.webp. On demand only.
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -7,7 +7,7 @@ import { expect, test, type Browser, type Locator, type Page } from '@playwright
 import { pendingMethods } from '../build/pending.ts';
 import { SHOTS, type ShotId } from '../build/shots.ts';
 
-const out = process.env.GITNEX_SITE_SHOTS_RAW;
+const out = process.env.GITNEXIA_SITE_SHOTS_RAW;
 test.skip(!out, 'the site screenshots run through `just site-shots`');
 
 const pending = pendingMethods(readFileSync(new URL('../../ui/src/demo/coverage.ts', import.meta.url), 'utf8'));
@@ -572,7 +572,7 @@ const SCENES: Scene[] = [
     pointer: true,
   },
   // The stack playground's three branches after "Create stack MRs…": the top MR docked beside the
-  // graph, scrolled to its merge box and the Stack table GitNex keeps in each description, the
+  // graph, scrolled to its merge box and the Stack table GitNexia keeps in each description, the
   // branches' MR icons beside it. Left to the graph's lanes.
   {
     id: 'stack',

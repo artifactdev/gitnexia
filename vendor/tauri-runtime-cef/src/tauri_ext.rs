@@ -206,7 +206,7 @@ pub trait WebviewCefExt {
   /// immediately before the closure runs and is not refreshed afterwards.
   fn with_cef_webview<F: FnOnce(&crate::Webview) + Send + 'static>(&self, f: F) -> Result<()>;
 
-  /// GitNex patch: asks the window manager for `request` about the webview's window, for an
+  /// GitNexia patch: asks the window manager for `request` about the webview's window, for an
   /// app that draws its own title bar; whether it was asked (see
   /// [`CefWebviewDispatcher::window_manager_request`]).
   fn window_manager_request(&self, request: crate::WindowManagerRequest) -> Result<bool>;

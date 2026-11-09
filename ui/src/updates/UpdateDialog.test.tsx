@@ -24,13 +24,13 @@ const { useAppInfo } = await import('../app/appInfo');
 const { useAppState, DEFAULT_SETTINGS } = await import('../app/state');
 const { useWorkingCopy } = await import('../diff/workingCopy');
 
-const release: UpdateRelease = { version: '0.3.0', name: 'GitNex 0.3.0', notes: [{ version: '0.3.0', publishedAt: null, notes: '## Added\n\n- **Updates** from GitHub' }], url: 'https://github.example/artifactdev/gitnex/releases/tag/v0.3.0', prerelease: false, publishedAt: null, asset: { name: 'GitNex_0.3.0_amd64.deb', size: 98 * 1024 * 1024 } };
+const release: UpdateRelease = { version: '0.3.0', name: 'GitNexia 0.3.0', notes: [{ version: '0.3.0', publishedAt: null, notes: '## Added\n\n- **Updates** from GitHub' }], url: 'https://github.example/artifactdev/gitnexia/releases/tag/v0.3.0', prerelease: false, publishedAt: null, asset: { name: 'GitNexia_0.3.0_amd64.deb', size: 98 * 1024 * 1024 } };
 
 function open(kind: InstallKind, state: UpdateState) {
   useAppInfo.setState({ info: { appVersion: '0.2.0', build: null, gitVersion: '2.47.1', installKind: kind, home: null } });
   render(<UpdateDialog />);
   act(() => { useUpdates.getState().setState(state); useUpdates.getState().openDialog(); });
-  return screen.getByRole('dialog', { name: 'Update to GitNex 0.3.0' });
+  return screen.getByRole('dialog', { name: 'Update to GitNexia 0.3.0' });
 }
 const button = (name: string | RegExp) => screen.getByRole('button', { name });
 
@@ -45,8 +45,8 @@ describe('UpdateDialog', () => {
     const d = open('deb', { state: 'ready', release });
     expect(await screen.findByRole('heading', { name: 'Added' })).toBeInTheDocument();
     expect(d.querySelector('.update-notes strong')).toHaveTextContent('Updates');
-    expect(d).toHaveTextContent('GitNex_0.3.0_amd64.deb · 98.0 MB');
-    expect(d).toHaveTextContent('You have GitNex 0.2.0.');
+    expect(d).toHaveTextContent('GitNexia_0.3.0_amd64.deb · 98.0 MB');
+    expect(d).toHaveTextContent('You have GitNexia 0.2.0.');
     fireEvent.click(button('View on GitHub'));
     expect(api.openUrl).toHaveBeenCalledWith(release.url);
     fireEvent.keyDown(d, { key: 'Escape' });
@@ -56,41 +56,41 @@ describe('UpdateDialog', () => {
   it('deb: Install; a cancelled password prompt shows the command with Copy; installed offers Restart', async () => {
     open('deb', { state: 'ready', release });
     expect(screen.getByText(/installs the package with apt/)).toBeInTheDocument();
-    api.updateInstall.mockResolvedValueOnce({ outcome: 'manual', command: 'sudo apt install /c/GitNex_0.3.0_amd64.deb', reason: 'GitNex couldn\'t get permission to install it.', output: null });
+    api.updateInstall.mockResolvedValueOnce({ outcome: 'manual', command: 'sudo apt install /c/GitNexia_0.3.0_amd64.deb', reason: 'GitNexia couldn\'t get permission to install it.', output: null });
     await act(async () => { fireEvent.click(button('Install 0.3.0')); });
-    expect(screen.getByRole('alert')).toHaveTextContent(/^GitNex couldn't get permission to install it\.$/);
+    expect(screen.getByRole('alert')).toHaveTextContent(/^GitNexia couldn't get permission to install it\.$/);
     expect(screen.queryByLabelText('Package manager output')).toBeNull();
     expect(screen.getByText('Run this in a terminal instead:')).toBeInTheDocument();
-    expect(screen.getByText('sudo apt install /c/GitNex_0.3.0_amd64.deb')).toBeInTheDocument();
-    fireEvent.click(button('Copy sudo apt install /c/GitNex_0.3.0_amd64.deb'));
-    expect(copyText).toHaveBeenCalledWith('sudo apt install /c/GitNex_0.3.0_amd64.deb');
+    expect(screen.getByText('sudo apt install /c/GitNexia_0.3.0_amd64.deb')).toBeInTheDocument();
+    fireEvent.click(button('Copy sudo apt install /c/GitNexia_0.3.0_amd64.deb'));
+    expect(copyText).toHaveBeenCalledWith('sudo apt install /c/GitNexia_0.3.0_amd64.deb');
     // A failed apt: its output apart from the reason, then the command.
-    api.updateInstall.mockResolvedValueOnce({ outcome: 'manual', command: 'sudo apt install /c/GitNex_0.3.0_amd64.deb', reason: 'The install failed (exit 100).', output: 'E: Sub-process /usr/bin/dpkg returned an error code (1)' });
+    api.updateInstall.mockResolvedValueOnce({ outcome: 'manual', command: 'sudo apt install /c/GitNexia_0.3.0_amd64.deb', reason: 'The install failed (exit 100).', output: 'E: Sub-process /usr/bin/dpkg returned an error code (1)' });
     await act(async () => { fireEvent.click(button('Install 0.3.0')); });
     expect(screen.getByRole('alert')).toHaveTextContent(/^The install failed \(exit 100\)\.$/);
     expect(screen.getByLabelText('Package manager output')).toHaveTextContent('E: Sub-process /usr/bin/dpkg returned an error code (1)');
     act(() => useUpdates.getState().setState({ state: 'installed', release }));
-    // A setting not saved yet is saved before GitNex goes.
+    // A setting not saved yet is saved before GitNexia goes.
     act(() => useAppState.getState().setSettings({ gravatar: false }));
-    await act(async () => { fireEvent.click(button('Restart GitNex')); });
+    await act(async () => { fireEvent.click(button('Restart GitNexia')); });
     expect(api.updateRestart).toHaveBeenCalledTimes(1);
     expect(api.saveSettings).toHaveBeenCalledWith(expect.objectContaining({ gravatar: false }));
     expect(api.saveSettings.mock.invocationCallOrder[0]).toBeLessThan(api.updateRestart.mock.invocationCallOrder[0]);
     // Unsaved edits ask first: Cancel doesn't restart, Discard edits does.
     useWorkingCopy.setState({ copies: { t: { key: 'k', path: 'a.txt', worktree: '/r', repo: 1, base: 'h0', dirty: true, view: 'diff' } } });
     choose.mockResolvedValueOnce(null);
-    await act(async () => { fireEvent.click(button('Restart GitNex')); });
+    await act(async () => { fireEvent.click(button('Restart GitNexia')); });
     expect(choose).toHaveBeenCalledWith(expect.objectContaining({ title: 'Discard unsaved changes?' }));
     expect(api.updateRestart).toHaveBeenCalledTimes(1);
     choose.mockResolvedValueOnce('discard');
-    await act(async () => { fireEvent.click(button('Restart GitNex')); });
+    await act(async () => { fireEvent.click(button('Restart GitNexia')); });
     expect(api.updateRestart).toHaveBeenCalledTimes(2);
     useWorkingCopy.setState({ copies: {} });
   });
 
   it('arch: asks how, remembers the answer; pacman installs, an AUR helper shows its commands', () => {
-    open('arch', { state: 'ready', release: { ...release, asset: { name: 'GitNex-0.3.0-1-x86_64.pkg.tar.zst', size: 1000 } } });
-    expect(screen.getByText(/How did you install GitNex\?/)).toBeInTheDocument();
+    open('arch', { state: 'ready', release: { ...release, asset: { name: 'GitNexia-0.3.0-1-x86_64.pkg.tar.zst', size: 1000 } } });
+    expect(screen.getByText(/How did you install GitNexia\?/)).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Install 0.3.0' })).toBeNull();
     fireEvent.click(button('Install with pacman'));
     expect(useAppState.getState().settings.updateArchMethod).toBe('pacman');
@@ -100,14 +100,14 @@ describe('UpdateDialog', () => {
     expect(api.updateInstall).toHaveBeenCalled();
     fireEvent.click(button('I use an AUR helper'));
     expect(useAppState.getState().settings.updateArchMethod).toBe('aur');
-    expect(screen.getByText(/If you installed GitNex from the AUR/)).toBeInTheDocument();
-    expect(screen.getByText('yay -S gitnex-bin')).toBeInTheDocument();
-    expect(screen.getByText('paru -S gitnex-bin')).toBeInTheDocument();
+    expect(screen.getByText(/If you installed GitNexia from the AUR/)).toBeInTheDocument();
+    expect(screen.getByText('yay -S gitnexia-bin')).toBeInTheDocument();
+    expect(screen.getByText('paru -S gitnexia-bin')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Install 0.3.0' })).toBeNull();
   });
 
-  it.each([['nsis', /installer opens, and GitNex closes/], ['msi', /Windows Installer opens/]] as const)('%s: Install starts the installer and says GitNex closes', (kind, note) => {
-    open(kind, { state: 'ready', release: { ...release, asset: { name: kind === 'msi' ? 'GitNex_0.3.0_x64.msi' : 'GitNex_0.3.0_x64-setup.exe', size: 1000 } } });
+  it.each([['nsis', /installer opens, and GitNexia closes/], ['msi', /Windows Installer opens/]] as const)('%s: Install starts the installer and says GitNexia closes', (kind, note) => {
+    open(kind, { state: 'ready', release: { ...release, asset: { name: kind === 'msi' ? 'GitNexia_0.3.0_x64.msi' : 'GitNexia_0.3.0_x64-setup.exe', size: 1000 } } });
     expect(screen.getByText(note)).toBeInTheDocument();
     fireEvent.click(button('Install 0.3.0'));
     expect(api.updateInstall).toHaveBeenCalled();
@@ -130,7 +130,7 @@ describe('UpdateDialog', () => {
     expect(screen.getByText('25%')).toBeInTheDocument();
     fireEvent.click(button('Cancel'));
     expect(api.updateCancel).toHaveBeenCalled();
-    act(() => useUpdates.getState().setState({ state: 'failed', message: "SHA256SUMS doesn't list GitNex_0.3.0_amd64.deb, so GitNex deleted the download and won't install it.", release }));
+    act(() => useUpdates.getState().setState({ state: 'failed', message: "SHA256SUMS doesn't list GitNexia_0.3.0_amd64.deb, so GitNexia deleted the download and won't install it.", release }));
     expect(screen.getByText(/SHA256SUMS doesn't list/)).toBeInTheDocument();
     fireEvent.click(button('Download again'));
     expect(api.updateDownload).toHaveBeenCalledTimes(2);

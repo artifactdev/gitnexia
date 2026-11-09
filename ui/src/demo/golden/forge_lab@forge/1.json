@@ -7,6 +7,7 @@
     {
       "account": {
         "addedAt": "<untimed>",
+        "baseUrl": null,
         "host": "gitlab.example.com",
         "id": "gitlab.example.com",
         "kind": "gitlab",

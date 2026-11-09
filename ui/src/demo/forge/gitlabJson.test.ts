@@ -9,7 +9,7 @@ const author = { id: 7, username: 'ada', name: 'Ada' };
 const mrJson = (extra: Json = {}): Json => ({ iid: 12, title: 'Dev work', state: 'opened', author, source_branch: 'dev', target_branch: 'main', web_url: 'https://gitlab.example.com/g/p/-/merge_requests/12', ...extra });
 const P = 'group/project';
 
-// Ports of the tests in crates/gitnex-forge/src/gitlab.rs (the `json` module's).
+// Ports of the tests in crates/gitnexia-forge/src/gitlab.rs (the `json` module's).
 describe('gitlab::json', () => {
   it('normalizes a user preferring the public email', () => {
     expect(j.user({ id: 7, username: 'ada', name: '', avatar_url: 'https://g/a.png', web_url: 'https://g/ada', public_email: '', email: 'ada@corp.example' })).toEqual({
@@ -52,13 +52,13 @@ describe('gitlab::json', () => {
     expect([m.title, m.state, m.conflicts, m.updatedAt, m.labels]).toEqual(['Explore', 'draft', true, 1_791_115_200, ['a']]);
   });
 
-  it("an MR whose description has GitNex's stack table is stacked", () => {
+  it("an MR whose description has GitNexia's stack table is stacked", () => {
     const v = (description: unknown) => mrJson({ iid: 5, title: 't', description });
-    expect(j.mr(v('Intro\n\n<!-- gitnex-stack:start -->\n| table |\n<!-- gitnex-stack:end -->'), P, P)!.stacked).toBe(true);
+    expect(j.mr(v('Intro\n\n<!-- gitnexia-stack:start -->\n| table |\n<!-- gitnexia-stack:end -->'), P, P)!.stacked).toBe(true);
     expect(j.mr(v('Plain text'), P, P)!.stacked).toBe(false);
     expect(j.mr(v(null), P, P)!.stacked).toBe(false);
-    expect(j.mr(v('<!-- gitnex-stack:start --> quoted, never closed'), P, P)!.stacked).toBe(false);
-    expect(j.createdMr(v('<!-- gitnex-stack:start -->\nT\n<!-- gitnex-stack:end -->'), P, P)!.stacked).toBe(true);
+    expect(j.mr(v('<!-- gitnexia-stack:start --> quoted, never closed'), P, P)!.stacked).toBe(false);
+    expect(j.createdMr(v('<!-- gitnexia-stack:start -->\nT\n<!-- gitnexia-stack:end -->'), P, P)!.stacked).toBe(true);
   });
 
   it('pipelines, merge statuses and approvals', () => {

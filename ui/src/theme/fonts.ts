@@ -4,7 +4,7 @@ import { DEFAULT_FONT_SETTINGS, fontVars, useUiFont, type FontSettings } from '.
 
 /** The UI font family setting's first-paint mirror, as the theme's (bind.ts): the app's chrome
  * shows before the settings load. `AppSettings.uiFontFamily` stays the source of truth. */
-export const UI_FONT_STORAGE_KEY = 'gitnex.uiFont.v1';
+export const UI_FONT_STORAGE_KEY = 'gitnexia.uiFont.v1';
 
 const readMirror = (): string => {
   try {

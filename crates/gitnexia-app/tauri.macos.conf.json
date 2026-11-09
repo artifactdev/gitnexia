@@ -1,0 +1,15 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "mainBinaryName": "GitNexia",
+  "bundle": {
+    "targets": ["app"],
+    "resources": {
+      "dictionaries/en-US-10-2.bdic": "dictionaries/en-US-10-2.bdic"
+    },
+    "macOS": {
+      "minimumSystemVersion": "12.0",
+      "signingIdentity": "-",
+      "infoPlist": "packaging/macos/Info.plist"
+    }
+  }
+}

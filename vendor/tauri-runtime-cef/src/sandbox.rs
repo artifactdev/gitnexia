@@ -30,7 +30,7 @@
 //! owned by root, setuid, executable by others — because Chromium treats a helper that
 //! fails them as a fatal error rather than falling back to another sandbox.
 //!
-//! GitNex patch: AppArmor's restriction also breaks installs that *do* have the helper.
+//! GitNexia patch: AppArmor's restriction also breaks installs that *do* have the helper.
 //! Chromium probes for the namespace sandbox by cloning into a new user namespace and
 //! `PCHECK`s the errno when that fails, accepting only the ones it expects, which `EACCES`
 //! is not. Where Ubuntu's `unprivileged_userns` AppArmor profile is
@@ -57,7 +57,7 @@
 //! Chromium's own toolchain, so CEF ships prebuilt `bootstrap.exe` / `bootstrapc.exe`
 //! hosts that load the application as a DLL exporting `RunWinMain` or `RunConsoleMain`
 //! (named like the renamed host: `app.exe` loads `app.dll`) and hand it the pointer.
-//! GitNex patch: such an entry point passes it to [`set_windows_sandbox_info`] before
+//! GitNexia patch: such an entry point passes it to [`set_windows_sandbox_info`] before
 //! anything else, and the runtime hands it to every `CefExecuteProcess` and
 //! `CefInitialize` call, so the renderer, GPU and utility processes run sandboxed.
 //!
@@ -84,13 +84,13 @@ pub(crate) fn windows_sandbox_unavailable() -> bool {
   cfg!(windows) && windows_sandbox_info().is_null()
 }
 
-/// GitNex patch: the sandbox broker `bootstrap.exe` passed to the application DLL's
+/// GitNexia patch: the sandbox broker `bootstrap.exe` passed to the application DLL's
 /// `RunWinMain`/`RunConsoleMain`, or null.
 #[cfg(windows)]
 static WINDOWS_SANDBOX_INFO: std::sync::atomic::AtomicPtr<u8> =
   std::sync::atomic::AtomicPtr::new(std::ptr::null_mut());
 
-/// GitNex patch: hands the runtime the sandbox broker CEF's `bootstrap.exe` gave the
+/// GitNexia patch: hands the runtime the sandbox broker CEF's `bootstrap.exe` gave the
 /// application DLL's entry point, so every `CefExecuteProcess` and `CefInitialize` gets it
 /// and the processes run sandboxed. Call it first in `RunWinMain`/`RunConsoleMain`, before
 /// the CEF entry point runs.
@@ -154,7 +154,7 @@ impl SandboxDisableReason {
 pub(crate) enum SandboxDecision {
   /// Leave the sandbox alone.
   Keep,
-  /// GitNex patch: keep the sandbox, but append `--disable-namespace-sandbox` so Chromium
+  /// GitNexia patch: keep the sandbox, but append `--disable-namespace-sandbox` so Chromium
   /// goes straight to the setuid helper without probing user namespaces, a probe that
   /// aborts the browser when AppArmor denies them outright (see the module docs).
   KeepSetuidOnly,
@@ -201,7 +201,7 @@ pub(crate) fn sandbox_decision(
     };
   }
 
-  // GitNex patch: the namespace sandbox cannot work under the AppArmor restriction, and
+  // GitNexia patch: the namespace sandbox cannot work under the AppArmor restriction, and
   // probing for it can abort the browser, so a usable helper is taken directly. Inside an
   // AppImage the helper Chromium finds is the inert one next to the executable, so the
   // AppImage cases below stay as they were.
@@ -322,7 +322,7 @@ fn running_from_appimage() -> bool {
 
 /// Whether Chromium can find *and use* the setuid `chrome-sandbox` helper.
 ///
-/// GitNex patch: asks about the helper Chromium itself picks
+/// GitNexia patch: asks about the helper Chromium itself picks
 /// ([`chromium_helper_candidate`]), so a `CHROME_DEVEL_SANDBOX` exported by the user's
 /// shell can't hide a good helper next to a packaged executable, or stand in for a bad one.
 ///
@@ -380,7 +380,7 @@ enum HelperCandidate {
   Devel(std::path::PathBuf),
 }
 
-/// GitNex patch: the helper path Chromium's `SetuidSandboxHost::GetSandboxBinaryPath`
+/// GitNexia patch: the helper path Chromium's `SetuidSandboxHost::GetSandboxBinaryPath`
 /// settles on. A `chrome-sandbox` that exists next to the executable always wins, usable
 /// or not. Only when there is none is `CHROME_DEVEL_SANDBOX` read, and only when the
 /// executable belongs to the user running it (a "user-managed build"), so a root-owned

@@ -5,7 +5,7 @@ import { EDITOR_SETTINGS_STORAGE_KEY, installEditorSettingsMigration, migrateSti
 
 vi.mock('../api/client', () => ({ api: { saveSettings: vi.fn(async () => null), saveProfile: vi.fn(async () => null) }, errorMessage: String }));
 
-const KEY = 'gitnex.editorSettings.v1';
+const KEY = 'gitnexia.editorSettings.v1';
 
 beforeEach(() => {
   localStorage.clear();

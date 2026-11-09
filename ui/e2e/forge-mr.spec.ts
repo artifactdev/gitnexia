@@ -460,8 +460,8 @@ test.describe('merge requests (spec #4 §7, 4B)', () => {
     });
 
     await test.step('Edit shows the form first: title, description, then reviewers, assignees and labels; the rest steps aside; Esc leaves it', async () => {
-      // GITNEX_SHOT=<prefix> (a manual run): a screenshot of Edit in a narrow and a wide dock.
-      const shot = async (size: 'narrow' | 'wide') => { if (process.env.GITNEX_SHOT) await page.screenshot({ path: `${process.env.GITNEX_SHOT}-${size}.png` }); };
+      // GITNEXIA_SHOT=<prefix> (a manual run): a screenshot of Edit in a narrow and a wide dock.
+      const shot = async (size: 'narrow' | 'wide') => { if (process.env.GITNEXIA_SHOT) await page.screenshot({ path: `${process.env.GITNEXIA_SHOT}-${size}.png` }); };
       await view.getByRole('button', { name: 'Dock beside the graph' }).click();
       const edit = view.getByRole('button', { name: 'Edit', exact: true });
       await drag(-400);
@@ -528,12 +528,12 @@ test.describe('merge requests (spec #4 §7, 4B)', () => {
       await expect(page.getByTestId('compare-header')).toContainText(head.slice(0, 6));
       const work = graph.getByRole('row').filter({ hasText: 'Work on a deleted branch' });
       await expect(work).toHaveCount(1);
-      expect(git(repo, 'for-each-ref', '--format=%(refname)', 'refs/gitnex')).toBe('refs/gitnex/compare/origin/mr/12');
+      expect(git(repo, 'for-each-ref', '--format=%(refname)', 'refs/gitnexia')).toBe('refs/gitnexia/compare/origin/mr/12');
       await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
       await page.keyboard.press('Escape');
       await expect(page.getByTestId('compare-header')).toBeHidden();
       await expect(work).toHaveCount(0);
-      expect(git(repo, 'for-each-ref', 'refs/gitnex')).toBe('');
+      expect(git(repo, 'for-each-ref', 'refs/gitnexia')).toBe('');
     });
   });
 });

@@ -17,7 +17,7 @@ export type AppEvent = { "type": "repoChanged", repo: number, kinds: Array<Chang
  */
 label: string, 
 /**
- * User-started (`true`) or GitNex-started (`false`, the background fetch). The UI
+ * User-started (`true`) or GitNexia-started (`false`, the background fetch). The UI
  * shows a background op nowhere but its activity log (K30).
  */
 interactive: boolean, } | { "type": "opProgress", op: number, phase: string, percent: number | null, 

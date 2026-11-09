@@ -56,24 +56,24 @@ function ReadingWidthControl() {
 }
 
 /** The platform of the app's window, which can draw its own title bar; none in a browser. */
-const WINDOW_PLATFORM = typeof window === 'undefined' ? undefined : window.__GITNEX_WINDOW__?.platform;
+const WINDOW_PLATFORM = typeof window === 'undefined' ? undefined : window.__GITNEXIA_WINDOW__?.platform;
 
-const RESTART_NOTE = 'Takes effect when GitNex restarts.';
+const RESTART_NOTE = 'Takes effect when GitNexia restarts.';
 const TITLE_BAR_DESCRIPTIONS: Record<'linux' | 'windows' | 'macos', string> = {
   linux: [
-    '• Separate: GitNex\'s title bar, above the tabs.',
+    '• Separate: GitNexia\'s title bar, above the tabs.',
     '• Combined: the tabs in the title bar, with ☰ and the window buttons.',
     '• System: the desktop\'s own title bar and frame, ☰ in the tab bar.',
     RESTART_NOTE,
   ].join('\n'),
   windows: [
-    '• Separate: GitNex\'s title bar, above the tabs.',
+    '• Separate: GitNexia\'s title bar, above the tabs.',
     '• Combined: the tabs in the title bar, with ☰ and the window buttons.',
     '• System: Windows\' own title bar and frame, ☰ in the tab bar.',
     RESTART_NOTE,
   ].join('\n'),
   macos: [
-    '• Separate: GitNex\'s title bar with the traffic lights, above the tabs.',
+    '• Separate: GitNexia\'s title bar with the traffic lights, above the tabs.',
     '• Combined: the tabs in the title bar, after the traffic lights and ☰.',
     '• System: macOS\'s standard title bar, ☰ in the tab bar.',
     RESTART_NOTE,
@@ -84,7 +84,7 @@ export type TitleBarChoice = 'separate' | 'combined' | 'system';
 const TITLE_BAR_CHOICES: readonly (readonly [TitleBarChoice, string])[] = [['separate', 'Separate'], ['combined', 'Combined'], ['system', 'System']];
 
 /** The choice the two stored switches make: the system title bar wins over compact mode
- * (Combined), which needs GitNex's own. */
+ * (Combined), which needs GitNexia's own. */
 export function titleBarChoice(s: { systemTitleBar: boolean; compactTitleBar: boolean }): TitleBarChoice {
   return s.systemTitleBar ? 'system' : s.compactTitleBar ? 'combined' : 'separate';
 }
@@ -106,7 +106,7 @@ const restart = async () => {
   }
 };
 
-/** Separate, Combined or System, and under it Restart GitNex once the choice isn't what the
+/** Separate, Combined or System, and under it Restart GitNexia once the choice isn't what the
  * window was built with. That line keeps its space while hidden, so nothing moves. In an X11
  * session it's System, fixed, and the same line says why. */
 function TitleBarControl({ ctx }: { ctx: SettingsCtx }) {
@@ -124,7 +124,7 @@ function TitleBarControl({ ctx }: { ctx: SettingsCtx }) {
         {systemOnly ? <span className="setting-hint">An X11 session always has the desktop's title bar.</span> : (
           <>
             <span className="setting-hint">Takes effect after a restart.</span>
-            <button type="button" className="primary" onClick={() => void restart()}>Restart GitNex</button>
+            <button type="button" className="primary" onClick={() => void restart()}>Restart GitNexia</button>
           </>
         )}
       </div>
@@ -132,12 +132,12 @@ function TitleBarControl({ ctx }: { ctx: SettingsCtx }) {
   );
 }
 
-/** "Title bar": where GitNex can draw its own (the app's window, on Linux, Windows and macOS),
+/** "Title bar": where GitNexia can draw its own (the app's window, on Linux, Windows and macOS),
  * over the two stored switches. In an X11 session there's nothing to change, so nothing to reset. */
 export function titleBarSetting(platform: 'linux' | 'windows' | 'macos'): SettingDef {
   return {
     id: 'titleBar', label: 'Title bar', page: 'appearance', group: 'Window', labelFor: 'group',
-    keywords: 'title bar titlebar separate combined compact system gitnex tabs space height row browser window frame decorations buttons minimize maximize close native gnome desktop windows macos traffic lights restart',
+    keywords: 'title bar titlebar separate combined compact system gitnexia tabs space height row browser window frame decorations buttons minimize maximize close native gnome desktop windows macos traffic lights restart',
     description: TITLE_BAR_DESCRIPTIONS[platform],
     Control: TitleBarControl,
     binding: () => useWindowChrome.getState().info?.systemOnly ? null : {

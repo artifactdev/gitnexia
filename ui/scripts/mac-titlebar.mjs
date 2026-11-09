@@ -1,5 +1,5 @@
-// GitNex's own title bar on macOS, checked on a running app with real input: the page over the
-// DevTools protocol (`GITNEX_DEV_CDP_PORT`, debug builds) for what it draws, and `mac-window`
+// GitNexia's own title bar on macOS, checked on a running app with real input: the page over the
+// DevTools protocol (`GITNEXIA_DEV_CDP_PORT`, debug builds) for what it draws, and `mac-window`
 // (built from mac-window.swift) for the window server's view of the window, the menu bar, and
 // mouse and key events posted to the system. Each step leaves a screenshot of the whole screen in
 // <out dir>. With `none` for the port (a release build, which refuses CDP), only what the window
@@ -89,8 +89,8 @@ await step('layout', async (note) => {
     if (!near(lights.close.y + lights.close.h / 2 - f.y, 15, 1)) throw new Error('the traffic lights are not centred in the bar');
     return;
   }
-  const info = await page.evaluate(() => window.__GITNEX_WINDOW__);
-  note(`__GITNEX_WINDOW__ ${JSON.stringify(info)}`);
+  const info = await page.evaluate(() => window.__GITNEXIA_WINDOW__);
+  note(`__GITNEXIA_WINDOW__ ${JSON.stringify(info)}`);
   if (info?.frame !== 'custom' || info?.platform !== 'macos') throw new Error('not the custom macOS title bar');
   await bar.waitFor({ timeout: 30_000 });
   const order = await bar.evaluate((el) => [...el.children].map((c) => c.getAttribute('aria-label') ?? c.className));

@@ -8,17 +8,17 @@
 #   fast     local builds: zstd 3 for both, a few seconds each, and about 20% larger packages
 #            (151 MiB, not 124-157). A zstd .deb needs dpkg 1.21.18 or later (Debian 12,
 #            Ubuntu 22.04) to install
-# GITNEX_PACKAGE_COMPRESSION=release|fast picks one; unset, a release build
-# (GITNEX_RELEASE_VERSION set) is `release` and every other build `fast`.
+# GITNEXIA_PACKAGE_COMPRESSION=release|fast picks one; unset, a release build
+# (GITNEXIA_RELEASE_VERSION set) is `release` and every other build `fast`.
 set -euo pipefail
 fail() { echo "package-compression: $*" >&2; exit 1; }
-mode=${GITNEX_PACKAGE_COMPRESSION:-}
-[ -n "$mode" ] || { [ -n "${GITNEX_RELEASE_VERSION:-}" ] && mode=release || mode=fast; }
+mode=${GITNEXIA_PACKAGE_COMPRESSION:-}
+[ -n "$mode" ] || { [ -n "${GITNEXIA_RELEASE_VERSION:-}" ] && mode=release || mode=fast; }
 case "$mode:${1:-}" in
   release:deb) echo '{"type":"gzip","level":6}' ;;
   release:zstd) echo 19 ;;
   fast:deb) echo '{"type":"zstd","level":3}' ;;
   fast:zstd) echo 3 ;;
   release:* | fast:*) fail "usage: package-compression.sh deb|zstd" ;;
-  *) fail "GITNEX_PACKAGE_COMPRESSION is '$mode', not release or fast" ;;
+  *) fail "GITNEXIA_PACKAGE_COMPRESSION is '$mode', not release or fast" ;;
 esac

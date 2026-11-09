@@ -14,7 +14,7 @@ const FEATURE = { width: 720, height: 450 };
 /** The diff panel, whole. */
 const DIFF = { width: 720, height: 545 };
 export const SHOTS: Record<ShotId, Shot> = {
-  hero: { alt: 'GitNex with Orbital, a made-up repository: its commit graph, branches and tabs', width: 1240, height: 775 },
+  hero: { alt: 'GitNexia with Orbital, a made-up repository: its commit graph, branches and tabs', width: 1240, height: 775 },
   review: { alt: 'Code review: a pending comment with a suggested change, and a new range being dragged from the gutter', width: 720, height: 400 },
   worktrees: { alt: "Orbital's release worktree switched to, its WIP row above the main worktree's in the graph", ...FEATURE },
   presets: { alt: "The graph zoomed in under a preset: a collapsed branch's six hidden commits open over the graph above its dotted row, lined up on its lane; below, a dotted stub where a hidden branch forks (1 hidden), and two merged branches folded into their merge commits, each curve ending in dots (2 folded commits)", width: 720, height: 410 },

@@ -3,7 +3,7 @@ import type { ThemeRegistration } from 'shiki';
 /**
  * Bearded Theme's Arc Blueberry as a TextMate theme for Shiki/Monaco. Shiki doesn't ship it; the
  * colours are the theme's own palette and Zed port (BeardedBear/bearded-theme, GPL-3.0), used
- * here as a colour scheme (the app theme in themes.ts is GitNex's own data). The theme's base is
+ * here as a colour scheme (the app theme in themes.ts is GitNexia's own data). The theme's base is
  * #111422 with #8eb0e6 as its primary, its syntax colours from the same palette.
  */
 export const beardedArcBlueberry: ThemeRegistration = {

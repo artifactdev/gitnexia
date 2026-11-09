@@ -19,7 +19,7 @@ describe('settingEntries', () => {
     useRuntime.setState({ tabs: {} });
     const entries = settingEntries();
     const prune = entries.find((e) => e.id === 'setting:prune')!;
-    expect(prune).toMatchObject({ group: 'setting', label: 'Prune deleted remote branches on fetch', detail: 'GitNex › Fetch and push › Fetch' });
+    expect(prune).toMatchObject({ group: 'setting', label: 'Prune deleted remote branches on fetch', detail: 'GitNexia › Fetch and push › Fetch' });
     // No repository shown: its settings aren't offered.
     expect(entries.some((e) => e.id === 'setting:repoEditor')).toBe(false);
     const showSpy = vi.spyOn(useSettingsUi.getState(), 'show');

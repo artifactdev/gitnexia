@@ -153,10 +153,10 @@ describe("the merge tool's kept work (spec #2 §13.3)", () => {
     expect(kept.huge).toBeUndefined();
     expect(kept.k0).toBeUndefined();
     expect(kept[`k${STORED_DRAFTS + 4}`]).toBeDefined();
-    sessionStorage.setItem('gitnex.mergeDrafts', '{"old":{}}');
+    sessionStorage.setItem('gitnexia.mergeDrafts', '{"old":{}}');
     const set = vi.spyOn(sessionStorage, 'setItem').mockImplementationOnce(() => { throw new Error('QuotaExceededError'); });
     useMergeDrafts.setState({ drafts: { [key]: draft() } });
     expect(set).toHaveBeenCalled();
-    expect(sessionStorage.getItem('gitnex.mergeDrafts')).toBeNull();
+    expect(sessionStorage.getItem('gitnexia.mergeDrafts')).toBeNull();
   });
 });

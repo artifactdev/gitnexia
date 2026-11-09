@@ -8,7 +8,7 @@
 mod cef_impl;
 mod devtools;
 mod dialog;
-/// GitNex patch: the spell-check dictionaries the application ships, copied where Chromium
+/// GitNexia patch: the spell-check dictionaries the application ships, copied where Chromium
 /// looks for them.
 mod dictionaries;
 /// The `Last Version` breadcrumb in the root cache path, and what a rollback to an older CEF
@@ -45,7 +45,7 @@ pub use frame::{FrameEvent, FrameEventHandler, FrameEventKind};
 pub use frame_navigation::{FrameNavigationState, NativeDocumentToken};
 mod window;
 mod window_builder;
-/// GitNex patch: the geometry of a Windows window with its own title bar (`platform/windows/chrome.rs`).
+/// GitNexia patch: the geometry of a Windows window with its own title bar (`platform/windows/chrome.rs`).
 mod window_frame;
 mod window_handle;
 

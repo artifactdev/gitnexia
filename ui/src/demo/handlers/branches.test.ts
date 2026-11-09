@@ -123,7 +123,7 @@ describe('deleteBranch and fastForward', () => {
       branchHandlers.deleteBranch({ repo: 1, worktree: t.dir, branch, local: true, remote, force: true, expect: NO }, ctx);
     await expect(del('main')).rejects.toMatchObject({ kind: 'InvalidInput', message: 'main is checked out' });
     await expect(del('feature')).rejects.toMatchObject({ kind: 'InvalidInput', message: 'feature is checked out in ../wt-side.', detail: { kind: 'checkedOutElsewhere', branch: 'feature', worktree: '../wt-side' } });
-    await expect(del('feature', { remote: 'origin', branch: 'feature', lease: base })).rejects.toMatchObject({ kind: 'RefMoved', message: 'origin/feature changed outside GitNex' });
+    await expect(del('feature', { remote: 'origin', branch: 'feature', lease: base })).rejects.toMatchObject({ kind: 'RefMoved', message: 'origin/feature changed outside GitNexia' });
   });
 
   it('fast-forwards a branch that is not checked out', async () => {
