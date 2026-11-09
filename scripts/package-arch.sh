@@ -9,7 +9,7 @@
 #   .PKGINFO = pacman's key = value metadata; depends mapped from the .deb's Depends through the
 #              table in scripts/arch-pkg.py (an unknown Debian name fails the build); license =
 #              MIT and the licenses of what the package bundles (arch-pkg.py licenses); provides
-#              gitnex and replaces/conflicts it, the package from before the rename
+#              gitnex and replaces/conflicts with it, the package from before the rename
 #   .MTREE   = gzip'd mtree of .PKGINFO and the payload, as makepkg's bsdtar writes it
 # Archive order: .PKGINFO, .MTREE, then the payload; GNU tar, every entry root:root with one fixed
 # mtime (the version's +YYYYMMDDHHMM build stamp, or $SOURCE_DATE_EPOCH), zstd -19 (-3 for a local
@@ -100,7 +100,7 @@ size=$(python3 "$helper" size "$work/pkg")
   echo "arch = x86_64"
   printf 'license = %s\n' "${licenses[@]}"
   printf 'provides = gitnexia\nprovides = gitnex\n'
-  printf 'conflicts = gitnexia\nconflicts = gitnex\n'
+  printf 'conflict = gitnexia\nconflict = gitnex\n'
   printf 'replaces = gitnex\n'
   printf 'depend = %s\n' "${depends[@]}"
 } > "$work/pkg/.PKGINFO"
