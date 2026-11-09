@@ -21,6 +21,7 @@ test-scripts:
     scripts/test-site-release.sh
     scripts/test-workflows.sh
     scripts/test-windows-installers.sh
+    python3 scripts/test-system-webview-beta.py
     scripts/test-name.sh
 
 # Prepares a release on main: sets the version everywhere, dates CHANGELOG.md's Unreleased

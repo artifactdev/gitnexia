@@ -64,7 +64,7 @@ export default function Licenses() {
             </li>
           ))}
         </ul>
-        {osKind() === 'windows' ? (
+        {files.some((f) => f.name === 'CEF-LICENSE.txt') && (osKind() === 'windows' ? (
           <p className="licenses-note">
             Chromium&apos;s own credits are installed with GitNexia, gzipped (extract them to open in a browser), in its install folder:
             <code>licenses\CHROMIUM-CREDITS.html.gz</code>
@@ -79,7 +79,7 @@ export default function Licenses() {
             Chromium&apos;s own credits are installed with the package, gzipped (view them with `zcat` or extract them to open in a browser):
             <code>/usr/share/doc/gitnexia/CHROMIUM-CREDITS.html.gz</code>
           </p>
-        )}
+        ))}
       </div>
       <pre className="licenses-text" tabIndex={0} aria-label={current ?? 'License text'} aria-busy={text === null}>{text ?? ''}</pre>
     </div>

@@ -4,12 +4,25 @@
 to answer one question: can the macOS build run on Tauri's own runtime and Apple's system
 WKWebView, with the UI fast enough and the bundle small enough?
 
-The separate `system-webview-beta` feature is preparation for a Windows/macOS beta, not a
-distributable release. It isolates the core's data directories and keyring namespace, disables
-the normal updater, and selects WKWebView or WebView2. Actions > **System webview beta build
-check** compiles it on both hosted platforms but does not publish binaries. Before distribution,
-the bundle identity and installers, a separate beta update channel, licenses for the actual
-dependency graph, runtime network/privacy controls and platform tests must be completed.
+The separate `system-webview-beta` feature builds experimental Windows/macOS test packages.
+Actions > **System webview beta** > **Run workflow** builds a Windows x64 setup `.exe` and
+an Apple Silicon `.dmg`. Download each platform's artifact at the bottom of the run and extract
+it; it contains the package, `SHA256SUMS` and `BETA.txt`. These are Actions artifacts (14 days),
+not GitHub Releases or website downloads.
+
+The app is **GitNexia Beta**, identifier `com.gitnexia.beta`, with separate data, webview storage
+and keyring entries. It never imports regular settings or tokens. The Windows per-user installer
+uses `%LOCALAPPDATA%\Programs\GitNexia Beta`; on macOS drag `GitNexia Beta.app` into Applications.
+Uninstalling keeps the beta's data. Updates are manual: download and install a later workflow
+artifact; the regular updater stays disabled. Windows needs WebView2 already installed. macOS
+needs 13.3 or later; newer CSS features still need compatibility/performance testing.
+
+These are unsigned Windows and ad-hoc-signed, unnotarized macOS packages: expect OS security
+warnings. They are for disposable test repositories, not production work. The app CSP stays
+enabled, but the CEF build's verified runtime network/privacy and sandbox guarantees do not
+apply; see [PRIVACY.md](../PRIVACY.md) and [SECURITY.md](../SECURITY.md). No system browser runtime
+or offline dictionary is bundled. Notices are generated for the beta's actual dependency graph.
+The packager bypasses the CEF-aware Tauri bundler entirely, so it cannot add CEF helpers.
 
 Why CEF was chosen in the first place is in
 [`cef-over-webkitgtk.md`](decisions/cef-over-webkitgtk.md). That decision is about Linux's

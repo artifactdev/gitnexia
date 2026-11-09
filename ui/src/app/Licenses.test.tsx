@@ -111,6 +111,24 @@ describe('About > Open source licenses', () => {
     expect(await screen.findByText(/This build doesn't include the license notices/)).toBeTruthy();
   });
 
+  it('does not advertise installed Chromium credits in a system-webview beta', async () => {
+    const files = { ...FILES, 'licenses/index.json': JSON.stringify({
+      files: [
+        { name: 'LICENSE.txt', size: 10 },
+        { name: 'THIRD-PARTY-NOTICES-rust.txt', size: 10 },
+        { name: 'THIRD-PARTY-NOTICES-ui.txt', size: 10 },
+      ],
+    }) };
+    vi.stubGlobal('fetch', mockFetch(files));
+    render(<About />);
+    act(() => useAbout.getState().setOpen(true));
+    fireEvent.click(screen.getByRole('button', { name: 'Open source licenses' }));
+    await screen.findByRole('list', { name: 'License files' });
+    expect(screen.queryByText(/Chromium's own credits/)).toBeNull();
+    expect(screen.queryByRole('button', { name: /Chromium Embedded Framework/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Spell-check dictionary/ })).toBeNull();
+  });
+
   it('opens on the About page again after closing', async () => {
     render(<About />);
     act(() => useAbout.getState().setOpen(true));

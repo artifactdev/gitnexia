@@ -21,6 +21,13 @@ current code; each point names where to look.
 
 ### Chromium sandbox
 
+**Experimental system-webview beta:** the guarantees below describe CEF releases, not the
+Actions test packages. Those use system WebView2/WKWebView and its platform sandbox, without
+the vendored CEF hardening or a verified `SandboxPolicy::Required` equivalent. App CSP and
+IPC capabilities remain configured, but runtime security/privacy parity is not established.
+These unsigned Windows/ad-hoc macOS packages are for disposable test repositories only.
+They install with a separate identity/profile and have no automatic update channel.
+
 - The UI runs in Chromium's multi-process sandbox. GitNexia asks the CEF runtime for
   `SandboxPolicy::Required` (`crates/gitnexia-app/src/lib.rs`): if Chromium can't sandbox its
   processes, GitNexia refuses to start instead of running unsandboxed.

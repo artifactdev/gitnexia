@@ -1,4 +1,4 @@
-name: System webview beta build check
+name: System webview beta
 
 on:
   workflow_dispatch:
@@ -15,7 +15,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, macos-15]
+        include:
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+          - os: macos-15
+            target: aarch64-apple-darwin
+    env:
+      GITNEXIA_SYSTEM_WEBVIEW_BETA: '1'
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -35,15 +41,81 @@ jobs:
       - name: Install UI dependencies
         working-directory: ui
         run: npm ci
+      - name: Install license checker
+        run: cargo install cargo-about --version 0.9.2 --locked --features cli
+      - name: Generate beta license notices and build identity
+        shell: bash
+        env:
+          TARGET: ${{ matrix.target }}
+        run: |
+          GITNEXIA_LICENSES_DIR=$(python3 -c 'from pathlib import Path; print(Path("target/system-webview-beta/licenses").resolve().as_posix())')
+          echo "GITNEXIA_LICENSES_DIR=$GITNEXIA_LICENSES_DIR" >> "$GITHUB_ENV"
+          mkdir -p "$GITNEXIA_LICENSES_DIR"
+          cargo about generate --format json --locked --fail -c about.toml \
+            --target "$TARGET" --no-default-features --features system-webview-beta \
+            -m crates/gitnexia-app/Cargo.toml -o "$GITNEXIA_LICENSES_DIR/about.json"
+          python3 scripts/notices.py rust "$GITNEXIA_LICENSES_DIR/about.json" "$GITNEXIA_LICENSES_DIR/THIRD-PARTY-NOTICES-rust.txt"
+          config=$(python3 -c 'import json; print(json.dumps(json.load(open("crates/gitnexia-app/tauri.beta.conf.json"))))')
+          echo "TAURI_CONFIG=$config" >> "$GITHUB_ENV"
+          version=$(python3 -c 'import json; print(json.load(open("crates/gitnexia-app/tauri.conf.json"))["version"])')
+          echo "GITNEXIA_BUILD_VERSION=$version+beta.$GITHUB_RUN_ID.$GITHUB_RUN_ATTEMPT" >> "$GITHUB_ENV"
       - name: Build UI
         working-directory: ui
         run: npm run build
       - name: Test beta paths
         run: cargo test --locked -p gitnexia-core --features system-webview-beta paths::tests
+      - name: Test beta packaging
+        run: python3 scripts/test-system-webview-beta.py
       - name: Build system webview binary
         run: cargo build --locked --release -p gitnexia-app --no-default-features --features system-webview-beta,tauri/custom-protocol
-      - name: Explain distribution status
+      - name: Install pinned NSIS packaging tool
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $archive = Join-Path $env:RUNNER_TEMP 'nsis-3.11.zip'
+          curl.exe -fsSL --retry 3 -o $archive 'https://downloads.sourceforge.net/project/nsis/NSIS%203/3.11/nsis-3.11.zip'
+          if ($LASTEXITCODE -ne 0) { throw 'NSIS download failed' }
+          if ((Get-FileHash $archive -Algorithm SHA256).Hash -ne 'C7D27F780DDB6CFFB4730138CD1591E841F4B7EDB155856901CDF5F214394FA1') {
+            throw 'NSIS checksum mismatch'
+          }
+          Expand-Archive $archive (Join-Path $env:RUNNER_TEMP 'beta-tools') -Force
+          (Join-Path $env:RUNNER_TEMP 'beta-tools/nsis-3.11') >> $env:GITHUB_PATH
+      - name: Package the beta
+        run: python3 scripts/package-system-webview-beta.py --build-id ${{ github.run_id }}
+      - name: Test Windows install and uninstall
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          BUILD_ID: ${{ github.run_id }}
+        run: |
+          $setup = @(Get-ChildItem "target/system-webview-beta/dist/$env:BUILD_ID/*-setup.exe")
+          if ($setup.Count -ne 1) { throw 'Expected exactly one beta installer' }
+          $install = Join-Path $env:RUNNER_TEMP 'GitNexia Beta install test'
+          $result = Start-Process $setup[0].FullName -ArgumentList "/S /D=$install" -PassThru -Wait
+          if ($result.ExitCode -ne 0) { throw "Beta installer failed: $($result.ExitCode)" }
+          foreach ($file in @('GitNexiaBeta.exe', 'BETA.txt', 'licenses/LICENSE.txt', 'licenses/THIRD-PARTY-NOTICES-rust.txt', 'licenses/THIRD-PARTY-NOTICES-ui.txt')) {
+            if (-not (Test-Path (Join-Path $install $file))) { throw "Installed beta is missing $file" }
+          }
+          if (Test-Path (Join-Path $install 'libcef.dll')) { throw 'Beta includes CEF' }
+          $result = Start-Process (Join-Path $install 'uninstall.exe') -ArgumentList '/S' -PassThru -Wait
+          if ($result.ExitCode -ne 0) { throw "Beta uninstall failed: $($result.ExitCode)" }
+          if (Test-Path (Join-Path $install 'GitNexiaBeta.exe')) { throw 'Beta binary survived uninstall' }
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: GitNexiaBeta-${{ matrix.target }}-${{ github.run_id }}
+          path: target/system-webview-beta/dist/${{ github.run_id }}/
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
+          overwrite: true
+      - name: Download and testing instructions
         shell: bash
         run: |
-          echo "Build check only: no packages or releases are published." >> "$GITHUB_STEP_SUMMARY"
-          echo "Do not distribute these binaries: isolation, privacy, licensing and beta updates are not complete." >> "$GITHUB_STEP_SUMMARY"
+          {
+            echo "## Download the experimental beta"
+            echo "Download this platform's artifact at the bottom of the workflow run."
+            echo "Extract it, then run the Windows setup.exe or open the macOS DMG and drag GitNexia Beta to Applications."
+            echo "Packages include SHA256SUMS and BETA.txt. Windows requires the existing WebView2 Runtime."
+            echo "Separate app/profile; no automatic updates. Unsigned/not notarized: OS security warnings are expected."
+            echo "Use disposable test repositories. System-runtime privacy and sandbox behavior is not equivalent to the audited CEF build."
+          } >> "$GITHUB_STEP_SUMMARY"

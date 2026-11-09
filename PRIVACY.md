@@ -254,6 +254,14 @@ no request for it.
 
 ### The embedded Chromium
 
+**Experimental system-webview beta:** the following CEF-specific network restrictions and
+measurements apply only to regular releases. Beta Actions packages use the system's WebView2
+or WKWebView; their runtime/OS networking, spelling and update behavior has not been audited
+to the same guarantees. The app CSP remains enabled and app-managed network requests still
+go through Rust. The beta has a separate app identifier, settings/data/cache folders and
+keyring service, imports no existing profile, and disables GitNexia's automatic updater.
+Use disposable test repositories; review the `BETA.txt` shipped with the package.
+
 The UI is GitNexia's own bundled files, served to the embedded Chromium through custom schemes; it
 needs no network. Left alone, Chromium still contacts Google services by itself. In an idle run
 of an unmodified build (two minutes, one repository open, background fetch Off, no forge

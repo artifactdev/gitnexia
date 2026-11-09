@@ -30,8 +30,10 @@ const notices = licenseNotices({
     // .txt: the app's asset protocol serves index.html for a path with no extension.
     { name: 'LICENSE.txt', path: here('../LICENSE') },
     { name: 'THIRD-PARTY-NOTICES-rust.txt', path: `${licensesDir}/THIRD-PARTY-NOTICES-rust.txt` },
-    { name: 'CEF-LICENSE.txt', path: `${licensesDir}/CEF-LICENSE.txt` },
-    { name: 'DICTIONARY-en-US-LICENSE.txt', path: here('../crates/gitnexia-app/dictionaries/en-US-LICENSE.txt') },
+    ...(process.env.GITNEXIA_SYSTEM_WEBVIEW_BETA === '1' ? [] : [
+      { name: 'CEF-LICENSE.txt', path: `${licensesDir}/CEF-LICENSE.txt` },
+      { name: 'DICTIONARY-en-US-LICENSE.txt', path: here('../crates/gitnexia-app/dictionaries/en-US-LICENSE.txt') },
+    ]),
   ],
 });
 // Shiki grammars replaced by GitNexia's own files (docs/licensing.md): Shiki's grammars that embed

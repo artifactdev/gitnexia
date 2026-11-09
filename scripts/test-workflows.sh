@@ -36,12 +36,17 @@ done
 
 beta=$wf/system-webview-beta.yml
 grep -qE '^  workflow_dispatch:$' "$beta" || fail "system-webview-beta.yml: not manually dispatched"
-grep -qF 'os: [windows-latest, macos-15]' "$beta" || fail "system-webview-beta.yml: missing beta platforms"
+grep -qF 'os: windows-latest' "$beta" && grep -qF 'os: macos-15' "$beta" ||
+  fail "system-webview-beta.yml: missing beta platforms"
 grep -qF -- '--no-default-features --features system-webview-beta,tauri/custom-protocol' "$beta" ||
   fail "system-webview-beta.yml: binary build doesn't select the system runtime without CEF"
-if grep -qE 'contents: write|gh release|actions/upload-artifact@' "$beta"; then
-  fail "system-webview-beta.yml: unfinished beta must not publish binaries"
+if grep -qE 'contents: write|gh release' "$beta"; then
+  fail "system-webview-beta.yml: beta artifacts must not modify regular releases"
 fi
+grep -q 'actions/upload-artifact@' "$beta" || fail "system-webview-beta.yml: no downloadable packages"
+grep -q 'package-system-webview-beta.py' "$beta" || fail "system-webview-beta.yml: no beta packaging"
+grep -qF -- '--no-default-features --features system-webview-beta \' "$beta" ||
+  fail "system-webview-beta.yml: notices aren't for the beta dependency graph"
 
 macos=$(sed -n '/^  macos:$/,/^  release:$/p' "$wf/release.yml")
 grep -qF "runs-on: \${{ inputs.macos_runner || 'macos-15' }}" <<<"$macos" ||

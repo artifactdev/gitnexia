@@ -5,6 +5,15 @@ pushing them starts [.github/workflows/release.yml](../.github/workflows/release
 builds the `.deb`, the Arch package, the `.rpm`, the two Windows installers and the macOS
 `.dmg`, checks them, and publishes a GitHub release with the packages and `SHA256SUMS`.
 
+## Experimental system-webview packages
+
+The manually dispatched **System webview beta** workflow is independent of this release flow.
+It uploads a Windows x64 per-user setup installer and a macOS Apple Silicon DMG as Actions
+artifacts, with checksums and test warnings. It does not publish a release or update the website.
+The packages install as **GitNexia Beta**, use separate profiles and require manual updates.
+They are unsigned/not notarized experimental builds, not replacements for the CEF releases.
+See [the system-webview notes](macos-wkwebview-spike.md) for requirements and limitations.
+
 ## Before you start
 
 - **Python 3.11 or newer must be available as `python3`.** Check `python3 --version`; on macOS,
