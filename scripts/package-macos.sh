@@ -20,7 +20,8 @@
 # search list, by SHA-1 or name: the release's Apple Developer ID certificate, which
 # scripts/macos-keychain.sh imports), that identity; without it, ad-hoc. With APPLE_ID,
 # APPLE_PASSWORD and APPLE_TEAM_ID set, the Tauri CLI notarizes the app and staples the ticket;
-# the checks below then require it. Either way each helper app gets its own identifier
+# the built app must then carry it. The .dmg's copy loses it when Tauri builds the image, so the
+# job notarizes and staples the .dmg itself. Either way each helper app gets its own identifier
 # (scripts/macos-codesign/codesign). See docs/releasing.md, "macOS signing".
 #
 # The version follows scripts/package-version.sh: a stamped one for local builds, the plain one
@@ -146,9 +147,6 @@ check_signature() {
 check_app() {
   local app=$1 res=$1/Contents/Resources
   check_signature "$app"
-  if [ -n "${APPLE_ID:-}" ] && [ -n "${APPLE_PASSWORD:-}" ] && [ -n "${APPLE_TEAM_ID:-}" ]; then
-    xcrun stapler validate "$app" >/dev/null 2>&1 || fail "$app: no stapled notarization ticket"
-  fi
   [ "$(cat "$res/install-kind")" = dmg ] || fail "$app: no install-kind 'dmg' in Contents/Resources"
   for f in LICENSE THIRD-PARTY-NOTICES-rust.txt THIRD-PARTY-NOTICES-ui.txt CEF-LICENSE.txt CHROMIUM-CREDITS.html.gz DICTIONARY-en-US-LICENSE.txt; do
     [ -s "$res/licenses/$f" ] || fail "$app: licenses/$f is missing or empty"
@@ -159,6 +157,11 @@ check_app() {
   [ "$(plutil -extract CFBundleShortVersionString raw "$app/Contents/Info.plist")" = "$v" ] || fail "$app: not version $v"
 }
 check_app "$app"
+# Tauri's bundler copies the app into the .dmg without the ticket, so only the built app is
+# required to carry it; the job notarizes and staples the .dmg itself.
+if [ -n "${APPLE_ID:-}" ] && [ -n "${APPLE_PASSWORD:-}" ] && [ -n "${APPLE_TEAM_ID:-}" ]; then
+  xcrun stapler validate "$app" >/dev/null 2>&1 || fail "$app: no stapled notarization ticket"
+fi
 codesign -dvv "$app" 2>&1 | grep -E '^(Identifier|Authority|TeamIdentifier|Signature|CodeDirectory)[= ]'
 echo "designated => $(designated "$app")"
 

@@ -364,9 +364,10 @@ does the app while bundling, given `APPLE_ID`, `APPLE_PASSWORD` (an app-specific
 `APPLE_TEAM_ID`: it signs, submits, waits and staples the ticket. The job then notarizes and
 staples the `.dmg` itself (`xcrun notarytool submit --wait`, `xcrun stapler staple`), so
 Gatekeeper accepts the image when it is opened. `scripts/package-macos.sh` checks the stapled
-ticket in the app and in the mounted image when the credentials are set. The `.dmg`'s pre-rename
-`GitNex_*` compatibility copy is byte-identical, so it carries the same signature and ticket. An
-update downloaded by GitNexia itself carries no quarantine flag, so it needs neither.
+ticket on the built app when the credentials are set. Tauri's image builder drops it from the
+copy inside the `.dmg`, so the job notarizes and staples the `.dmg` itself. The `.dmg`'s
+pre-rename `GitNex_*` compatibility copy is byte-identical, so it carries the same signature and
+ticket. An update downloaded by GitNexia itself carries no quarantine flag, so it needs neither.
 
 **How the release signs.** The certificate and its key are two repository secrets:
 `MACOS_CERTIFICATE_P12` (the `.p12`, base64, exported from Keychain Access with the "Developer ID
@@ -393,8 +394,8 @@ script then checks, in the bundle and in the mounted `.dmg`: `codesign --verify 
 the hardened runtime, the library-validation entitlement, the identifiers and, with an identity,
 that the app's and every helper's designated requirement is their identifier and Apple's anchor
 with the Team ID (or, for a self-signed certificate, the certificate's hash; never a cdhash), and
-that the app carries its notarization ticket when the credentials are set. It prints the signature
-(`Authority=Developer ID Application: Jeremias Arnstadt (CJKNBR45T2)`,
+that the built app carries its notarization ticket when the credentials are set. It prints the
+signature (`Authority=Developer ID Application: Jeremias Arnstadt (CJKNBR45T2)`,
 `TeamIdentifier=CJKNBR45T2`) and the requirement.
 
 **Where it's kept.** The `.p12`, its password and the notarization credentials are in the
