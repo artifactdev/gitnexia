@@ -41,6 +41,13 @@ struct List<T> {
 }
 
 #[derive(Deserialize)]
+#[serde(untagged)]
+enum IterationList {
+    Bare(Vec<Value>),
+    Wrapped(List<Value>),
+}
+
+#[derive(Deserialize)]
 struct Project {
     name: String,
 }
@@ -556,7 +563,10 @@ impl AzureDevOpsProvider {
                 self.pull_request_url(project, number)?
             ))
             .await?;
-        let iterations: Vec<Value> = response.json(&self.host)?;
+        let iterations = match response.json(&self.host)? {
+            IterationList::Bare(iterations) => iterations,
+            IterationList::Wrapped(list) => list.value,
+        };
         let (id, latest) = iterations
             .iter()
             .filter_map(|v| v["id"].as_u64().map(|id| (id, v)))
@@ -1436,12 +1446,15 @@ mod tests {
 
     #[tokio::test]
     async fn review_diff_uses_the_latest_iteration_and_marks_its_changed_lines() {
-        let iterations = json!([{
-            "id": 3,
-            "commonRefCommit": {"commitId": "base"},
-            "targetRefCommit": {"commitId": "target"},
-            "sourceRefCommit": {"commitId": "head"}
-        }])
+        let iterations = json!({
+            "count": 1,
+            "value": [{
+                "id": 3,
+                "commonRefCommit": {"commitId": "base"},
+                "targetRefCommit": {"commitId": "target"},
+                "sourceRefCommit": {"commitId": "head"}
+            }]
+        })
         .to_string();
         let changes = json!({
             "changeEntries": [
