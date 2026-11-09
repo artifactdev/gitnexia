@@ -5,6 +5,13 @@ All notable changes to GitNexia (GitNex before this release, GitVolt before 1.5.
 
 ## [Unreleased]
 
+### Added
+
+- **Azure DevOps pull request workflows.** View pull requests and their merge status, create
+  ready or draft pull requests, add discussion comments and replies, and merge with the selected
+  strategy. Reviewer votes are displayed; requesting reviewers, voting, inline comments and
+  pipeline checks are not supported.
+
 ### Changed
 
 - **GitNex is now GitNexia.** The app, its bundles and packages, its repository
