@@ -5,6 +5,8 @@ All notable changes to GitNexia (GitNex before this release, GitVolt before 1.5.
 
 ## [Unreleased]
 
+## [1.7.2] - 2026-11-09
+
 - **Azure DevOps Services pull request view.** Fixed the pull request view so Azure DevOps Services pull requests display correctly.
 
 ## [1.7.1] - 2026-11-09

@@ -2354,7 +2354,7 @@ dependencies = [
 
 [[package]]
 name = "gitnexia-ai"
-version = "1.7.1"
+version = "1.7.2"
 dependencies = [
  "gitnexia-core",
  "serde_json",
@@ -2364,7 +2364,7 @@ dependencies = [
 
 [[package]]
 name = "gitnexia-app"
-version = "1.7.1"
+version = "1.7.2"
 dependencies = [
  "block2",
  "gdk4-x11",
@@ -2390,7 +2390,7 @@ dependencies = [
 
 [[package]]
 name = "gitnexia-core"
-version = "1.7.1"
+version = "1.7.2"
 dependencies = [
  "base64 0.23.1",
  "block2",
@@ -2429,7 +2429,7 @@ dependencies = [
 
 [[package]]
 name = "gitnexia-forge"
-version = "1.7.1"
+version = "1.7.2"
 dependencies = [
  "base64 0.23.1",
  "gitnexia-core",
@@ -2448,7 +2448,7 @@ dependencies = [
 
 [[package]]
 name = "gitnexia-graph"
-version = "1.7.1"
+version = "1.7.2"
 dependencies = [
  "serde",
  "serde_json",
@@ -2457,7 +2457,7 @@ dependencies = [
 
 [[package]]
 name = "gitnexia-graph-wasm"
-version = "1.7.1"
+version = "1.7.2"
 dependencies = [
  "gitnexia-graph",
  "serde_json",
@@ -2466,7 +2466,7 @@ dependencies = [
 
 [[package]]
 name = "gitnexia-harness"
-version = "1.7.1"
+version = "1.7.2"
 dependencies = [
  "axum",
  "base64 0.23.1",
