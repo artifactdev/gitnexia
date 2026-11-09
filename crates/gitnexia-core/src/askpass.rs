@@ -91,6 +91,12 @@ const CREDENTIAL_HELPER: &str = "--gitnexia-credential-helper";
 /// transport or redirect; the request must also match a remote of the running operation.
 pub fn azure_credential_scope(url: &str) -> Option<String> {
     let scope = https_credential_url(url)?;
+    let authority = scope.split_once("://")?.1.split('/').next()?;
+    if authority != "dev.azure.com"
+        && !(authority.ends_with(".visualstudio.com") && authority != "vs-ssh.visualstudio.com")
+    {
+        return None;
+    }
     let parsed = crate::remotes::parse_remote_url(&scope)?;
     parsed.host.starts_with("dev.azure.com/").then_some(scope)
 }
