@@ -23,6 +23,12 @@ All notable changes to GitNexia (GitNex before this release, GitVolt before 1.5.
   update signed with the new certificate asks once more for folder permissions; the ones after it
   keep them (docs/releasing.md, "macOS signing").
 
+### Fixed
+
+- **GitLab HTTPS clones use the saved personal access token.** Cloning a repository found through
+  an account no longer asks for a password, and uses the account that found it when several
+  accounts are configured for the same host.
+
 ## [1.5.3] - 2026-11-06
 
 - added support for AzureDevOps with PAT authentication
