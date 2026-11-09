@@ -17,6 +17,8 @@ describe('the MR/PR section (spec #4 §2 "MR/PR list")', () => {
     expect([s.id, s.label, s.nests]).toEqual(['mrs', 'Merge requests', false]);
     expect(s.items.map((i) => [i.key, i.name])).toEqual([['mr:12', '!12 Dev work']]);
     expect(mrSection({ ...EMPTY_FORGE, kind: 'github', list: list('all') })!.label).toBe('Pull requests');
+    const azure = mrSection({ ...EMPTY_FORGE, kind: 'azuredevops', list: { ...list('all'), kind: 'azuredevops' } })!;
+    expect([azure.label, azure.items[0].name]).toEqual(['Pull requests', '#12 Dev work']);
   });
 
   it('says why it is empty', () => {

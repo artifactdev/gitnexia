@@ -164,10 +164,6 @@ async function pollOnce(tabId: string, reason: PollReason): Promise<PollOutcome>
         return IDLE;
       }
       if (gone()) return IDLE;
-      if (target.account === 'azuredevops') {
-        patchForge(tabId, { kind: null, remote: target.remote, project: target.project, accountId: target.accountId, mapped: [], byRef: {}, history: {}, upstreams: {}, list: null, error: null, failures: 0, updatedAt: Date.now() });
-        return IDLE;
-      }
       const host = target.project.host;
       // Read again when the repository switched to another account on the host.
       const known = forgeOf(tabId);

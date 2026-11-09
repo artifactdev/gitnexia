@@ -50,15 +50,19 @@ beforeEach(() => {
 afterEach(() => vi.restoreAllMocks());
 
 describe('pollForge (spec #4 §3.4)', () => {
-  it('recognizes Azure repositories without polling unsupported pull request APIs', async () => {
+  it('polls Azure DevOps pull requests and exposes them in the forge state', async () => {
     const azure = { ...project, kind: 'azuredevops', host: 'dev.azure.com/orbital', path: 'Space/Orbit', id: '11111111-2222-3333-4444-555555555555' };
     api.forgeRepoProjects.mockResolvedValue({ target: 'origin', remotes: [{ ...target, account: 'azuredevops', project: azure }] });
+    api.forgeAccounts.mockResolvedValue([{ account: { id: '', host: 'dev.azure.com/orbital', user: { username: 'ada' } }, status: { kind: 'ok' } }]);
+    api.forgeBranchMrs.mockResolvedValue({ kind: 'azuredevops', remote: 'origin', mrs: [{ remoteRef: 'refs/remotes/origin/dev', mr: mrOf(12) }], history: [], fetchedAt: 1, pollIntervalSecs: 30 });
+    api.forgeMrList.mockResolvedValue({ kind: 'azuredevops', remote: 'origin', project: azure, filter: 'all', mrs: [mrOf(12)], fetchedAt: 1, pollIntervalSecs: null });
     await pollForge('t', 'timer');
-    expect(forgeOf('t').project).toEqual(azure);
-    expect(forgeOf('t').kind).toBeNull();
+    expect(api.forgeBranchMrs).toHaveBeenCalledWith(4, ['refs/remotes/origin/old', 'refs/remotes/origin/dev']);
+    expect(api.forgeMrList).toHaveBeenCalledWith(4, 'all');
+    expect([forgeOf('t').project, forgeOf('t').kind, forgeOf('t').me]).toEqual([azure, 'azuredevops', 'ada']);
+    expect(forgeOf('t').byRef['refs/remotes/origin/dev']?.number).toBe(12);
+    expect(forgeOf('t').list?.mrs.map((mr) => mr.number)).toEqual([12]);
     expect(forgeOf('t').error).toBeNull();
-    expect(api.forgeBranchMrs).not.toHaveBeenCalled();
-    expect(api.forgeMrList).not.toHaveBeenCalled();
   });
 
   it('a full poll maps the badges, the list and the open MR, and says a pipeline runs', async () => {
