@@ -1,8 +1,16 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+const api = vi.hoisted(() => ({
+  createProfile: vi.fn(async () => ({ id: 'w', name: 'Work', color: '#000' })),
+  switchProfile: vi.fn(async () => ({ settings: {}, profile: {}, profiles: [] })),
+  saveProfile: vi.fn(async () => null),
+  saveSettings: vi.fn(async () => null),
+  avatar: vi.fn(async () => null),
+  forgeAccounts: vi.fn(async (): Promise<unknown[]> => []),
+}));
 vi.mock('../api/client', () => ({
-  api: { createProfile: vi.fn(async () => ({ id: 'w', name: 'Work', color: '#000' })), switchProfile: vi.fn(async () => ({ settings: {}, profile: {}, profiles: [] })), saveProfile: vi.fn(async () => null), saveSettings: vi.fn(async () => null), avatar: vi.fn(async () => null) },
+  api,
   errorMessage: (e: unknown) => String(e),
 }));
 vi.mock('../api/transport', () => ({ copyText: vi.fn(async () => {}), inTauri: () => false }));
@@ -48,7 +56,10 @@ describe('ProfileDialog: focus trap (fix round 1)', () => {
 });
 
 describe('ProfileDialog: an empty name', () => {
-  afterEach(() => { useProfileDialog.setState({ mode: null }); });
+  afterEach(() => {
+    useProfileDialog.setState({ mode: null });
+    api.forgeAccounts.mockReset().mockResolvedValue([]);
+  });
 
   it('saves the trimmed empty name, and the hint says what it does', async () => {
     const { useAppState } = await import('../app/state');
@@ -78,5 +89,37 @@ describe('ProfileDialog: an empty name', () => {
     fireEvent.change(screen.getByLabelText('Email'), { target: { value: ' grace@example.com ' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
     await vi.waitFor(() => expect(renameProfile).toHaveBeenCalledExactlyOnceWith('Work', '#4d88ff', 'Grace Hopper', 'grace@example.com'));
+  });
+
+  it('lists this profile’s accounts and opens the Accounts settings page', async () => {
+    api.forgeAccounts.mockResolvedValue([{
+      account: {
+        id: 'gitlab.example.com', host: 'gitlab.example.com', kind: 'gitlab', baseUrl: null,
+        user: { username: 'ada', name: 'Ada Lovelace' },
+      },
+      status: { kind: 'ok' },
+    }]);
+    const { useSettingsUi } = await import('../settings/schema');
+    const { useAppState } = await import('../app/state');
+    useSettingsUi.setState({ open: false, page: 'general' });
+    useAppState.setState({ profile: { ...useAppState.getState().profile, name: 'Work' } });
+    render(<ProfileDialog />);
+    act(() => useProfileDialog.getState().open('rename'));
+
+    expect(await screen.findByText('GitLab · @ada')).toBeTruthy();
+    expect(screen.getByText('gitlab.example.com')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Edit accounts' }));
+
+    expect(useSettingsUi.getState().open).toBe(true);
+    expect(useSettingsUi.getState().page).toBe('accounts');
+    expect(screen.queryByRole('dialog', { name: 'Edit profile' })).toBeNull();
+  });
+
+  it('shows when the profile has no connected accounts', async () => {
+    api.forgeAccounts.mockResolvedValue([]);
+    render(<ProfileDialog />);
+    act(() => useProfileDialog.getState().open('rename'));
+    expect(await screen.findByText('No integrations or accounts connected.')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Edit accounts' })).toBeTruthy();
   });
 });

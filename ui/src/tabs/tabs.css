@@ -128,6 +128,15 @@
 .profile-identity { display: flex; align-items: flex-start; gap: 14px; }
 .profile-identity-fields { display: flex; flex: 1; flex-direction: column; gap: 4px; min-width: 0; }
 .profile-identity-fields label { margin-bottom: 8px; }
+.profile-accounts { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--section-border); }
+.profile-accounts h3 { margin: 0 0 6px; color: var(--text-secondary); font-size: 12px; font-weight: 600; }
+.profile-accounts ul { display: grid; gap: 5px; max-height: 120px; margin: 0; padding: 0; overflow-y: auto; list-style: none; }
+.profile-accounts li { display: flex; align-items: center; gap: 6px; min-width: 0; font-size: 12px; }
+.profile-accounts li > :last-child { margin-left: auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.profile-accounts-error { color: var(--red) !important; }
+.profile-edit-accounts { margin-top: 8px; padding: 4px 8px; border: 1px solid var(--section-border); border-radius: 4px; background: var(--panel-bg1); color: var(--text-selected); font: inherit; cursor: pointer; }
+.profile-edit-accounts:hover { background: var(--hover-row); }
+.profile-edit-accounts:focus-visible { outline: 2px solid var(--focus-outline); outline-offset: 2px; }
 .swatches { display: flex; gap: 6px; margin-bottom: 4px; }
 .swatch { width: 20px; height: 20px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; }
 .swatch[aria-checked="true"] { border-color: var(--text-selected); }
