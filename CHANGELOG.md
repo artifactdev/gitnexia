@@ -5,6 +5,8 @@ All notable changes to GitNexia (GitNex before this release, GitVolt before 1.5.
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-11-09
+
 ### Changed
 
 - **GitNex is now GitNexia.** The app, its bundles and packages, its repository
