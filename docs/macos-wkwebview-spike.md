@@ -4,6 +4,13 @@
 to answer one question: can the macOS build run on Tauri's own runtime and Apple's system
 WKWebView, with the UI fast enough and the bundle small enough?
 
+The separate `system-webview-beta` feature is preparation for a Windows/macOS beta, not a
+distributable release. It isolates the core's data directories and keyring namespace, disables
+the normal updater, and selects WKWebView or WebView2. Actions > **System webview beta build
+check** compiles it on both hosted platforms but does not publish binaries. Before distribution,
+the bundle identity and installers, a separate beta update channel, licenses for the actual
+dependency graph, runtime network/privacy controls and platform tests must be completed.
+
 Why CEF was chosen in the first place is in
 [`cef-over-webkitgtk.md`](decisions/cef-over-webkitgtk.md). That decision is about Linux's
 WebKitGTK; WKWebView is a different engine port and has not been measured yet.

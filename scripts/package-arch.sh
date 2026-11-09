@@ -100,7 +100,7 @@ size=$(python3 "$helper" size "$work/pkg")
   echo "arch = x86_64"
   printf 'license = %s\n' "${licenses[@]}"
   printf 'provides = gitnexia\nprovides = gitnex\n'
-  printf 'conflict = gitnexia\nconflict = gitnex\n'
+  printf 'conflicts = gitnexia\nconflicts = gitnex\n'
   printf 'replaces = gitnex\n'
   printf 'depend = %s\n' "${depends[@]}"
 } > "$work/pkg/.PKGINFO"

@@ -34,6 +34,15 @@ for f in "$wf"/*.yml; do
   if grep -qE '[[:space:]]["'"'"']?\+(HEAD|refs/)' "$f"; then fail "$name: pushes a forced refspec (+HEAD: or +refs/)"; fi
 done
 
+beta=$wf/system-webview-beta.yml
+grep -qE '^  workflow_dispatch:$' "$beta" || fail "system-webview-beta.yml: not manually dispatched"
+grep -qF 'os: [windows-latest, macos-15]' "$beta" || fail "system-webview-beta.yml: missing beta platforms"
+grep -qF -- '--no-default-features --features system-webview-beta,tauri/custom-protocol' "$beta" ||
+  fail "system-webview-beta.yml: binary build doesn't select the system runtime without CEF"
+if grep -qE 'contents: write|gh release|actions/upload-artifact@' "$beta"; then
+  fail "system-webview-beta.yml: unfinished beta must not publish binaries"
+fi
+
 macos=$(sed -n '/^  macos:$/,/^  release:$/p' "$wf/release.yml")
 grep -qF "runs-on: \${{ inputs.macos_runner || 'macos-15' }}" <<<"$macos" ||
   fail "release.yml: macOS doesn't use the selected hosted runner with macos-15 as default"

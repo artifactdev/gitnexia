@@ -37,15 +37,8 @@ test("each lane's text colour reads at 4.5:1 on the page and on glass", () => {
 
 test('the live demo hides below a 992 px viewport, whatever its state', () => {
   const narrow = /@media \(max-width: 991\.98px\) {([\s\S]*?)\n}/.exec(css)?.[1] ?? '';
-  expect(narrow).toContain('.demo-show { display: none; }');
   expect(narrow).toContain('.hero-demo[data-state] .demo-live { visibility: hidden; }');
   expect(narrow).toContain('.hero-demo[data-state] .still { visibility: visible; }');
-});
-
-test('the demo controls appear only after the demo is asked for', () => {
-  expect(css).toContain('.hero-demo[data-state="still"] .demo-bar [data-action="reset"]');
-  expect(css).toContain('.hero-demo[data-state="still"] .demo-bar [data-action="fullscreen"]');
-  expect(css).toContain('.hero-demo[data-state="failed"] .demo-bar [data-action="fullscreen"]');
 });
 
 test('smooth scrolling and the demo\'s fade only without reduced motion', () => {

@@ -316,6 +316,14 @@ impl SystemTokenStore {
             FileTokenStore::new(file_path),
         )
     }
+
+    /// An independent keyring namespace without migration from other applications.
+    pub fn isolated(file_path: PathBuf, service: &'static str) -> Self {
+        Self::new(
+            Some(Box::new(KeyringBackend::new(service))),
+            FileTokenStore::new(file_path),
+        )
+    }
 }
 
 impl TokenStore for SystemTokenStore {
@@ -454,6 +462,13 @@ mod tests {
                 assert_eq!(mode($p), $m $(, $msg)?);
             }
         };
+    }
+
+    #[test]
+    fn an_isolated_keyring_does_not_read_legacy_services() {
+        let backend = KeyringBackend::new("gitnexia-system-webview-beta");
+        assert_eq!(backend.service, "gitnexia-system-webview-beta");
+        assert!(backend.legacy.is_empty());
     }
 
     /// A Secret Service in memory, or none at all (`up: false`).

@@ -9,10 +9,14 @@ use std::path::{Path, PathBuf};
 
 /// The app's folder name in each base folder: `GitNexia` on macOS (its `~/Library/Application
 /// Support` and `~/Library/Caches` hold apps by their names), `gitnexia` elsewhere.
-#[cfg(target_os = "macos")]
+#[cfg(all(target_os = "macos", not(feature = "system-webview-beta")))]
 pub const APP_DIR: &str = "GitNexia";
-#[cfg(not(target_os = "macos"))]
+#[cfg(all(not(target_os = "macos"), not(feature = "system-webview-beta")))]
 pub const APP_DIR: &str = "gitnexia";
+#[cfg(all(target_os = "macos", feature = "system-webview-beta"))]
+pub const APP_DIR: &str = "GitNexia Beta";
+#[cfg(all(not(target_os = "macos"), feature = "system-webview-beta"))]
+pub const APP_DIR: &str = "gitnexia-beta";
 
 /// The folder names before the rename to GitNexia, newest first: `GitNex` (the app's name until
 /// 1.6.0) and `GitVolt` (0.7.0 to 1.5.0). Their config and data are copied once on first start.
@@ -32,12 +36,19 @@ const CEF_DIR: &str = "com.gitnexia.desktop";
 /// caches are left behind (they are re-fetched). Tokens in the data folder and the profiles in the
 /// config folder move with it.
 pub fn migrate_legacy_dirs() {
+    if !legacy_migration_enabled() {
+        return;
+    }
     static ONCE: std::sync::Once = std::sync::Once::new();
     ONCE.call_once(|| {
         copy_legacy_to(&config_base(), &config_dir());
         copy_legacy_to(&data_base(), &data_dir());
         copy_legacy_cef_profile();
     });
+}
+
+fn legacy_migration_enabled() -> bool {
+    !cfg!(feature = "system-webview-beta")
 }
 
 /// Copies the first old app folder found under `base` to `new`, when `new` doesn't exist yet.
@@ -233,7 +244,20 @@ mod tests {
             assert!(dir.is_absolute(), "{}", dir.display());
             assert!(dir.ends_with(super::APP_DIR), "{}", dir.display());
         }
+
         assert!(super::runtime_dir().unwrap().is_absolute());
+    }
+
+    #[test]
+    fn beta_data_has_a_distinct_namespace() {
+        if cfg!(feature = "system-webview-beta") {
+            assert_ne!(APP_DIR, "GitNexia");
+            assert_ne!(APP_DIR, "gitnexia");
+            assert!(!legacy_migration_enabled());
+        } else {
+            assert!(APP_DIR == "GitNexia" || APP_DIR == "gitnexia");
+            assert!(legacy_migration_enabled());
+        }
     }
 
     #[test]

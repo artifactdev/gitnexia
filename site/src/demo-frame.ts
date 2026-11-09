@@ -1,5 +1,5 @@
 // The hero's live demo (website spec §3, §4.5, §6.3): the demo build (demo/demo.html) in an iframe
-// over the hero's still screenshot. It loads only when the visitor presses Show demo, and only
+// over the hero's still screenshot. It starts after the page has loaded and gone idle, and only
 // where its frame can be 960 px wide (a 992 px viewport, less the gutters); the still stays until
 // the demo reports its graph is up (ui/src/demo/frame.ts), and stays if the demo can't start.
 
@@ -21,10 +21,12 @@ export interface HeroDemoOptions {
   origin: string;
   timeoutMs: number;
   wide: WideQuery;
+  /** Calls `start` once the page has loaded and the browser is idle. */
+  schedule(start: () => void): void;
   /** Where the demo's messages arrive. */
   messages: Pick<Window, 'addEventListener'>;
 }
-export interface HeroDemo { readonly state: DemoState; readonly frame: HTMLIFrameElement | null; show(): void; reset(): void }
+export interface HeroDemo { readonly state: DemoState; readonly frame: HTMLIFrameElement | null; reset(): void }
 
 /** The demo's report, if `e` is one, from `frame`, on `origin`. */
 export function demoReport(e: MessageEvent, frame: HTMLIFrameElement | null, origin: string): { type: 'ready' } | { type: 'failed'; message: string } | null {
@@ -36,17 +38,29 @@ export function demoReport(e: MessageEvent, frame: HTMLIFrameElement | null, ori
   return null;
 }
 
+/** After the load event, when the browser is idle: the demo's code and data never compete with the page's own. */
+export function afterLoadAndIdle(win: Window, run: () => void): void {
+  const idle = () => {
+    if (typeof win.requestIdleCallback === 'function') win.requestIdleCallback(() => run(), { timeout: 2000 });
+    else win.setTimeout(run, 200);
+  };
+  if (win.document.readyState === 'complete') idle();
+  else win.addEventListener('load', idle, { once: true });
+}
+
 export function initHeroDemo(root: HTMLElement, options: Partial<HeroDemoOptions> = {}): HeroDemo {
   const src = options.src ?? DEMO_SRC;
   const origin = options.origin ?? location.origin;
   const timeoutMs = options.timeoutMs ?? READY_TIMEOUT_MS;
   const wide = options.wide ?? matchMedia(WIDE_ENOUGH);
+  const schedule = options.schedule ?? ((start: () => void) => afterLoadAndIdle(window, start));
   const messages = options.messages ?? window;
   const stage = root.querySelector<HTMLElement>('.stage');
   const badge = root.querySelector<HTMLElement>('.demo-badge');
   if (!stage || !badge) throw new Error('the hero has no .stage or .demo-badge');
 
   let frame: HTMLIFrameElement | null = null;
+  let scheduled = false;
   let timer: ReturnType<typeof setTimeout> | undefined;
 
   let detail = '';
@@ -56,13 +70,14 @@ export function initHeroDemo(root: HTMLElement, options: Partial<HeroDemoOptions
     if (!wide.matches && state !== 'failed') return BADGE.still;
     return detail ? `${BADGE[state]}: ${detail}` : BADGE[state];
   };
-  const setState = (state: DemoState, why = '') => {
+  const show = (state: DemoState, why = '') => {
     root.dataset.state = state;
     detail = why;
     badge.textContent = label();
     badge.title = badge.textContent;
   };
   const start = () => {
+    scheduled = true;
     clearTimeout(timer);
     frame?.remove();
     frame = root.ownerDocument.createElement('iframe');
@@ -70,38 +85,34 @@ export function initHeroDemo(root: HTMLElement, options: Partial<HeroDemoOptions
     frame.title = 'GitNexia live demo';
     frame.src = src;
     stage.append(frame);
-    setState('loading');
+    show('loading');
     timer = setTimeout(() => {
-      if (root.dataset.state === 'loading') setState('failed', 'it took too long to load');
+      if (root.dataset.state === 'loading') show('failed', 'it took too long to load');
     }, timeoutMs);
-  };
-  const show = () => {
-    if (!wide.matches) return;
-    if (root.dataset.state === 'loading' || root.dataset.state === 'ready') return;
-    start();
   };
   messages.addEventListener('message', (e) => {
     const report = demoReport(e, frame, origin);
     if (!report) return;
     clearTimeout(timer);
-    if (report.type === 'ready') setState('ready');
-    else setState('failed', report.message);
+    if (report.type === 'ready') show('ready');
+    else show('failed', report.message);
   });
-  const showButton = root.querySelector<HTMLButtonElement>('[data-action="show"]');
-  if (showButton) {
-    showButton.hidden = false;
-    showButton.addEventListener('click', show);
-  }
-  setState('still');
+  const startWhenWide = () => {
+    if (!wide.matches || frame || scheduled) return;
+    scheduled = true;
+    schedule(() => { if (!frame) start(); });
+  };
+  show('still');
+  startWhenWide();
   wide.addEventListener('change', () => {
     badge.textContent = label();
     badge.title = badge.textContent;
+    startWhenWide();
   });
 
   return {
     get state() { return root.dataset.state as DemoState; },
     get frame() { return frame; },
-    show,
     reset: start,
   };
 }

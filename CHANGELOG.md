@@ -5,16 +5,6 @@ All notable changes to GitNexia (GitNex before this release, GitVolt before 1.5.
 
 ## [Unreleased]
 
-## [1.6.1] - 2026-11-09
-
-### Changed
-
-- **1.6.1 publishes only the GitNexia package names.** The pre-rename `GitNex_*` copies that 1.6.0
-  carried for older installs are gone. A GitNex 1.5.x still finds and installs 1.6.0 under the old
-  names, and updates from there to 1.6.1; a fresh install takes 1.6.1 directly.
-
-## [1.6.0] - 2026-11-09
-
 ### Changed
 
 - **GitNex is now GitNexia.** The app, its bundles and packages, its repository

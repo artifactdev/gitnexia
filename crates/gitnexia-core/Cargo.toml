@@ -7,6 +7,7 @@ license.workspace = true
 
 [features]
 testing = ["gitnexia-graph/testing"]
+system-webview-beta = []
 
 [dependencies]
 gitnexia-graph.workspace = true

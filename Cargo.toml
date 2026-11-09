@@ -3,7 +3,7 @@ resolver = "3"
 members = ["crates/gitnexia-graph", "crates/gitnexia-graph-wasm", "crates/gitnexia-core", "crates/gitnexia-forge", "crates/gitnexia-ai", "crates/gitnexia-app", "crates/gitnexia-harness"]
 
 [workspace.package]
-version = "1.6.1"
+version = "1.6.0"
 edition = "2024"
 publish = false
 license = "MIT"

@@ -78,7 +78,7 @@ info=$(tar -xOf "$work/p.tar" .PKGINFO)
 for kv in 'pkgname = gitnexia' 'pkgver = 0.1.0.202610051325.ab4dbf9e-1' 'pkgdesc = A fast desktop Git client' \
           'arch = x86_64' "builddate = $built" \
           'provides = gitnexia' 'provides = gitnex' \
-          'conflict = gitnexia' 'conflict = gitnex' 'replaces = gitnex' \
+          'conflicts = gitnexia' 'conflicts = gitnex' 'replaces = gitnex' \
           'depend = gcc-libs' 'depend = git' 'depend = glibc' 'depend = gtk4'; do
   grep -qxF "$kv" <<<"$info" || fail ".PKGINFO lacks '$kv': $info"
 done

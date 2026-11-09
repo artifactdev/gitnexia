@@ -20,6 +20,8 @@ cef = ["dep:tauri-runtime-cef"]
 # The macOS spike: Tauri's system-webview runtime (WKWebView) instead of the bundled CEF. See
 # docs/macos-wkwebview-spike.md.
 macos-wkwebview = ["dep:tauri-runtime-wry"]
+# An isolated, unreleased system-webview build. It must not be combined with CEF.
+system-webview-beta = ["dep:tauri-runtime-wry", "gitnexia-core/system-webview-beta"]
 
 [dependencies]
 gitnexia-core.workspace = true
@@ -52,3 +54,4 @@ tauri-runtime-wry = { workspace = true, optional = true }
 # The folder dialog's owner window (`portal_parent`).
 [target.'cfg(windows)'.dependencies]
 raw-window-handle.workspace = true
+tauri-runtime-wry = { workspace = true, optional = true }

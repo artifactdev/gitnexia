@@ -16,7 +16,9 @@ use gitnexia_core::paths;
 use gitnexia_core::settings::SettingsStore;
 use gitnexia_core::shellenv::ShellEnv;
 use gitnexia_forge::gravatar::{DEFAULT_BASE_URL, Gravatar};
-use std::path::{Path, PathBuf};
+#[cfg(any(not(feature = "system-webview-beta"), test))]
+use std::path::Path;
+use std::path::PathBuf;
 use std::sync::{Arc, OnceLock};
 use tauri::{Emitter, Manager, WebviewWindowBuilder};
 #[cfg(feature = "cef")]
@@ -29,14 +31,35 @@ mod desktop;
 mod menu;
 mod window_state;
 
-// Without CEF only the macOS system-webview spike can supply a runtime.
-#[cfg(not(any(feature = "cef", all(target_os = "macos", feature = "macos-wkwebview"))))]
-compile_error!("enable the `cef` feature, or `macos-wkwebview` on macOS");
+#[cfg(all(feature = "cef", feature = "system-webview-beta"))]
+compile_error!("system-webview-beta must be built with --no-default-features");
+#[cfg(all(
+    feature = "system-webview-beta",
+    not(any(target_os = "macos", windows))
+))]
+compile_error!("system-webview-beta is supported only on macOS and Windows");
+#[cfg(not(any(
+    feature = "cef",
+    all(target_os = "macos", feature = "macos-wkwebview"),
+    all(any(target_os = "macos", windows), feature = "system-webview-beta")
+)))]
+compile_error!("enable the `cef` feature, or a supported system-webview feature");
 
 /// What the UI reports as the webview runtime (About/Settings › About).
-#[cfg(all(target_os = "macos", feature = "macos-wkwebview"))]
+#[cfg(all(
+    target_os = "macos",
+    any(feature = "macos-wkwebview", feature = "system-webview-beta")
+))]
 const RUNTIME_INFO: &str = "tauri 3.0.0-alpha.5 · tauri-runtime-wry 3.0.0-alpha.5 (WKWebView)";
-#[cfg(not(all(target_os = "macos", feature = "macos-wkwebview")))]
+#[cfg(all(windows, feature = "system-webview-beta"))]
+const RUNTIME_INFO: &str = "tauri 3.0.0-alpha.5 · tauri-runtime-wry 3.0.0-alpha.5 (WebView2)";
+#[cfg(not(any(
+    all(
+        target_os = "macos",
+        any(feature = "macos-wkwebview", feature = "system-webview-beta")
+    ),
+    all(windows, feature = "system-webview-beta")
+)))]
 const RUNTIME_INFO: &str =
     "tauri 3.0.0-alpha.5 · tauri-runtime-cef 3.0.0-alpha.6 (GitNexia patch: CEF #3002)";
 
@@ -115,6 +138,7 @@ type QuitSlot = Arc<OnceLock<Box<dyn Fn() + Send + Sync>>>;
 /// folder, the install kind from the `install-kind` file each package puts in the resources
 /// folder: beside the binary (`GitNexia.exe` on Windows, which loads this DLL), or the bundle's
 /// `Contents/Resources` on macOS; none: a build from source.
+#[cfg(not(feature = "system-webview-beta"))]
 fn update_config(child_env: ChildEnvHook, quit: QuitSlot) -> gitnexia_core::updates::UpdateConfig {
     use gitnexia_core::updates::install::detect_install_kind;
     let exe = std::env::current_exe().ok();
@@ -134,6 +158,14 @@ fn update_config(child_env: ChildEnvHook, quit: QuitSlot) -> gitnexia_core::upda
     }
 }
 
+fn token_store(path: PathBuf) -> gitnexia_forge::tokens::SystemTokenStore {
+    if cfg!(feature = "system-webview-beta") {
+        gitnexia_forge::tokens::SystemTokenStore::isolated(path, "gitnexia-system-webview-beta")
+    } else {
+        gitnexia_forge::tokens::SystemTokenStore::system(path)
+    }
+}
+
 fn build_api(cli: GitCli, launch: Option<String>, child_env: ChildEnvHook, quit: QuitSlot) -> Api {
     let shell_env = cli.shell_env().cloned();
     // `system_url_opener` (I2) routes through the same argv-only, detached launch and
@@ -147,9 +179,13 @@ fn build_api(cli: GitCli, launch: Option<String>, child_env: ChildEnvHook, quit:
                 .map_err(|e| GbError::other(format!("couldn't open {url}: {e}")))
         })
     });
-    let api = Api::new(cli.with_command_hook(child_env.clone()), launch)
-        .with_app_version(APP_VERSION)
-        .with_updates(update_config(child_env.clone(), quit))
+    let api =
+        Api::new(cli.with_command_hook(child_env.clone()), launch).with_app_version(APP_VERSION);
+    #[cfg(not(feature = "system-webview-beta"))]
+    let api = api.with_updates(update_config(child_env.clone(), quit));
+    #[cfg(feature = "system-webview-beta")]
+    let _ = quit;
+    let api = api
         .with_data_dir(paths::data_dir())
         .with_url_opener(url_opener)
         .with_openers(
@@ -184,9 +220,7 @@ fn build_api(cli: GitCli, launch: Option<String>, child_env: ChildEnvHook, quit:
                         ),
                     },
                 )),
-                Arc::new(gitnexia_forge::tokens::SystemTokenStore::system(
-                    paths::data_dir().join("forge-tokens"),
-                )),
+                Arc::new(token_store(paths::data_dir().join("forge-tokens"))),
             ),
         // --- end 4A T10 ---
         None => api.with_forge(
@@ -197,18 +231,14 @@ fn build_api(cli: GitCli, launch: Option<String>, child_env: ChildEnvHook, quit:
                     avatar_dir: None,
                 },
             )),
-            Arc::new(gitnexia_forge::tokens::SystemTokenStore::system(
-                paths::data_dir().join("forge-tokens"),
-            )),
+            Arc::new(token_store(paths::data_dir().join("forge-tokens"))),
         ),
     };
     // AI commit messages (Settings › AI): the OpenAI-compatible/local-CLI provider, and its
     // endpoint token in the same system keyring (else the owner-only file) as the forge tokens.
     api.with_ai(
         Arc::new(gitnexia_ai::Ai::with_shell_env(shell_env)),
-        Arc::new(gitnexia_forge::tokens::SystemTokenStore::system(
-            paths::data_dir().join("ai-tokens"),
-        )),
+        Arc::new(token_store(paths::data_dir().join("ai-tokens"))),
     )
 }
 
@@ -315,6 +345,7 @@ const DICTIONARY: &str = "en-US-10-2.bdic";
 
 /// Where the packages put the app's own files: beside the binary, or on macOS the bundle's
 /// `Contents/Resources` (tauri.macos.conf.json).
+#[cfg(any(not(feature = "system-webview-beta"), test))]
 fn resources_dir(exe: &Path) -> Option<PathBuf> {
     let dir = exe.parent()?;
     if cfg!(target_os = "macos") {
@@ -520,7 +551,10 @@ pub fn run() {
     tauri::async_runtime::set(Box::leak(Box::new(runtime)).handle().clone());
     // macOS's menu bar (menu.rs); no menu elsewhere.
     let builder = tauri::Builder::default();
-    #[cfg(all(target_os = "macos", feature = "macos-wkwebview"))]
+    #[cfg(any(
+        all(target_os = "macos", feature = "macos-wkwebview"),
+        all(any(target_os = "macos", windows), feature = "system-webview-beta")
+    ))]
     let builder = builder.runtime(tauri_runtime_wry::Wry::default());
     // Never in caret-browsing mode, even if "Turn on" was once clicked in Chrome's F7
     // dialog (Chrome keeps it in the profile). The F7 command itself is blocked in the
@@ -592,7 +626,8 @@ pub fn run() {
             // GitNexia's own title bar (chrome.rs), unless the user asked for the system's; the
             // page knows which before its first render.
             let wayland = std::env::var("WAYLAND_DISPLAY").ok();
-            let custom = chrome::custom_frame(window_store.state().settings.system_title_bar, wayland.as_deref());
+            let custom = chrome::custom_frame(window_store.state().settings.system_title_bar, wayland.as_deref())
+                && !(cfg!(windows) && cfg!(feature = "system-webview-beta"));
             // Compact mode (no title bar row) needs that title bar; read now too, so the whole
             // window, the traffic lights included, changes at the same restart.
             let compact = custom && window_store.state().settings.compact_title_bar;
@@ -608,11 +643,16 @@ pub fn run() {
             #[cfg(target_os = "macos")]
             let current = chrome::macos_chrome(custom, chrome::macos::double_click()).with_compact(compact);
             #[cfg(not(any(target_os = "linux", target_os = "macos")))]
-            let current = chrome::chrome(custom, None).with_compact(compact);
+            let current = chrome::chrome(custom, None).with_compact(compact)
+                .with_system_only(cfg!(windows) && cfg!(feature = "system-webview-beta"));
             // macOS keeps its frame and traffic lights: the page goes under a transparent title
             // bar, and the lights into the page's.
             let decorations = !custom || cfg!(target_os = "macos");
             let mut builder = WebviewWindowBuilder::from_config(app.handle(), &cfg)?.decorations(decorations).initialization_script(chrome::init_script(&current));
+            #[cfg(all(windows, feature = "system-webview-beta"))]
+            {
+                builder = builder.data_directory(paths::data_dir().join("webview2"));
+            }
             #[cfg(target_os = "macos")]
             if custom {
                 let (x, y) = chrome::traffic_lights(compact);
