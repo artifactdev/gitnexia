@@ -88,6 +88,9 @@ GitHub Pages sends every file with `Cache-Control: max-age=600` and has no setti
 - **The demo's data** is fetched as `manifest.json?v=<rev>` and `<bundle>.gbdemo?v=<rev>`. The
   demo build adds each bundle's `rev` (the first 12 hex digits of its SHA-256) to the manifest it
   publishes, and builds the manifest's own into the demo's code (`ui/build/demoDataRev.ts`).
+- **The demo loads on demand:** the landing page creates its iframe, and fetches `demo/demo.html`,
+  the WebAssembly and the `.gbdemo` bundles, only after the visitor presses **Show demo**. Until
+  then the first screen carries only the hero's screenshot.
 - **Pages** (`index.html`, `demo/demo.html`) can be up to 10 minutes old after a deploy. New code
   never gets an older cached manifest or bundle. A page loaded before a deploy may get the new
   data, and a part of the demo it hadn't loaded yet may fail to load until the visitor reloads.

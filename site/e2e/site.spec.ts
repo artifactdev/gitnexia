@@ -5,24 +5,29 @@ import type { ReleaseFile } from '../build/release.ts';
 const file = JSON.parse(readFileSync(new URL('../data/release.json', import.meta.url), 'utf8')) as ReleaseFile;
 if (!file.release) throw new Error('site/data/release.json has no release: these checks need one');
 const release = file.release;
-// Playwright's desktop Chrome says Windows; the steps below are written for a Linux visitor.
+// The steps below are written for a Linux visitor; the main check overrides the host's platform.
 const LINUX = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36';
 
 test.describe('desktop', () => {
   test.use({ userAgent: LINUX });
 
-  test("the page: its own origin only, no errors, downloads from release.json, the live demo boots and resets", async ({ page, baseURL }) => {
+  test("the page: its own origin only, no errors, downloads from release.json, the live demo loads on demand and resets", async ({ page, baseURL }) => {
     test.setTimeout(240_000);
     const origin = new URL(baseURL ?? '').origin;
     const foreign: string[] = [];
     const errors: string[] = [];
+    const demoRequests: string[] = [];
     page.on('request', (r) => {
       const u = r.url();
+      if (u.includes('/demo/')) demoRequests.push(u);
       if (!u.startsWith(`${origin}/`) && !/^(?:data|blob|about):/.test(u)) foreign.push(u);
     });
     page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
     page.on('pageerror', (e) => errors.push(e.message));
     await page.addInitScript(() => {
+      // The steps below are written for a Linux visitor: the host's platform must not leak through.
+      Object.defineProperty(navigator, 'platform', { configurable: true, get: () => 'Linux x86_64' });
+      Object.defineProperty(navigator, 'userAgentData', { configurable: true, get: () => ({ platform: 'Linux' }) });
       document.addEventListener('securitypolicyviolation', (e) => console.error(`[csp-violation] ${e.effectiveDirective} ${e.blockedURI}`));
     });
     await page.goto('./');
@@ -44,11 +49,16 @@ test.describe('desktop', () => {
     });
 
     const hero = page.locator('.hero-demo');
-    await test.step('the live demo boots in its frame, then the still steps aside', async () => {
+    await test.step('the demo loads only when Show demo is pressed, then the still steps aside', async () => {
+      await expect(hero.getByRole('button', { name: 'Show demo' })).toBeVisible();
+      await expect(page.locator('iframe')).toHaveCount(0);
+      expect(demoRequests).toEqual([]);
+      await hero.getByRole('button', { name: 'Show demo' }).click();
       await expect(hero).toHaveAttribute('data-state', 'ready', { timeout: 90_000 });
       await expect(page.frameLocator('iframe[title="GitNexia live demo"]').getByRole('grid', { name: 'Commit graph' })).toBeVisible();
       await expect(hero.locator('.still')).toBeHidden();
       await expect(hero.getByRole('status')).toHaveText('Live demo');
+      expect(demoRequests.length).toBeGreaterThan(0);
     });
 
     await test.step('keyboard: Tab reaches the Download CTA from the top, then Reset and Full screen in order', async () => {
@@ -56,7 +66,7 @@ test.describe('desktop', () => {
         const el = document.activeElement as HTMLElement | null;
         return el?.classList.contains('cta') ? 'cta' : (el?.getAttribute('data-action') ?? '');
       });
-      await page.evaluate(() => { (document.activeElement as HTMLElement | null)?.blur(); window.scrollTo(0, 0); });
+      await page.locator('header').getByRole('link', { name: 'GitNexia', exact: true }).focus();
       let reached = false;
       for (let i = 0; i < 15 && !reached; i++) {
         await page.keyboard.press('Tab');
@@ -115,17 +125,21 @@ test.describe('desktop', () => {
     expect(after?.x).toBe(before?.x);
   });
 
-  for (const [width, iframes] of [[992, 1], [991, 0]] as const) {
-    test(`at ${width}px the demo ${iframes ? 'boots' : 'stays a still'}`, async ({ browser, baseURL }) => {
+  for (const [width, loads] of [[992, true], [991, false]] as const) {
+    test(`at ${width}px the demo ${loads ? 'loads only on Show demo' : 'stays a still'}`, async ({ browser, baseURL }) => {
       const context = await browser.newContext({ userAgent: LINUX, viewport: { width, height: 860 }, baseURL });
       const page = await context.newPage();
       await page.goto('./');
-      if (iframes) {
+      const show = page.getByRole('button', { name: 'Show demo' });
+      if (loads) {
+        await expect(page.locator('iframe')).toHaveCount(0);
+        await expect(show).toBeVisible();
+        await show.click();
         await expect(page.locator('.hero-demo')).toHaveAttribute('data-state', 'ready', { timeout: 90_000 });
         await expect(page.locator('iframe')).toHaveCount(1);
       } else {
-        await page.waitForTimeout(2500);
         await expect(page.locator('iframe')).toHaveCount(0);
+        await expect(show).toBeHidden();
         await expect(page.locator('.hero-demo .still')).toBeVisible();
       }
       await context.close();
@@ -142,8 +156,7 @@ test('a phone gets the screenshot and the note, never the demo', async ({ browse
   await page.waitForLoadState('load');
   await expect(page.getByText('Try the live demo on a desktop.')).toBeVisible();
   await expect(page.locator('.hero-demo .still')).toBeVisible();
-  // Past the load-and-idle start a wide screen would have made.
-  await page.waitForTimeout(2500);
+  await expect(page.getByRole('button', { name: 'Show demo' })).toBeHidden();
   await expect(page.locator('iframe')).toHaveCount(0);
   expect(demo).toEqual([]);
   await expect(page.getByRole('link', { name: 'Download', exact: true })).toBeVisible();

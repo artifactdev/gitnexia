@@ -39,3 +39,9 @@ test('every generated part has its marker', () => {
 test('Reset demo carries both its labels, so arming shifts nothing', () => {
   expect(html).toContain('<button type="button" class="btn" data-action="reset"><span class="btn-stack"><span class="when-idle">Reset demo</span><span class="when-armed">Reset and lose your changes</span></span></button>');
 });
+
+test('the demo starts from a hidden Show demo button over the still', () => {
+  expect(html).toContain('<button type="button" class="btn demo-show" data-action="show" hidden>');
+  expect(html).toContain('<span class="demo-show-idle">Show demo</span>');
+  expect(html).toContain('<span class="demo-show-retry">Try again</span>');
+});
