@@ -5,6 +5,8 @@ All notable changes to GitNexia (GitNex before this release, GitVolt before 1.5.
 
 ## [Unreleased]
 
+## [1.7.1] - 2026-11-09
+
 ### Added
 
 - **Azure DevOps pull request workflows.** View pull requests and their merge status, create
