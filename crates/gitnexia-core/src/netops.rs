@@ -594,10 +594,20 @@ impl Api {
     /// `git clone` into `dest` (spec §13), then opens it. `dest` must be absolute and must not
     /// exist, or be an empty directory. A failed or cancelled clone removes every folder it
     /// created (an existing empty one is emptied again, not removed).
+    #[cfg(test)]
     pub(crate) async fn clone_repo(
         &self,
         url: String,
         dest: String,
+    ) -> Result<RepoSummary, GbError> {
+        self.clone_repo_for_account(url, dest, None).await
+    }
+
+    pub(crate) async fn clone_repo_for_account(
+        &self,
+        url: String,
+        dest: String,
+        account: Option<String>,
     ) -> Result<RepoSummary, GbError> {
         let dest_path = PathBuf::from(&dest);
         if !dest_path.is_absolute() {
@@ -630,7 +640,7 @@ impl Api {
             name: "origin".into(),
             url: url.clone(),
             settable: false,
-            account: None,
+            account,
         }]);
         self.bus.emit(AppEvent::OpStarted {
             op: op.id,

@@ -31,8 +31,8 @@ terminal), a React UI, and [Tauri](https://tauri.app/) with the Chromium (CEF) r
 > **Status:** used day to day on Linux and Windows; newer on macOS.
 
 For self-hosted Bitbucket, see [setup and compatibility](docs/bitbucket.md).
-For Azure DevOps Services account setup and automatic PAT authentication of HTTPS git remotes,
-see [connection setup](docs/azure-devops.md).
+GitLab and Azure DevOps accounts use their saved PAT for matching HTTPS git remotes. For Azure
+DevOps Services account setup, see [connection setup](docs/azure-devops.md).
 
 ## Platforms
 

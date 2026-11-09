@@ -473,15 +473,20 @@ impl ForgeHub {
         url: &str,
         selected: Option<&str>,
     ) -> Result<Option<Secret>, GbError> {
-        let Some(scope) = crate::askpass::azure_credential_scope(url) else {
+        let Some(scope) = crate::askpass::git_credential_scope(url) else {
             return Ok(None);
         };
-        let Some(remote) = crate::remotes::parse_remote_url(&scope) else {
+        let Some(host) = crate::remotes::forge_host(&scope) else {
             return Ok(None);
+        };
+        let kind = if crate::askpass::azure_credential_scope(&scope).is_some() {
+            ForgeKind::AzureDevOps
+        } else {
+            ForgeKind::GitLab
         };
         let profile = store.active_profile();
-        let Some(account) = account_for_selected(&profile.forge_accounts, &remote.host, selected)
-            .filter(|a| a.kind == ForgeKind::AzureDevOps && a.host == remote.host)
+        let Some(account) = account_for_selected(&profile.forge_accounts, &host, selected)
+            .filter(|a| a.kind == kind && a.host == host)
             .cloned()
         else {
             return Ok(None);
@@ -1660,6 +1665,54 @@ mod tests {
                 .any(|a| a.account.id == second.account.id
                     && a.status == AccountStatus::TokenMissing)
         );
+        h.remove_account(&store, &first.account.host, Some(first.account.id))
+            .await
+            .unwrap();
+        h.remove_account(&store, &second.account.host, Some(second.account.id))
+            .await
+            .unwrap();
+        assert!(h.git_token(&store, url, None).await.unwrap().is_none());
+    }
+
+    #[tokio::test]
+    async fn gitlab_git_tokens_respect_the_selected_account_and_host() {
+        let conn = Arc::new(FakeConnector::default());
+        for (token, id) in [(TOKEN, 1), (TOKEN2, 2)] {
+            let mut p = FakeProvider::new(ForgeKind::GitLab, HOST);
+            p.user.id = id.into();
+            conn.add(token, p);
+        }
+        let tokens = MemTokens::new(TokenStorage::File);
+        let h = hub(conn, tokens);
+        let store = SettingsStore::in_memory();
+        let first = h
+            .add_account(&store, HOST, ForgeKind::GitLab, Secret::new(TOKEN), None)
+            .await
+            .unwrap();
+        let second = h
+            .add_account(&store, HOST, ForgeKind::GitLab, Secret::new(TOKEN2), None)
+            .await
+            .unwrap();
+        let url = "https://gitlab.example.com/group/sub/project.git";
+
+        assert_eq!(
+            h.git_token(&store, url, None).await.unwrap(),
+            Some(Secret::new(TOKEN))
+        );
+        assert_eq!(
+            h.git_token(&store, url, Some(&second.account.id))
+                .await
+                .unwrap(),
+            Some(Secret::new(TOKEN2))
+        );
+        for other in [
+            "http://gitlab.example.com/group/project.git",
+            "https://gitlab.example.com:8443/group/project.git",
+            "git@gitlab.example.com:group/project.git",
+            "https://github.com/group/project.git",
+        ] {
+            assert!(h.git_token(&store, other, None).await.unwrap().is_none());
+        }
         h.remove_account(&store, &first.account.host, Some(first.account.id))
             .await
             .unwrap();

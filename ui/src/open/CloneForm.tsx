@@ -34,12 +34,14 @@ export function CloneForm({ tabId, autoFocus, onCloned }: { tabId: string; autoF
   // The clone's op is labelled with its destination (`opStarted.label`).
   const op = useOps((s) => (busy ? Object.values(s.ops).find((o) => o.kind === 'clone' && o.label === dest.trim()) : undefined));
 
-  const clone = async (remote: string, target: string) => {
+  const clone = async (remote: string, target: string, account?: string) => {
     setDest(target);
     setBusy(true);
     setError(null);
     try {
-      const repo = await api.clone(remote, target);
+      const repo = account
+        ? await api.clone(remote, target, account)
+        : await api.clone(remote, target);
       // The tab that started the clone may be gone (closed) or no longer an Open tab: the
       // result then opens in a tab of its own instead of applying to a dead tab id.
       const here = useAppState.getState().profile.tabs.find((t) => t.id === tabId);
@@ -68,9 +70,9 @@ export function CloneForm({ tabId, autoFocus, onCloned }: { tabId: string; autoF
       setPicking(false);
     }
   };
-  /** A forge search hit: clone it into the chosen folder, in a folder named after it. HTTPS
-   * first: it works for public repositories and with the user's git credential helper (and can
-   * prompt); SSH only when the forge gives no HTTPS URL, since a token account has no SSH key. */
+  /** A forge search hit: clone it with the account that found it, into the chosen folder. HTTPS
+   * works with public repositories, configured PATs or the user's git credential helper; SSH is
+   * used only when the forge gives no HTTPS URL, since a token account has no SSH key. */
   const cloneHit = async (hit: ForgeRepoHit) => {
     const remote = hit.project.cloneHttps.trim() || hit.project.cloneSsh.trim();
     if (!remote) {
@@ -98,7 +100,7 @@ export function CloneForm({ tabId, autoFocus, onCloned }: { tabId: string; autoF
     }
     setUrl(remote);
     setDestEdited(false);
-    await clone(remote, joinPath(base, name));
+    await clone(remote, joinPath(base, name), hit.accountId);
   };
 
   const problem = cloneUrlProblem(url) ?? cloneDestProblem(dest);

@@ -30,7 +30,7 @@ fn cli() -> GitCli {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn azure_pat_reaches_real_git_without_a_prompt_or_persistent_helper() {
+async fn forge_pats_reach_real_git_without_a_prompt_or_persistent_helper() {
     use gitnexia_core::askpass::AskpassServer;
     use gitnexia_core::events::EventBus;
     use gitnexia_core::ops::{OpRegistry, OpRemote};
@@ -72,23 +72,36 @@ async fn azure_pat_reaches_real_git_without_a_prompt_or_persistent_helper() {
     ]);
     let before = std::fs::read(repo.path().join(".git/config")).unwrap();
 
-    for (url, interactive) in [
+    for (url, interactive, username) in [
         (
             "https://orbital@dev.azure.com/orbital/Space%20Tools/_git/Orbit",
             true,
+            "gitnexia",
         ),
-        ("https://dev.azure.com/orbital/Space/_git/O'rbit", false),
+        (
+            "https://dev.azure.com/orbital/Space/_git/O'rbit",
+            false,
+            "gitnexia",
+        ),
         (
             "https://dev.azure.com/orbital/Space/_git/Orbit%2520%25",
             true,
+            "gitnexia",
         ),
         (
             "https://dev.azure.com/orbital/Sp%C3%A4ce/_git/O%27rbit%25",
             false,
+            "gitnexia",
         ),
         (
             "https://orbital.visualstudio.com/DefaultCollection/Space/_git/Orbit",
             true,
+            "gitnexia",
+        ),
+        (
+            "https://gitlab.example.com/group/sub/project.git",
+            true,
+            "oauth2",
         ),
     ] {
         let op = ops.begin(OpKind::Fetch, Some(1), interactive);
@@ -98,7 +111,7 @@ async fn azure_pat_reaches_real_git_without_a_prompt_or_persistent_helper() {
             settable: true,
             account: Some("chosen-account".into()),
         }]);
-        let scope = gitnexia_core::askpass::azure_credential_scope(url).unwrap();
+        let scope = gitnexia_core::askpass::git_credential_scope(url).unwrap();
         let mut env = server.env_for(Some(op.id));
         env.extend(server.credential_env(&[scope]));
         assert!(
@@ -145,11 +158,15 @@ async fn azure_pat_reaches_real_git_without_a_prompt_or_persistent_helper() {
             );
             assert!(
                 out.stderr.is_empty(),
-                "configured helpers must not run for covered Azure URLs"
+                "configured helpers must not run for covered forge URLs"
             );
             if action == "fill" {
                 let output = String::from_utf8(out.stdout).unwrap();
-                assert!(output.lines().any(|line| line == "username=gitnexia"));
+                assert!(
+                    output
+                        .lines()
+                        .any(|line| line == format!("username={username}"))
+                );
                 assert!(
                     output
                         .lines()
@@ -160,7 +177,7 @@ async fn azure_pat_reaches_real_git_without_a_prompt_or_persistent_helper() {
     }
     assert_eq!(
         calls.load(Ordering::SeqCst),
-        5,
+        6,
         "store/erase must neither read nor delete the account token"
     );
     assert!(std::fs::read(repo.path().join(".git/config")).unwrap() == before);

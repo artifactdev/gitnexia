@@ -108,7 +108,7 @@ describe('OpenRepoScreen', () => {
     const hit = await screen.findByRole('button', { name: 'Clone alice/widget' });
     expect(api.forgeSearchRepos).toHaveBeenCalledWith('widget');
     await act(async () => { fireEvent.click(hit); });
-    expect(api.clone).toHaveBeenCalledWith('https://gitlab.example.com/alice/widget.git', '/home/u/repos/widget');
+    expect(api.clone).toHaveBeenCalledWith('https://gitlab.example.com/alice/widget.git', '/home/u/repos/widget', '7');
     expect(screen.queryByLabelText('Repository URL')).toBeNull();
     expect(rt.openPathInTab).toHaveBeenCalledWith('/home/u/repos/widget', 't1');
   });
