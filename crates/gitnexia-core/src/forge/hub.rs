@@ -242,7 +242,7 @@ impl ForgeHub {
             // An organization's own policy (e.g. a fine-grained token lifetime cap) says why: keep its words.
             GbErrorKind::AuthFailed if is_forbidden(&e) && e.message.contains("forbids access via a fine-grained") => e,
             GbErrorKind::AuthFailed if kind == ForgeKind::Bitbucket && is_forbidden(&e) => GbError::new(GbErrorKind::AuthFailed, format!("{host} accepted the token but refused access to your Bitbucket user")),
-            GbErrorKind::AuthFailed if kind == ForgeKind::AzureDevOps && is_forbidden(&e) => GbError::new(GbErrorKind::AuthFailed, format!("{host} refused access: use an organization-scoped token with Code (Read) permission and verify your repository access")),
+            GbErrorKind::AuthFailed if kind == ForgeKind::AzureDevOps && is_forbidden(&e) => GbError::new(GbErrorKind::AuthFailed, format!("{host} refused access: use an organization-scoped token with the required Code permissions (Read for browsing; Read & write for PR changes) and verify your repository access")),
             GbErrorKind::AuthFailed if is_forbidden(&e) => GbError::new(GbErrorKind::AuthFailed, format!("{host} accepted the token but it can't read your user: give it the api scope (GitLab), read access (GitHub) or read:user (Forgejo)")),
             GbErrorKind::AuthFailed => GbError::new(GbErrorKind::AuthFailed, format!("{host} rejected this token: check that you copied all of it")),
             _ => e,

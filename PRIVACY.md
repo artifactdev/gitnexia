@@ -69,8 +69,8 @@ makes no forge requests (apart from images you choose to load, below).
     port and context path, under `/rest/api/1.0` and `/rest/build-status/1.0`. Bitbucket Cloud
     is not contacted by this integration.
   - Azure DevOps Services: `https://dev.azure.com/<your organization>`, for authenticated
-    identity and accessible Git repositories. No organization enumeration, Azure DevOps Server,
-    Microsoft Entra/OAuth endpoint or separate avatar service is contacted.
+    identity, accessible Git repositories and PR operations. No organization enumeration,
+    Azure DevOps Server, Microsoft Entra/OAuth endpoint or separate avatar service is contacted.
 - **Sends:**
   - your token, in the `Authorization` header and only to that account's host;
     Azure PATs use Basic auth with an empty username, confined to the configured organization;
@@ -83,11 +83,12 @@ makes no forge requests (apart from images you choose to load, below).
   - Bitbucket merges open the PR's page in your system browser instead of sending a merge
     request with the token. This sends the PR URL to your browser, not the token; the browser's
     own Bitbucket login is independent of GitNexia.
-  - Azure DevOps currently sends repository searches/lookups only, not PR or work-item writes.
-    Searches filter accessible repositories locally by project/repository name. Adding an
-    account validates identity and repository read access; opening a repository resolves its
-    remote. Matching HTTPS git remotes also use the saved PAT, as described above; SSH remotes
-    continue to use your existing SSH credentials.
+  - Azure DevOps sends repository searches/lookups, PR lists/details, comments, creation and
+    merge requests to the configured organization. It does not send work-item writes. Searches
+    filter accessible repositories locally by project/repository name. Adding an account validates
+    identity and repository read access; opening a repository resolves its remote. Matching HTTPS
+    git remotes also use the saved PAT, as described above; SSH remotes continue to use your
+    existing SSH credentials.
 - **When:**
   - for the shown tab's repository, when the tab opens and after GitNexia writes something to the
     forge;

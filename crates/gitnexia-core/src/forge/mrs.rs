@@ -327,11 +327,6 @@ impl ForgeHub {
             })
             .ok_or_else(|| refuse(NO_TARGET))?;
         let (key, provider, project) = self.project_for_remote(store, remotes, &remote).await?;
-        if project.kind == crate::forge::ForgeKind::AzureDevOps {
-            return Err(refuse(
-                "Azure DevOps pull request workflows are not supported by this integration",
-            ));
-        }
         self.restore_responses(&key, &provider, &project);
         Ok(MrTarget {
             key,

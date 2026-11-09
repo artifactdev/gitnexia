@@ -6,8 +6,9 @@ access tokens (PATs). Azure DevOps Server and Microsoft Entra sign-in are not in
 ## Connect and clone
 
 1. In your Azure DevOps organization, open **User settings > Personal access tokens**.
-   Create a token scoped to that organization with **Code (Read)** permission. The token
-   cannot grant repository access your user does not already have.
+   Create a token scoped to that organization with **Code (Read)** permission for browsing.
+   PR creation, comments and merges need **Code (Read & write)**. The token cannot grant
+   repository access your user does not already have.
 2. In GitNexia, open **Settings > Accounts > Add account** and select **Azure DevOps**.
 3. Enter your organization URL, for example `https://dev.azure.com/orbital`, not a project
    URL, clone URL or API endpoint.
@@ -49,14 +50,23 @@ The account key is `dev.azure.com/orbital`, including the organization, rather t
 - Search accessible Git repositories across the organization's projects.
 - Clone repositories, recognize existing remotes, and open repository, branch, commit and file
   pages in the system browser.
+- List and view pull requests, including their descriptions, existing reviewers and merge status.
+- Create ready or draft pull requests from a branch in the same repository, and add discussion
+  comments or replies.
+- Merge a pull request using the chosen merge strategy. GitNexia sends the source commit it read
+  with the merge request so Azure DevOps can refuse a stale merge.
+- PR reviewer votes already on Azure DevOps are displayed, but requesting reviewers, voting,
+  approvals and changes-requested actions are not available in GitNexia.
+- Inline review comments, pipelines/checks, cross-repository PR creation, work-item integration,
+  and Azure DevOps Server are not included.
 - Disabled repositories are excluded from discovery. TFVC is not a Git repository and is not
   included.
-- Pull request lists, build status, PR creation, reviews, comments, merges, forks and work-item
-  integration are not included in this first integration. PR controls/polling are not enabled.
 - No organization enumeration or third-party OAuth access is required: you enter the organization.
 - Contract tests use a local fake HTTP server, not a live Azure DevOps organization.
 
-The repository API contract is
-[Azure DevOps REST 7.1](https://learn.microsoft.com/en-us/rest/api/azure/devops/git/repositories/list?view=azure-devops-rest-7.1).
+The API contract follows Azure DevOps REST 7.1: [repository discovery](https://learn.microsoft.com/en-us/rest/api/azure/devops/git/repositories/list?view=azure-devops-rest-7.1),
+[pull request creation](https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-requests/create?view=azure-devops-rest-7.1),
+[pull request updates and merge](https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-requests/update?view=azure-devops-rest-7.1),
+and [pull request threads](https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-request-threads/list?view=azure-devops-rest-7.1).
 Removing an account deletes its locally stored token, but does not revoke it in Azure DevOps.
 Revoke unused PATs there too. See [Security](../SECURITY.md) and [Privacy](../PRIVACY.md).

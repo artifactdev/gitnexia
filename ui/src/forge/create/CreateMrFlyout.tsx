@@ -188,8 +188,16 @@ export function CreateMrFlyout({ tabId, props: { branch }, close: closeFrame }: 
   // Pushed elsewhere than the source (another remote, or the target branch itself): ask where.
   const pushElsewhere = !!pushed && (pushed.remote !== draft.sourceRemote || pushed.branch !== sourceBranch);
   const pushNote = createBlocked({ draft, sourceBranch, onRemote, sourceProject: ctx.sourceProject, targetProject: ctx.project.path });
-  const unsupported = kind === 'bitbucket' && (draft.draft || draft.assignees.length > 0 || draft.labels.length > 0);
-  const blocked = loading ? 'Loading…' : unsupported ? 'Clear the saved draft status, assignees and labels: these options are not supported by this Bitbucket integration.' : pushNote;
+  const unsupported = (kind === 'bitbucket' && (draft.draft || draft.assignees.length > 0 || draft.labels.length > 0))
+    || (kind === 'azuredevops' && (draft.reviewers.length > 0 || draft.assignees.length > 0 || draft.labels.length > 0));
+  const unsupportedMessage = kind === 'bitbucket'
+    ? 'Clear the saved draft status, assignees and labels: these options are not supported by this Bitbucket integration.'
+    : 'Clear saved reviewers, assignees and labels: these options are not supported by this Azure DevOps integration.';
+  const blocked = loading ? 'Loading…'
+    : unsupported ? unsupportedMessage
+      : kind === 'azuredevops' && ctx.sourceProject.toLowerCase() !== ctx.project.path.toLowerCase()
+        ? 'Azure DevOps pull requests must come from a branch in the target repository.'
+        : pushNote;
   const squash = squashToggle(ctx.settings);
   const targets = (sidebar?.remotes.find((g) => g.name === draft.targetRemote)?.branches ?? []).map((b) => b.name).filter((n) => n !== 'HEAD');
   const remoteOptions = choices.map((r) => [r, r] as const);
@@ -378,9 +386,10 @@ export function CreateMrFlyout({ tabId, props: { branch }, close: closeFrame }: 
             />
           </div>
           {/* --- end 5A T9 --- */}
-          <PeopleCard rows={kind === 'bitbucket' ? people.slice(0, 1) : people} disabled={busy} />
+          {kind !== 'azuredevops' && <PeopleCard rows={kind === 'bitbucket' ? people.slice(0, 1) : people} disabled={busy} />}
           {kind === 'bitbucket' && <p className="create-mr-hint">This Bitbucket integration supports reviewers, but not draft pull requests, assignees or labels.</p>}
-          {unsupported && <button type="button" className="create-mr-ghost" onClick={() => update({ ...draft, draft: false, assignees: [], labels: [] })}>Clear unsupported options</button>}
+          {kind === 'azuredevops' && <p className="create-mr-hint">Azure DevOps supports draft pull requests, but reviewer, assignee and label selection is not available here.</p>}
+          {unsupported && <button type="button" className="create-mr-ghost" onClick={() => update({ ...draft, draft: kind === 'bitbucket' ? false : draft.draft, reviewers: [], assignees: [], labels: [] })}>Clear unsupported options</button>}
           {kind === 'gitlab' && (
             <div className="create-mr-field">
               <span className="create-mr-label">When merged</span>

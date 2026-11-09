@@ -51,7 +51,7 @@ const TOKEN_HELP: Record<ForgeKind, string> = {
   github: 'Opens GitHub\'s fine-grained token page with the permissions GitNexia needs selected. Some organizations cap these tokens\' lifetime (e.g. 90 days); use a classic token for those.',
   forgejo: 'Opens the new-token form in your Applications settings. Generate a token with the read:user, write:repository and write:issue scopes, then paste it here.',
   bitbucket: 'Use a personal access token (user HTTP access token) from Manage account › HTTP access tokens, with repository read/write permissions for the actions you need. Merges open in your browser. Bitbucket Cloud is not supported.',
-  azuredevops: 'Enter https://dev.azure.com/your-organization and use a personal access token with Code (Read) access. Browse projects and repositories in Clone. Pull request workflows and Azure DevOps Server are not supported.',
+  azuredevops: 'Enter https://dev.azure.com/your-organization and use a personal access token with Code (Read) access to browse, or Code (Read & write) for pull request changes. Azure DevOps Server is not supported.',
 };
 /** Untyped, with no suggestion of its kind, the host a forge picked starts with (GitLab: none). */
 const DEFAULT_HOSTS: Partial<Record<ForgeKind, string>> = { github: 'github.com', forgejo: 'codeberg.org' };

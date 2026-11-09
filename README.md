@@ -174,10 +174,13 @@ checksums. After that, GitNexia updates itself (see [Updates](#updates)).
 
 #### MRs/PRs
 
-- **GitHub, GitLab, Forgejo and Bitbucket,** self-hosted included (Codeberg and Gitea too),
+- **GitHub, GitLab, Forgejo, Bitbucket and Azure DevOps Services,**
+  self-hosted included where supported (Codeberg and Gitea too),
   with a personal access token. Bitbucket Data Center / Server supports custom HTTPS ports and
   context paths, repository discovery, PRs, reviews and reported build statuses; token-restricted
-  merges open in the browser. Bitbucket Cloud is not included.
+  merges open in the browser. Azure DevOps Services supports PR lists, creation, comments and
+  direct merges; its inline reviews and reviewer actions aren't included. Bitbucket Cloud is not
+  included.
 - **MR/PR view.** Docked beside the graph: reply, resolve, react, edit, approve, request changes,
   change reviewers, assignees and labels, and check out (adding the fork's remote first).
 - **Pipelines and timeline.** Pipeline status, and the activity timeline in rendered Markdown
@@ -253,7 +256,7 @@ checksums. After that, GitNexia updates itself (see [Updates](#updates)).
 | Pull/merge requests: list, view, create, comment, approve, merge | ✅ | ✅ Also auto-merge, and updating a branch that's behind |
 | Inline code review comments | ✅ GitHub | ✅ GitHub, GitLab and Forgejo: lines and ranges, a pending review, suggested changes you can apply |
 | Stacked pull/merge requests | 🟡 GitHub.com only | ✅ GitHub, GitLab and Forgejo |
-| Forges | GitHub, GitLab, Bitbucket, Azure DevOps; self-hosted on paid plans | GitHub, GitLab, Forgejo (including Codeberg and Gitea), Bitbucket Data Center / Server and Azure DevOps Services; self-hosted included for supported providers. Azure DevOps supports PAT accounts, repository discovery, clone and HTTPS git authentication, not PR workflows. Bitbucket Cloud and Azure DevOps Server aren't supported |
+| Forges | GitHub, GitLab, Bitbucket, Azure DevOps; self-hosted on paid plans | GitHub, GitLab, Forgejo (including Codeberg and Gitea), Bitbucket Data Center / Server and Azure DevOps Services; self-hosted included for supported providers. Azure DevOps supports PAT accounts, repository discovery, clone, HTTPS git authentication and core PR workflows. Bitbucket Cloud and Azure DevOps Server aren't supported |
 | Commit signing | ✅ | ✅ Through your git config |
 | Signature verification | ✅ | ✅ |
 | Command palette and keyboard shortcuts | ✅ | ✅ Every one listed in Help › Keyboard shortcuts (Ctrl+/) |
@@ -277,8 +280,8 @@ checksums. After that, GitNexia updates itself (see [Updates](#updates)).
 - **Not planned:** Intel Macs, an integrated terminal, AI features, issue tracker integrations,
   cloud workspaces and team features, and Bitbucket Cloud, Azure DevOps Server or GitHub Enterprise Server
   support. Use the tools you already have for those.
-- **Azure DevOps Services:** accounts and Git repositories are supported; PR workflows and
-  Microsoft Entra/OAuth sign-in are not included. See [connection setup](docs/azure-devops.md).
+- **Azure DevOps Services:** PR reviews/approvals, inline comments, pipelines, cross-repository
+  PRs and Microsoft Entra/OAuth sign-in are not included. See [connection setup](docs/azure-devops.md).
 
 ## Updates
 

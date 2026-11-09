@@ -484,10 +484,12 @@ with an Open in browser action. A diff shows the old and new pages side by side.
 GitHub, GitLab, Forgejo and Bitbucket Data Center / Server are the providers (`gitnexia-forge`),
 all over personal access tokens. Bitbucket Cloud is a different API and is not included.
 Azure DevOps Services (`gitnexia-forge/src/azure_devops.rs`) supports PAT-authenticated repository
-discovery and lookup, not PR workflows. Accounts and parsed remotes use organization-scoped
-keys (`dev.azure.com/<organization>`); HTTPS, SSH and legacy Visual Studio URLs map to the same
-project/repository identity. Azure user and repository GUIDs remain strings in `ForgeId`;
-other providers retain their numeric IDs and the existing serialized shape.
+discovery and lookup, plus core PR workflows: listing and viewing, creating, commenting and
+merging. Accounts and parsed remotes use organization-scoped keys (`dev.azure.com/<organization>`);
+HTTPS, SSH and legacy Visual Studio URLs map to the same project/repository identity. Azure user
+and repository GUIDs remain strings in `ForgeId`; other providers retain their numeric IDs and the
+existing serialized shape. Reviews/approvals, inline comments, pipelines and cross-repository PR
+creation are not included.
 Bitbucket keeps native project-key/repository-slug identities separate from HTTPS clone paths
 (`scm/…`) and web paths (`projects/…/repos/…`, or `users/…/repos/…` for personal repositories).
 Its configured HTTPS installation base preserves custom ports and context paths. Token-restricted
