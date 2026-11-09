@@ -90,12 +90,17 @@ const CREDENTIAL_HELPER: &str = "--gitnexia-credential-helper";
 /// An Azure HTTPS repository, without userinfo. Credentials never cover another port, path,
 /// transport or redirect; the request must also match a remote of the running operation.
 pub fn azure_credential_scope(url: &str) -> Option<String> {
-    let scope = azure_https_url(url)?;
+    let scope = https_credential_url(url)?;
     let parsed = crate::remotes::parse_remote_url(&scope)?;
     parsed.host.starts_with("dev.azure.com/").then_some(scope)
 }
 
-fn azure_https_url(url: &str) -> Option<String> {
+/// A Git HTTPS repository URL suitable for a path-scoped credential helper.
+pub fn git_credential_scope(url: &str) -> Option<String> {
+    azure_credential_scope(url).or_else(|| https_credential_url(url))
+}
+
+fn https_credential_url(url: &str) -> Option<String> {
     let (scheme, rest) = url.trim().split_once("://")?;
     if !scheme.eq_ignore_ascii_case("https")
         || rest.contains(['?', '#', '\\'])
@@ -104,14 +109,30 @@ fn azure_https_url(url: &str) -> Option<String> {
         return None;
     }
     let (authority, path) = rest.split_once('/')?;
-    let host = authority.rsplit('@').next()?.to_ascii_lowercase();
-    let host = host.strip_suffix(":443").unwrap_or(&host);
-    if host.contains(':')
-        || !(host == "dev.azure.com"
-            || (host.ends_with(".visualstudio.com") && host != "vs-ssh.visualstudio.com"))
+    let host_port = authority.rsplit('@').next()?.to_ascii_lowercase();
+    let (host, port) = match host_port.rsplit_once(':') {
+        Some((host, port)) if !port.is_empty() && port.bytes().all(|b| b.is_ascii_digit()) => {
+            let port = port.parse::<u16>().ok().filter(|p| *p != 0)?;
+            (host, Some(port))
+        }
+        Some(_) => return None,
+        None => (host_port.as_str(), None),
+    };
+    if host.is_empty()
+        || !host
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || matches!(c, '.' | '-'))
     {
         return None;
     }
+    let host = host.to_ascii_lowercase();
+    let authority = if port == Some(443) {
+        host
+    } else if let Some(port) = port {
+        format!("{host}:{port}")
+    } else {
+        host
+    };
     let path = path.trim_end_matches('/');
     let mut encoded = Vec::new();
     for segment in path.split('/') {
@@ -125,7 +146,7 @@ fn azure_https_url(url: &str) -> Option<String> {
         }
         encoded.push(crate::remotes::encode_path_segment(&decoded));
     }
-    Some(format!("https://{host}/{}", encoded.join("/")))
+    Some(format!("https://{authority}/{}", encoded.join("/")))
 }
 
 fn credential_url(input: impl BufRead) -> std::io::Result<Option<String>> {
@@ -162,7 +183,7 @@ fn credential_url(input: impl BufRead) -> std::io::Result<Option<String>> {
                 .map(crate::remotes::encode_path_segment)
                 .collect::<Vec<_>>()
                 .join("/");
-            azure_https_url(&format!("https://{host}/{path}"))
+            https_credential_url(&format!("https://{host}/{path}"))
         }
         _ => None,
     })
@@ -391,7 +412,7 @@ impl AskpassServer {
     }
 
     /// Temporary URL-scoped git configuration. Combined with `env_for`, this replaces other
-    /// helpers only for these Azure HTTPS repositories, without putting a PAT in the environment.
+    /// helpers only for the covered HTTPS repositories, without putting a PAT in the environment.
     pub fn credential_env(&self, urls: &[String]) -> Vec<(OsString, OsString)> {
         if urls.is_empty() {
             return Vec::new();
@@ -565,11 +586,11 @@ impl AskpassServer {
         let Some(entry) = self.ops.get(op).filter(|e| !e.cancel.is_cancelled()) else {
             return Ok(None);
         };
-        let Some(scope) = azure_https_url(url) else {
+        let Some(scope) = git_credential_scope(url) else {
             return Ok(None);
         };
         let Some(remote) = entry.remotes().into_iter().find(|r| {
-            azure_credential_scope(&r.url).is_some_and(|own| {
+            git_credential_scope(&r.url).is_some_and(|own| {
                 scope == own
                     || scope
                         .strip_prefix(&own)
@@ -592,13 +613,18 @@ impl AskpassServer {
             Some(token) if token.is_empty() || token.expose().contains(['\r', '\n', '\0']) => {
                 Err(GbError::new(
                     GbErrorKind::AuthFailed,
-                    "The Azure DevOps token is not a valid Git credential: replace it in Settings > Accounts.",
+                    "The forge token is not a valid Git credential: replace it in Settings > Accounts.",
                 ))
             }
             Some(token) => {
                 entry.protect_secret(&token);
+                let username = if azure_credential_scope(url).is_some() {
+                    "gitnexia"
+                } else {
+                    "oauth2"
+                };
                 Ok(Some(format!(
-                    "username=gitnexia\npassword={}\n",
+                    "username={username}\npassword={}\n",
                     token.expose()
                 )))
             }
@@ -733,11 +759,44 @@ mod tests {
     }
 
     #[test]
+    fn git_credential_scope_normalizes_https_repositories() {
+        assert_eq!(
+            git_credential_scope("https://Ada@GitLab.example.com:443/group/sub/project.git/")
+                .as_deref(),
+            Some("https://gitlab.example.com/group/sub/project.git")
+        );
+        assert_eq!(
+            git_credential_scope("https://gitlab.example.com:8443/group/project.git").as_deref(),
+            Some("https://gitlab.example.com:8443/group/project.git")
+        );
+        for url in [
+            "http://gitlab.example.com/group/project.git",
+            "https://gitlab.example.com",
+            "https://gitlab.example.com/group/../other.git",
+            "https://gitlab.example.com/group/%2fproject.git",
+            "https://gitlab.example.com/group/project.git?token=x",
+            "https://gitlab.example.com/group/project.git#fragment",
+            "https://gitlab.example.com:0/group/project.git",
+            "https://gitlab.example.com:8443:443/group/project.git",
+        ] {
+            assert!(git_credential_scope(url).is_none(), "{url}");
+        }
+    }
+
+    #[test]
     fn reads_the_git_credential_protocol_without_using_supplied_passwords() {
         let input = b"protocol=https\nhost=dev.azure.com\npath=orbital/Space/_git/Orbit\nusername=orbital\npassword=FAKE-ignored\n\n";
         assert_eq!(
             credential_url(&input[..]).unwrap().as_deref(),
             Some("https://dev.azure.com/orbital/Space/_git/Orbit")
+        );
+        assert_eq!(
+            credential_url(
+                b"protocol=https\nhost=gitlab.example.com\npath=group/project.git\n\n".as_slice()
+            )
+            .unwrap()
+            .as_deref(),
+            Some("https://gitlab.example.com/group/project.git")
         );
         for input in [
             "protocol=https\nhost=dev.azure.com\n\n",

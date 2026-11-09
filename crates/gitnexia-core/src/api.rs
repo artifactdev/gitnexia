@@ -458,6 +458,9 @@ pub enum Request {
     Clone {
         url: String,
         dest: String,
+        #[serde(default)]
+        #[ts(optional)]
+        account: Option<String>,
     },
     /// A commit's diff (`git diff` against its first parent; `git show` for a root commit) as a
     /// `git apply`-ready patch: `PatchPayload`.
@@ -3008,8 +3011,8 @@ impl Api {
     /// Environment for a network command belonging to `op`: askpass's (none if askpass isn't
     /// running: git then fails a prompt at once, `GIT_TERMINAL_PROMPT=0`), and for a GitNexia-started
     /// (non-interactive) op, `GCM_INTERACTIVE=never` too, so Git Credential Manager never shows
-    /// its own prompt for a background fetch either. A covered Azure HTTPS remote uses the
-    /// saved PAT through a temporary URL-scoped helper, not the user's credential manager.
+    /// its own prompt for a background fetch either. A covered GitLab or Azure HTTPS remote uses
+    /// the saved PAT through a temporary URL-scoped helper, not the user's credential manager.
     pub(crate) fn net_env(&self, op: OpId) -> Vec<(std::ffi::OsString, std::ffi::OsString)> {
         let mut env = self
             .askpass
@@ -3033,11 +3036,16 @@ impl Api {
             let mut remotes = entry.remotes();
             let mut urls = Vec::new();
             for remote in &mut remotes {
-                remote.account = selected.clone();
-                if let Some(scope) = crate::askpass::azure_credential_scope(&remote.url)
-                    && let Some(parsed) = crate::remotes::parse_remote_url(&scope)
+                if selected.is_some() {
+                    remote.account = selected.clone();
+                }
+                if let Some(scope) = crate::askpass::git_credential_scope(&remote.url)
+                    && let Some(host) = crate::remotes::forge_host(&scope)
                     && profile.forge_accounts.iter().any(|a| {
-                        a.kind == crate::forge::ForgeKind::AzureDevOps && a.host == parsed.host
+                        matches!(
+                            a.kind,
+                            crate::forge::ForgeKind::AzureDevOps | crate::forge::ForgeKind::GitLab
+                        ) && a.host == host
                     })
                     && !urls.contains(&scope)
                 {
@@ -4800,7 +4808,9 @@ impl Api {
                 to_json(hub.retarget_mr(&self.store, &list, number, &target).await?)
             }
             // --- end 4D T3 ---
-            Request::Clone { url, dest } => to_json(self.clone_repo(url, dest).await?),
+            Request::Clone { url, dest, account } => {
+                to_json(self.clone_repo_for_account(url, dest, account).await?)
+            }
             Request::CreateCommitPatch { repo, rev } => {
                 let h = self.handle(repo)?;
                 to_json(crate::patch::commit_patch(&self.cli, &h.workdir, &rev).await?)
@@ -8321,6 +8331,54 @@ mod tests {
                 "{url}"
             );
         }
+    }
+
+    #[tokio::test]
+    async fn gitlab_clone_auth_environment_uses_the_selected_account() {
+        use crate::forge::fake::{FakeConnector, FakeProvider, MemTokens};
+        use crate::forge::{ForgeKind, TokenStorage};
+        let host = "gitlab.example.com";
+        let conn = Arc::new(FakeConnector::default());
+        for (token, id) in [("FAKE-gitlab-first", 1), ("FAKE-gitlab-second", 2)] {
+            let mut p = FakeProvider::new(ForgeKind::GitLab, host);
+            p.user.id = id.into();
+            conn.add(token, p);
+        }
+        let api = api().with_forge(conn, MemTokens::new(TokenStorage::File));
+        api.dispatch(req(serde_json::json!({"method":"addForgeAccount","params":{"host":host,"kind":"gitlab","token":"FAKE-gitlab-first"}}))).await.unwrap();
+        let second = api.dispatch(req(serde_json::json!({"method":"addForgeAccount","params":{"host":host,"kind":"gitlab","token":"FAKE-gitlab-second"}}))).await.unwrap();
+        let selected = second["account"]["id"].as_str().unwrap().to_string();
+        let dir = tempfile::tempdir().unwrap();
+        api.start_askpass(dir.path(), "/bin/false".into())
+            .await
+            .unwrap();
+        let op = api.ops().begin(crate::events::OpKind::Clone, None, true);
+        op.set_remotes(vec![crate::ops::OpRemote {
+            name: "origin".into(),
+            url: "https://gitlab.example.com/group/project.git".into(),
+            settable: false,
+            account: Some(selected.clone()),
+        }]);
+        let env = api.net_env(op.id);
+        assert_eq!(op.remotes()[0].account.as_deref(), Some(selected.as_str()));
+        let params = env
+            .iter()
+            .find(|(k, _)| k == "GIT_CONFIG_PARAMETERS")
+            .unwrap()
+            .1
+            .to_string_lossy();
+        assert!(params.contains("credential.https://gitlab.example.com/group/project.git.helper="));
+        assert!(
+            params.contains(
+                "credential.https://gitlab.example.com/group/project.git.useHttpPath=true"
+            )
+        );
+        assert!(
+            params.contains(
+                "http.https://gitlab.example.com/group/project.git.followRedirects=false"
+            )
+        );
+        assert!(!params.contains("FAKE-gitlab"));
     }
 
     #[tokio::test]

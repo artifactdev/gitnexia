@@ -306,7 +306,8 @@ export const api = {
   /** The repos in every folder, scanned in parallel, merged and de-duplicated ("Your repos"). */
   scanFolders: (roots: string[], refresh: boolean) => call<ScannedRepo[]>({ method: 'scanFolders', params: { roots, refresh } }),
   /** Clones `url` into the absolute `dest` (spec §13); the op's label is `dest`. */
-  clone: (url: string, dest: string) => call<RepoSummary>({ method: 'clone', params: { url, dest } }),
+  clone: (url: string, dest: string, account?: string) =>
+    call<RepoSummary>({ method: 'clone', params: { url, dest, ...(account ? { account } : {}) } }),
   /** A commit's diff (`git diff` against its first parent) as a patch, with a suggested name. */
   createCommitPatch: (repo: number, rev: string) => call<PatchPayload>({ method: 'createCommitPatch', params: { repo, rev } }),
   /** The working tree's diff (or its staged changes) as a patch. Untracked files aren't included. */
