@@ -3,12 +3,16 @@
 use crate::endpoints::HostEndpoints;
 use crate::http::{ChangeCounter, ClientConfig, HttpClient, REQUEST_TIMEOUT};
 use crate::time::{parse_rfc3339, unix_now};
+use futures_util::future::try_join_all;
 use gitnexia_core::avatar::AvatarPayload;
 use gitnexia_core::error::{GbError, GbErrorKind};
 use gitnexia_core::forge::*;
 use gitnexia_core::redact::Secret;
 use serde::Deserialize;
 use serde_json::{Value, json};
+
+const REVIEW_FILE_LIMIT: usize = 1024 * 1024;
+const CHANGE_PAGE_SIZE: usize = 2000;
 
 pub struct AzureDevOpsProvider {
     host: String,
@@ -51,6 +55,22 @@ struct Repository {
     default_branch: Option<String>,
     #[serde(default)]
     is_disabled: bool,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct IterationChanges {
+    change_entries: Vec<Value>,
+    #[serde(default)]
+    next_skip: usize,
+    #[serde(default)]
+    next_top: usize,
+}
+
+struct ReviewSnapshot {
+    iteration: u64,
+    refs: DiffRefs,
+    changes: Vec<Value>,
 }
 
 fn guid(id: &str) -> Result<String, GbError> {
@@ -114,6 +134,65 @@ fn branch_name(v: &Value) -> Option<String> {
 
 fn timestamp(v: &Value) -> Option<i64> {
     parse_rfc3339(v.as_str()?)
+}
+
+fn review_path(raw: &str) -> Result<String, GbError> {
+    let path = raw.strip_prefix('/').unwrap_or(raw);
+    if path.is_empty()
+        || path.contains(['\\', '\0'])
+        || path.chars().any(char::is_control)
+        || path.split('/').any(|part| matches!(part, "" | "." | ".."))
+    {
+        return Err(GbError::other(
+            "Azure DevOps returned an invalid pull request file path",
+        ));
+    }
+    Ok(path.to_owned())
+}
+
+fn diff_lines(old: &str, new: &str) -> Vec<ReviewLine> {
+    let patch = similar::TextDiff::from_lines(old, new)
+        .unified_diff()
+        .context_radius(3)
+        .to_string();
+    gitnexia_core::forge::review::commentable_lines(&patch)
+}
+
+fn position_point(line: Option<u32>) -> Value {
+    line.map_or(Value::Null, |line| json!({"line": line, "offset": 1}))
+}
+
+fn position_bounds(start: Option<u32>, end: Option<u32>) -> (Value, Value) {
+    match (start, end) {
+        (Some(start), Some(end)) => (position_point(Some(start)), position_point(Some(end))),
+        (Some(line), None) | (None, Some(line)) => {
+            (position_point(Some(line)), position_point(Some(line)))
+        }
+        (None, None) => (Value::Null, Value::Null),
+    }
+}
+
+fn thread_position(v: &Value) -> Option<DiffPosition> {
+    let context = &v["threadContext"];
+    let path = review_path(context["filePath"].as_str()?).ok()?;
+    let left_start = context["leftFileStart"]["line"].as_u64().map(|n| n as u32);
+    let left_end = context["leftFileEnd"]["line"].as_u64().map(|n| n as u32);
+    let right_start = context["rightFileStart"]["line"].as_u64().map(|n| n as u32);
+    let right_end = context["rightFileEnd"]["line"].as_u64().map(|n| n as u32);
+    if left_start.is_none() && left_end.is_none() && right_start.is_none() && right_end.is_none() {
+        return None;
+    }
+    Some(DiffPosition {
+        path: path.clone(),
+        old_path: Some(path),
+        line: right_end,
+        old_line: left_end,
+        snippet: None,
+        start_line: right_start,
+        start_old_line: left_start,
+        head_sha: None,
+        outdated: v["pullRequestThreadContext"]["isOutdated"].as_bool() == Some(true),
+    })
 }
 
 fn pull_request(v: &Value, project: &ForgeProject, host: &str) -> Result<ForgeMr, GbError> {
@@ -285,14 +364,14 @@ fn pull_request_detail(
     })
 }
 
-fn azure_note(v: &Value, host: &str) -> Option<ForgeNote> {
+fn azure_note(v: &Value, host: &str, position: Option<DiffPosition>) -> Option<ForgeNote> {
     Some(ForgeNote {
         id: v["id"].as_i64()?.to_string(),
         author: identity(&v["author"], host)?,
         body: v["content"].as_str()?.to_owned(),
         created_at: timestamp(&v["publishedDate"]).unwrap_or(0),
         system: v["commentType"].as_str() == Some("system"),
-        position: None,
+        position,
         body_html: None,
         reactions: Vec::new(),
         web_url: None,
@@ -301,12 +380,13 @@ fn azure_note(v: &Value, host: &str) -> Option<ForgeNote> {
 
 fn discussion(v: &Value, host: &str) -> Option<ForgeDiscussion> {
     let id = v["id"].as_i64()?.to_string();
+    let position = thread_position(v);
     let notes = v["comments"]
         .as_array()
         .into_iter()
         .flatten()
         .filter(|c| c["isDeleted"].as_bool() != Some(true))
-        .filter_map(|c| azure_note(c, host))
+        .filter_map(|c| azure_note(c, host, position.clone()))
         .collect();
     let resolved = matches!(
         v["status"].as_str(),
@@ -462,6 +542,174 @@ impl AzureDevOpsProvider {
                 self.pull_request_url(project, number)?
             ))
             .await
+    }
+
+    async fn review_iteration(
+        &self,
+        project: &ForgeProject,
+        number: u64,
+    ) -> Result<(u64, DiffRefs), GbError> {
+        let response = self
+            .http
+            .get(&format!(
+                "{}/iterations?api-version=7.1",
+                self.pull_request_url(project, number)?
+            ))
+            .await?;
+        let iterations: Vec<Value> = response.json(&self.host)?;
+        let (id, latest) = iterations
+            .iter()
+            .filter_map(|v| v["id"].as_u64().map(|id| (id, v)))
+            .max_by_key(|(id, _)| *id)
+            .ok_or_else(|| {
+                GbError::other(format!(
+                    "Azure DevOps hasn't worked out pull request #{number}'s diff yet"
+                ))
+            })?;
+        let commit = |key: &str| {
+            latest[key]["commitId"]
+                .as_str()
+                .filter(|s| !s.is_empty())
+                .map(str::to_owned)
+        };
+        let refs = DiffRefs {
+            base_sha: commit("commonRefCommit").ok_or_else(|| {
+                GbError::other("Azure DevOps returned an iteration without its common commit")
+            })?,
+            start_sha: commit("targetRefCommit").ok_or_else(|| {
+                GbError::other("Azure DevOps returned an iteration without its target commit")
+            })?,
+            head_sha: commit("sourceRefCommit").ok_or_else(|| {
+                GbError::other("Azure DevOps returned an iteration without its source commit")
+            })?,
+        };
+        Ok((id, refs))
+    }
+
+    async fn review_snapshot(
+        &self,
+        project: &ForgeProject,
+        number: u64,
+    ) -> Result<ReviewSnapshot, GbError> {
+        let (iteration, refs) = self.review_iteration(project, number).await?;
+        let base = format!(
+            "{}/iterations/{iteration}/changes",
+            self.pull_request_url(project, number)?
+        );
+        let mut changes = Vec::new();
+        let mut skip = 0;
+        loop {
+            let response = self
+                .http
+                .get(&format!(
+                    "{base}?$compareTo=0&$top={CHANGE_PAGE_SIZE}&$skip={skip}&api-version=7.1"
+                ))
+                .await?;
+            let page: IterationChanges = response.json(&self.host)?;
+            changes.extend(page.change_entries);
+            if page.next_skip <= skip || page.next_top == 0 {
+                break;
+            }
+            skip = page.next_skip;
+        }
+        Ok(ReviewSnapshot {
+            iteration,
+            refs,
+            changes,
+        })
+    }
+
+    async fn item_text(
+        &self,
+        project: &ForgeProject,
+        path: &str,
+        commit: &str,
+    ) -> Result<Option<String>, GbError> {
+        let response = self
+            .http
+            .get_as(
+                &format!(
+                    "{}/items?path={}&versionDescriptor.version={}&versionDescriptor.versionType=commit&api-version=7.1",
+                    self.repository_url(project)?,
+                    crate::http::encode_component(&format!("/{path}")),
+                    crate::http::encode_component(commit)
+                ),
+                "text/plain",
+            )
+            .await?;
+        if response.body.len() > REVIEW_FILE_LIMIT || response.body.contains(&0) {
+            return Ok(None);
+        }
+        Ok(String::from_utf8(response.body.as_ref().clone()).ok())
+    }
+
+    async fn review_file(
+        &self,
+        project: &ForgeProject,
+        snapshot: &ReviewSnapshot,
+        change: &Value,
+    ) -> Result<Option<ReviewFile>, GbError> {
+        if change["item"]["isFolder"].as_bool() == Some(true) {
+            return Ok(None);
+        }
+        let Some(raw_path) = change["item"]["path"].as_str() else {
+            return Err(GbError::other(
+                "Azure DevOps returned a pull request change without a file path",
+            ));
+        };
+        let path = review_path(raw_path)?;
+        let old_path = review_path(
+            change["originalPath"]
+                .as_str()
+                .or(change["item"]["originalPath"].as_str())
+                .unwrap_or(raw_path),
+        )?;
+        let change_types = change["changeType"].as_str().unwrap_or_default();
+        let has_change_type = |expected: &str| {
+            change_types
+                .split(',')
+                .any(|kind| kind.trim().eq_ignore_ascii_case(expected))
+        };
+        let added = has_change_type("add") || has_change_type("undelete");
+        let deleted = has_change_type("delete");
+        let old = if added {
+            Some(String::new())
+        } else {
+            self.item_text(project, &old_path, &snapshot.refs.base_sha)
+                .await?
+        };
+        let new = if deleted {
+            Some(String::new())
+        } else {
+            self.item_text(project, &path, &snapshot.refs.head_sha)
+                .await?
+        };
+        let too_large = old.is_none() || new.is_none();
+        let lines = match (&old, &new) {
+            (Some(old), Some(new)) => diff_lines(old, new),
+            _ => Vec::new(),
+        };
+        Ok(Some(ReviewFile {
+            path: if deleted { old_path.clone() } else { path },
+            old_path,
+            lines,
+            too_large,
+        }))
+    }
+
+    async fn review_files(
+        &self,
+        project: &ForgeProject,
+        snapshot: &ReviewSnapshot,
+    ) -> Result<Vec<ReviewFile>, GbError> {
+        let mut files = Vec::new();
+        for changes in snapshot.changes.chunks(crate::http::PARALLEL) {
+            let batch = changes
+                .iter()
+                .map(|change| self.review_file(project, snapshot, change));
+            files.extend(try_join_all(batch).await?.into_iter().flatten());
+        }
+        Ok(files)
     }
 }
 
@@ -660,7 +908,6 @@ impl ForgeProvider for AzureDevOpsProvider {
             let discussions = list
                 .value
                 .iter()
-                .filter(|v| v["threadContext"].is_null() && v["pullRequestThreadContext"].is_null())
                 .filter_map(|v| discussion(v, &self.host))
                 .filter(|d| !d.notes.is_empty())
                 .collect();
@@ -670,6 +917,112 @@ impl ForgeProvider for AzureDevOpsProvider {
                 poll_interval_secs: response.poll_interval_secs,
                 fetched_at: unix_now(),
             })
+        })
+    }
+
+    fn review_diff<'a>(
+        &'a self,
+        project: &'a ForgeProject,
+        number: u64,
+    ) -> ForgeFuture<'a, ReviewDiff> {
+        Box::pin(async move {
+            let snapshot = self.review_snapshot(project, number).await?;
+            let files = self.review_files(project, &snapshot).await?;
+            Ok(ReviewDiff {
+                refs: snapshot.refs,
+                files,
+            })
+        })
+    }
+
+    fn review_drafts<'a>(
+        &'a self,
+        project: &'a ForgeProject,
+        number: u64,
+    ) -> ForgeFuture<'a, ReviewDrafts> {
+        Box::pin(async move {
+            let (_, refs) = self.review_iteration(project, number).await?;
+            Ok(ReviewDrafts {
+                refs: Some(refs),
+                drafts: Vec::new(),
+                pending_review: None,
+                can_draft: false,
+            })
+        })
+    }
+
+    fn comment_now<'a>(
+        &'a self,
+        project: &'a ForgeProject,
+        number: u64,
+        comment: &'a NewReviewComment,
+    ) -> ForgeFuture<'a, ForgeDiscussion> {
+        Box::pin(async move {
+            let snapshot = self.review_snapshot(project, number).await?;
+            if comment.refs != snapshot.refs {
+                return Err(GbError::new(
+                    GbErrorKind::InvalidInput,
+                    "This Azure DevOps pull request changed; compare again before commenting",
+                ));
+            }
+            let path = review_path(&comment.anchor.path)?;
+            let change = snapshot.changes.iter().find(|c| {
+                c["item"]["path"]
+                    .as_str()
+                    .and_then(|p| review_path(p).ok())
+                    .is_some_and(|p| p == path)
+            });
+            let change_tracking_id = change
+                .and_then(|c| c["changeTrackingId"].as_u64())
+                .ok_or_else(|| {
+                    GbError::new(
+                        GbErrorKind::InvalidInput,
+                        "That file is no longer in the Azure DevOps pull request diff",
+                    )
+                })?;
+
+            let end = comment.anchor.end.position_lines();
+            let start = comment
+                .anchor
+                .start
+                .as_ref()
+                .map(ReviewLine::position_lines)
+                .unwrap_or(end);
+            let (left_file_start, left_file_end) = position_bounds(start.0, end.0);
+            let (right_file_start, right_file_end) = position_bounds(start.1, end.1);
+            let base = self.pull_request_url(project, number)?;
+            let response = self
+                .http
+                .send_json(
+                    crate::http::Method::Post,
+                    &format!("{base}/threads?api-version=7.1"),
+                    &json!({
+                        "comments": [{
+                            "parentCommentId": 0,
+                            "content": comment.body,
+                            "commentType": 1
+                        }],
+                        "status": 1,
+                        "threadContext": {
+                            "filePath": format!("/{path}"),
+                            "leftFileStart": left_file_start,
+                            "leftFileEnd": left_file_end,
+                            "rightFileStart": right_file_start,
+                            "rightFileEnd": right_file_end
+                        },
+                        "pullRequestThreadContext": {
+                            "changeTrackingId": change_tracking_id,
+                            "iterationContext": {
+                                "firstComparingIteration": 0,
+                                "secondComparingIteration": snapshot.iteration
+                            }
+                        }
+                    }),
+                )
+                .await?;
+            let value: Value = response.json(&self.host)?;
+            discussion(&value, &self.host)
+                .ok_or_else(|| GbError::other("Azure DevOps returned an unreadable review thread"))
         })
     }
 
@@ -729,7 +1082,7 @@ impl ForgeProvider for AzureDevOpsProvider {
                         GbError::other("Azure DevOps returned a thread without a comment")
                     })?
             };
-            azure_note(comment, &self.host)
+            azure_note(comment, &self.host, None)
                 .ok_or_else(|| GbError::other("Azure DevOps returned an unreadable comment"))
         })
     }
@@ -1082,6 +1435,210 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn review_diff_uses_the_latest_iteration_and_marks_its_changed_lines() {
+        let iterations = json!([{
+            "id": 3,
+            "commonRefCommit": {"commitId": "base"},
+            "targetRefCommit": {"commitId": "target"},
+            "sourceRefCommit": {"commitId": "head"}
+        }])
+        .to_string();
+        let changes = json!({
+            "changeEntries": [
+                {"changeType": "add", "item": {"path": "/src", "isFolder": true}},
+                {
+                    "changeTrackingId": 19,
+                    "changeType": "edit",
+                    "item": {"path": "/src/lib.rs"}
+                }
+            ]
+        })
+        .to_string();
+        let s = TestServer::start(move |_, head| {
+            if head.contains("/iterations?") {
+                Canned::json(200, &iterations)
+            } else if head.contains("/iterations/3/changes?") {
+                Canned::json(200, &changes)
+            } else if head.contains("versiondescriptor.version=base") {
+                Canned {
+                    status: 200,
+                    headers: vec![("Content-Type".into(), "text/plain".into())],
+                    body: b"one\nold\nend\n".to_vec(),
+                }
+            } else if head.contains("versiondescriptor.version=head") {
+                Canned {
+                    status: 200,
+                    headers: vec![("Content-Type".into(), "text/plain".into())],
+                    body: b"one\nnew\nend\n".to_vec(),
+                }
+            } else {
+                Canned::json(404, "{}")
+            }
+        });
+        let result = provider(&s)
+            .review_diff(&sample_project(), 42)
+            .await
+            .unwrap();
+        assert_eq!(
+            result.refs,
+            DiffRefs {
+                base_sha: "base".into(),
+                start_sha: "target".into(),
+                head_sha: "head".into()
+            }
+        );
+        assert_eq!(result.files.len(), 1);
+        assert_eq!(result.files[0].path, "src/lib.rs");
+        assert!(!result.files[0].too_large);
+        assert!(result.files[0].lines.contains(&ReviewLine {
+            kind: LineKind::Removed,
+            old_line: 2,
+            new_line: 2
+        }));
+        assert!(
+            result.files[0].lines.contains(&ReviewLine {
+                kind: LineKind::Added,
+                old_line: 3,
+                new_line: 2
+            }),
+            "{:?}",
+            result.files[0].lines
+        );
+        let heads = s.heads.lock().unwrap();
+        let item_reads: Vec<_> = heads
+            .iter()
+            .filter(|head| head.contains("/items?"))
+            .collect();
+        assert_eq!(item_reads.len(), 2);
+        assert!(
+            item_reads
+                .iter()
+                .all(|head| head.contains("accept: text/plain"))
+        );
+    }
+
+    #[tokio::test]
+    async fn inline_review_comments_use_the_current_iteration_and_are_read_back() {
+        let iterations = json!([{
+            "id": 3,
+            "commonRefCommit": {"commitId": "base"},
+            "targetRefCommit": {"commitId": "target"},
+            "sourceRefCommit": {"commitId": "head"}
+        }])
+        .to_string();
+        let changes = json!({
+            "changeEntries": [{
+                "changeTrackingId": 19,
+                "changeType": "edit",
+                "item": {"path": "/src/lib.rs"}
+            }]
+        })
+        .to_string();
+        let thread = json!({
+            "id": 141,
+            "status": "active",
+            "threadContext": {
+                "filePath": "/src/lib.rs",
+                "rightFileStart": {"line": 2, "offset": 1},
+                "rightFileEnd": {"line": 2, "offset": 1}
+            },
+            "pullRequestThreadContext": {
+                "changeTrackingId": 19,
+                "iterationContext": {
+                    "firstComparingIteration": 0,
+                    "secondComparingIteration": 3
+                }
+            },
+            "comments": [{
+                "id": 7,
+                "parentCommentId": 0,
+                "content": "Inline",
+                "author": {
+                    "id": "11111111-2222-3333-4444-555555555555",
+                    "displayName": "Robin",
+                    "uniqueName": "robin@example.com"
+                },
+                "publishedDate": "2026-10-02T09:00:00Z",
+                "commentType": "text"
+            }]
+        })
+        .to_string();
+        let iterations_reply = iterations.clone();
+        let changes_reply = changes.clone();
+        let thread_reply = thread.clone();
+        let threads_reply = json!({
+            "value": [serde_json::from_str::<Value>(&thread).unwrap()]
+        })
+        .to_string();
+        let s = TestServer::start(move |_, head| {
+            if head.contains("/iterations?") {
+                Canned::json(200, &iterations_reply)
+            } else if head.contains("/iterations/3/changes?") {
+                Canned::json(200, &changes_reply)
+            } else if head.starts_with("post ") {
+                Canned::json(200, &thread_reply)
+            } else if head.contains("/threads?") {
+                Canned::json(200, &threads_reply)
+            } else {
+                Canned::json(404, "{}")
+            }
+        });
+        let p = provider(&s);
+        let project = sample_project();
+        let comment = NewReviewComment {
+            anchor: ReviewAnchor {
+                path: "src/lib.rs".into(),
+                old_path: "src/lib.rs".into(),
+                start: None,
+                end: ReviewLine {
+                    kind: LineKind::Added,
+                    old_line: 2,
+                    new_line: 2,
+                },
+            },
+            body: "Inline".into(),
+            refs: DiffRefs {
+                base_sha: "base".into(),
+                start_sha: "target".into(),
+                head_sha: "head".into(),
+            },
+        };
+        let posted = p.comment_now(&project, 42, &comment).await.unwrap();
+        assert_eq!(posted.notes[0].position.as_ref().unwrap().line, Some(2));
+        let request = s
+            .heads
+            .lock()
+            .unwrap()
+            .iter()
+            .find(|h| h.starts_with("post ") && h.contains("/threads?"))
+            .cloned()
+            .unwrap();
+        assert!(request.contains("/pullrequests/42/threads?api-version=7.1"));
+        let body: Value = s
+            .bodies
+            .lock()
+            .unwrap()
+            .iter()
+            .find(|b| b.contains("Inline"))
+            .map(|b| serde_json::from_str(b).unwrap())
+            .unwrap();
+        assert_eq!(body["threadContext"]["filePath"], "/src/lib.rs");
+        assert_eq!(body["threadContext"]["rightFileStart"]["line"], 2);
+        assert_eq!(body["pullRequestThreadContext"]["changeTrackingId"], 19);
+        assert_eq!(
+            body["pullRequestThreadContext"]["iterationContext"]["secondComparingIteration"],
+            3
+        );
+
+        let discussions = p.discussions(&project, 42).await.unwrap().value;
+        assert_eq!(discussions.len(), 1, "{:?}", s.heads.lock().unwrap());
+        assert_eq!(
+            discussions[0].notes[0].position.as_ref().unwrap().line,
+            Some(2)
+        );
+    }
+
+    #[tokio::test]
     async fn reads_discussions_and_replies_to_a_thread_root() {
         let s = TestServer::start(|_, head| {
             if head.contains("/threads/141?") {
@@ -1097,15 +1654,19 @@ mod tests {
             } else {
                 Canned::json(
                     200,
-                    r#"{"value":[{"id":141,"status":"active","comments":[{"id":7,"parentCommentId":0,"content":"Question","author":{"id":"22222222-3333-4444-5555-666666666666","displayName":"Alex","uniqueName":"alex"},"publishedDate":"2026-10-02T09:00:00Z","commentType":"text"}]},{"id":142,"threadContext":{"filePath":"/src/lib.rs"},"comments":[]}]}"#,
+                    r#"{"value":[{"id":141,"status":"active","comments":[{"id":7,"parentCommentId":0,"content":"Question","author":{"id":"22222222-3333-4444-5555-666666666666","displayName":"Alex","uniqueName":"alex"},"publishedDate":"2026-10-02T09:00:00Z","commentType":"text"}]},{"id":142,"threadContext":{"filePath":"/src/lib.rs","rightFileStart":{"line":8,"offset":1},"rightFileEnd":{"line":8,"offset":1}},"comments":[{"id":9,"parentCommentId":0,"content":"Inline","author":{"id":"11111111-2222-3333-4444-555555555555","displayName":"Robin","uniqueName":"robin"},"publishedDate":"2026-10-02T10:00:00Z","commentType":"text"}]}]}"#,
                 )
             }
         });
         let p = provider(&s);
         let project = sample_project();
         let discussions = p.discussions(&project, 42).await.unwrap().value;
-        assert_eq!(discussions.len(), 1);
+        assert_eq!(discussions.len(), 2);
         assert_eq!(discussions[0].notes[0].body, "Question");
+        assert_eq!(
+            discussions[1].notes[0].position.as_ref().unwrap().line,
+            Some(8)
+        );
         let reply = p
             .reply(
                 &project,

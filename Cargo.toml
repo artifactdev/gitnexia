@@ -50,6 +50,7 @@ httpdate = "1.0.3"
 encoding_rs = "0.8.42"
 base64 = "0.23.1"
 insta = "1.48"
+similar = "2.7.0"
 axum = { version = "0.8.9", features = ["ws"] }
 tokio-tungstenite = "0.30"
 # Tauri 3 alpha + the official CEF (Chromium) runtime (Task 14). Pinned exactly: this is an

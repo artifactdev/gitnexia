@@ -51,14 +51,17 @@ The account key is `dev.azure.com/orbital`, including the organization, rather t
 - Clone repositories, recognize existing remotes, and open repository, branch, commit and file
   pages in the system browser.
 - List and view pull requests, including their descriptions, existing reviewers and merge status.
+  **Compare** shows the pull request's net changes from its common base to its current head;
+  inline comments can be posted on lines in that diff.
 - Create ready or draft pull requests from a branch in the same repository, and add discussion
-  comments or replies.
+  comments or replies. Inline comments post immediately; composing a batch of draft review comments
+  and submitting them together is not supported.
 - Merge a pull request using the chosen merge strategy. GitNexia sends the source commit it read
   with the merge request so Azure DevOps can refuse a stale merge.
 - PR reviewer votes already on Azure DevOps are displayed, but requesting reviewers, voting,
   approvals and changes-requested actions are not available in GitNexia.
-- Inline review comments, pipelines/checks, cross-repository PR creation, work-item integration,
-  and Azure DevOps Server are not included.
+- Pipelines/checks, cross-repository PR creation, work-item integration, and Azure DevOps Server
+  are not included.
 - Disabled repositories are excluded from discovery. TFVC is not a Git repository and is not
   included.
 - No organization enumeration or third-party OAuth access is required: you enter the organization.
@@ -66,7 +69,11 @@ The account key is `dev.azure.com/orbital`, including the organization, rather t
 
 The API contract follows Azure DevOps REST 7.1: [repository discovery](https://learn.microsoft.com/en-us/rest/api/azure/devops/git/repositories/list?view=azure-devops-rest-7.1),
 [pull request creation](https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-requests/create?view=azure-devops-rest-7.1),
+[pull request iterations](https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-request-iterations/list?view=azure-devops-rest-7.1),
+[iteration changes](https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-request-iteration-changes/get?view=azure-devops-rest-7.1),
+[repository items](https://learn.microsoft.com/en-us/rest/api/azure/devops/git/items/get?view=azure-devops-rest-7.1),
 [pull request updates and merge](https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-requests/update?view=azure-devops-rest-7.1),
+[pull request thread creation](https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-request-threads/create?view=azure-devops-rest-7.1),
 and [pull request threads](https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-request-threads/list?view=azure-devops-rest-7.1).
 Removing an account deletes its locally stored token, but does not revoke it in Azure DevOps.
 Revoke unused PATs there too. See [Security](../SECURITY.md) and [Privacy](../PRIVACY.md).

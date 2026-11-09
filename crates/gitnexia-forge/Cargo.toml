@@ -18,6 +18,8 @@ ureq.workspace = true
 keyring.workspace = true
 httpdate.workspace = true
 tempfile.workspace = true
+similar.workspace = true
+futures-util.workspace = true
 
 [target.'cfg(unix)'.dependencies]
 nix.workspace = true

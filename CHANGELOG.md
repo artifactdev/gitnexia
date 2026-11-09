@@ -5,6 +5,12 @@ All notable changes to GitNexia (GitNex before this release, GitVolt before 1.5.
 
 ## [Unreleased]
 
+### Added
+
+- **Azure DevOps inline pull-request comments.** Compare a PR's net changes from its common base
+  to its head, and post comments on lines in the diff. Comments post immediately; batched draft
+  reviews are not supported.
+
 ## [1.7.2] - 2026-11-09
 
 - **Azure DevOps Services pull request view.** Fixed the pull request view so Azure DevOps Services pull requests display correctly.
