@@ -85,7 +85,8 @@ find the packages by their new names too.
 | all | `SHA256SUMS` (`sha256sum` output listing each package) |
 
 For 1.6.0, the same rows exist with `GitNexia` replaced by `GitNex` (`GitNex_<version>_amd64.deb`,
-`GitNex-<version>-1.x86_64.rpm`, …), byte for byte identical and listed in `SHA256SUMS` too.
+`GitNex-<version>-1.x86_64.rpm`, …), byte for byte identical and listed in `SHA256SUMS` too. The
+workflow makes those old-name copies only for 1.6.0; 1.6.1 and later publish the new names alone.
 
 The tag stays `v<version>`, and the release's body (the CHANGELOG section) is what the update
 dialog shows. Drafts are never offered; a release marked pre-release (or with a pre-release
