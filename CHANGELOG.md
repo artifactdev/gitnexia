@@ -5,6 +5,8 @@ All notable changes to GitNexia (GitNex before this release, GitVolt before 1.5.
 
 ## [Unreleased]
 
+## [1.7.3] - 2026-11-09
+
 ### Added
 
 - **Azure DevOps inline pull-request comments.** Compare a PR's net changes from its common base
