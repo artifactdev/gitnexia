@@ -240,9 +240,10 @@ side by side, then the release job:
    a workflow artifact.
 3. **macOS** (`macos-15` by default, or `macos-26` selected in **Run workflow**; both
    GitHub-hosted Apple Silicon, read-only): stable Rust, Node 22, `just`, CMake and
-   Ninja, `tauri-cli` and cargo-about; imports the signing certificate into a throwaway keychain
-   (see [macOS signing](#macos-signing)), runs `just package-macos` with `GITNEXIA_RELEASE_VERSION`
-   set (see [macOS disk image](#macos-disk-image)), and keeps the `.dmg` and its checksum as a
+   Ninja, `tauri-cli` and cargo-about; imports the Developer ID certificate into a throwaway
+   keychain (see [macOS signing](#macos-signing)), runs `just package-macos` with
+   `GITNEXIA_RELEASE_VERSION` set (see [macOS disk image](#macos-disk-image)), notarizes the app
+   and the `.dmg`, and keeps the `.dmg` and its checksum as a
    workflow artifact. Its caches (cargo, the two cargo tools, the CEF archive) are saved from main
    only, as the others are. Cargo and compiled cargo-tool caches are separate for each macOS
    image; the CEF archive is shared.
@@ -333,59 +334,51 @@ the mounted image.
 
 ### macOS signing
 
-The release's app is signed with **GitNexia's own self-signed code-signing certificate**, so that
-macOS recognises each new version as the same app:
+The release's app is signed with **an Apple Developer ID Application certificate** and notarized,
+so macOS recognises each new version as the same app and Gatekeeper accepts a downloaded copy:
 
 | | |
 |---|---|
-| Subject | CN "GitNexia Self-Signed Code Signing", O GitNexia |
-| Key | RSA 3072; extended key usage code signing (critical) |
-| Valid until | 2046 |
-| SHA-1 | `C7:51:CE:94:C4:B3:D5:EA:A9:D2:75:9C:E8:4F:3C:C8:48:26:36:61` |
+| Subject | CN "Developer ID Application: Jeremias Arnstadt (CJKNBR45T2)" |
+| Team ID | `CJKNBR45T2` |
+| SHA-1 | `F7:90:B0:B4:69:63:FC:69:DB:79:B6:4A:90:AA:DB:76:82:1F:A0:8B` |
+| Valid until | 2027-02-01 |
 
 macOS remembers an app's Privacy & Security permissions (folder access such as Downloads) by the
 app's *designated requirement*. For an ad-hoc signature, as up to 1.2.0, that is the build's hash
 (`cdhash H"…"`), new with every build, so each update asked again (#11). Signed with the
-certificate it is the same in every release:
+Developer ID it is the same in every release:
 
 ```
-identifier "com.gitnexia.desktop" and certificate root = H"c751ce94c4b3d5eaa9d2759ce84f3cc848263661"
+identifier "com.gitnexia.desktop" and anchor apple generic and certificate leaf[subject.OU] = "CJKNBR45T2"
 ```
 
-(codesign's default for a certificate outside Apple's: the identifier and the hash of the chain's
-root, which for a self-signed certificate is the certificate itself.) The first signed release
-still asks once, since 1.2.0's requirement was its cdhash; the ones after it don't.
+(codesign's default for a Developer ID: the identifier, Apple's `anchor apple generic` and the
+Team ID, plus its certificate-field clauses.) The first release signed with it still asks once,
+since 1.5.x's requirement named a certificate hash; the ones after it don't. The Team ID also
+means the Keychain no longer asks after every update: its items' partition list names the app by Team ID, so **Always Allow**
+carries over (with a self-signed certificate it named the build's cdhash instead).
 
-**The Keychain still asks after an update.** A login-keychain item (where GitNexia keeps forge
-tokens, through the `keyring` crate) has two checks: its access list, which names apps by the
-designated requirement, so it now matches every release; and its *partition list*, which names
-the app that created it by its Team ID, for code signed with an Apple Developer ID, and otherwise
-by its cdhash (`partition_id: cdhash:…`). A new build has a new cdhash, so it fails the partition
-check and macOS asks again; **Always Allow** adds that build's cdhash only. Checked on a
-`macos-15` runner (October 2026, a one-off job): an item made by a tool signed with this
-certificate is read without a prompt by a rebuild of it in a keychain without partitions, and
-refused (`errSecAuthFailed` with interaction off) in the login keychain. Only a Team ID (Apple
-Developer Program) gives a partition that survives updates.
-
-**It isn't notarization.** The certificate isn't Apple's: no Developer ID, no Team ID, and the
-`.dmg` isn't notarized. Gatekeeper still rejects a downloaded copy (`spctl --assess` says
-"rejected"), so it needs `xattr -dr com.apple.quarantine /Applications/GitNexia.app` or **Open
-Anyway** once (README.md). An update downloaded by GitNexia itself carries no quarantine flag, so
-it needs neither. Nothing trusts the certificate, and nothing needs to: codesign signs with an
-untrusted identity by its hash (`security find-identity` lists it as `CSSMERR_TP_NOT_TRUSTED`,
-"0 valid identities"), `codesign --verify --deep --strict` checks the signature against its own
-designated requirement, which names the certificate's hash rather than a trusted anchor, and so
-does Privacy & Security. So the certificate is never added to a trust store, not even on the
-runner.
+**Notarization.** The app and the `.dmg` are notarized by Apple's notary service. The Tauri CLI
+does the app while bundling, given `APPLE_ID`, `APPLE_PASSWORD` (an app-specific password) and
+`APPLE_TEAM_ID`: it signs, submits, waits and staples the ticket. The job then notarizes and
+staples the `.dmg` itself (`xcrun notarytool submit --wait`, `xcrun stapler staple`), so
+Gatekeeper accepts the image when it is opened. `scripts/package-macos.sh` checks the stapled
+ticket in the app and in the mounted image when the credentials are set. The `.dmg`'s pre-rename
+`GitNex_*` compatibility copy is byte-identical, so it carries the same signature and ticket. An
+update downloaded by GitNexia itself carries no quarantine flag, so it needs neither.
 
 **How the release signs.** The certificate and its key are two repository secrets:
-`MACOS_CERTIFICATE_P12` (the `.p12`, base64, with the friendly name "GitNexia Self-Signed Code
-Signing" and the legacy encryption `security import` reads) and `MACOS_CERTIFICATE_PASSWORD`. The
-macOS job's "Signing keychain" step (`scripts/macos-keychain.sh import`) puts them in a throwaway
-keychain on the runner, unlocked and searched for the build, tries a signature, and sets
-`GITNEXIA_MACOS_SIGNING_IDENTITY` to the certificate's SHA-1; the job deletes the keychain after
-the build, whatever happens. A run on `artifactdev/gitnexia` without the secrets fails there; a
-fork's run builds ad-hoc. `mac-port.yml`'s package job does the same, minus the requirement.
+`MACOS_CERTIFICATE_P12` (the `.p12`, base64, exported from Keychain Access with the "Developer ID
+Certification Authority" intermediate) and `MACOS_CERTIFICATE_PASSWORD`. Notarization takes three
+more: `APPLE_ID` (the Apple ID), `APPLE_PASSWORD` (an app-specific password, not the Apple ID's)
+and `APPLE_TEAM_ID`. The macOS job's "Signing keychain" step (`scripts/macos-keychain.sh import`)
+puts the certificate in a throwaway keychain on the runner, unlocked and searched for the build,
+tries a signature, and sets `GITNEXIA_MACOS_SIGNING_IDENTITY` to the certificate's SHA-1; the job
+deletes the keychain after the build, whatever happens. A run on `artifactdev/gitnexia` without
+the certificate or the notarization secrets fails there; a fork's run builds ad-hoc.
+`mac-port.yml`'s package job imports the certificate too, minus the requirement, and doesn't
+notarize.
 
 `just package-macos` signs with `GITNEXIA_MACOS_SIGNING_IDENTITY` when it's set (an identity in
 the keychain search list, by SHA-1 or name), and ad-hoc otherwise (`signingIdentity: "-"` in
@@ -398,40 +391,35 @@ Apple's); with an identity, the `.dmg` too. Each helper app gets its own identif
 `.helper.alerts`), through `scripts/macos-codesign/codesign` ahead on the bundler's `PATH`. The
 script then checks, in the bundle and in the mounted `.dmg`: `codesign --verify --deep --strict`,
 the hardened runtime, the library-validation entitlement, the identifiers and, with an identity,
-that the app's and every helper's designated requirement is their identifier and the
-certificate's hash (never a cdhash). It prints the signature (`Authority=GitNexia Self-Signed Code
-Signing`, `TeamIdentifier=not set`) and the requirement.
+that the app's and every helper's designated requirement is their identifier and Apple's anchor
+with the Team ID (or, for a self-signed certificate, the certificate's hash; never a cdhash), and
+that the app carries its notarization ticket when the credentials are set. It prints the signature
+(`Authority=Developer ID Application: Jeremias Arnstadt (CJKNBR45T2)`,
+`TeamIdentifier=CJKNBR45T2`) and the requirement.
 
-**Where it's kept.** The `.p12` and its password are in the repository's secrets, which GitHub
-never shows again, and in the maintainer's password manager, the only copy to restore them from.
-Neither belongs in the repository, a log or an issue.
+**Where it's kept.** The `.p12`, its password and the notarization credentials are in the
+repository's secrets, which GitHub never shows again, and in the maintainer's password manager,
+the only copy to restore them from. Neither belongs in the repository, a log or an issue.
 
-**Rotating it** (if the key leaks or is lost, or the certificate nears 2046): every user gets **one
-more round of folder-permission prompts** after the first update signed with the new certificate, as
-with the move from ad-hoc. Rotated on 2026-11-06, after the first key was lost. To make a new one:
+**Renewing it** (Developer ID certificates expire; this one on 2027-02-01): every user gets **one
+more round of folder-permission prompts** after the first update signed with the new certificate,
+as with the move from ad-hoc. To replace it, create or renew the "Developer ID Application"
+certificate in the Apple Developer portal, then:
 
 ```sh
-openssl req -x509 -newkey rsa:3072 -sha256 -days 7300 -noenc -keyout key.pem -out cert.pem \
-  -subj "/CN=GitNexia Self-Signed Code Signing/O=GitNexia" \
-  -addext "basicConstraints=critical,CA:FALSE" -addext "keyUsage=critical,digitalSignature" \
-  -addext "extendedKeyUsage=critical,codeSigning"
-openssl pkcs12 -export -legacy -inkey key.pem -in cert.pem \
-  -name "GitNexia Self-Signed Code Signing" -out gitnexia-codesign.p12
-base64 < gitnexia-codesign.p12 | gh secret set MACOS_CERTIFICATE_P12 -R artifactdev/gitnexia
-gh secret set MACOS_CERTIFICATE_PASSWORD -R artifactdev/gitnexia   # prompts for it
+# In Keychain Access: select the certificate and its private key, plus "Developer ID
+# Certification Authority", and export them as a .p12.
+base64 < DeveloperID.p12 | gh secret set MACOS_CERTIFICATE_P12 -R artifactdev/gitnexia
+gh secret set MACOS_CERTIFICATE_PASSWORD -R artifactdev/gitnexia
+gh secret set APPLE_ID -R artifactdev/gitnexia
+gh secret set APPLE_PASSWORD -R artifactdev/gitnexia        # app-specific password
+gh secret set APPLE_TEAM_ID -R artifactdev/gitnexia
 ```
 
-Keep the `.p12` and its password in the password manager, delete `key.pem`, and update the SHA-1
-and the requirement above and in SECURITY.md (`openssl x509 -in cert.pem -noout -fingerprint
--sha1`).
+Keep the `.p12` and its password in the password manager and update the SHA-1 and Team ID above
+and in SECURITY.md: `security find-identity -v -p codesigning` prints them, and
+`openssl x509 -noout -fingerprint -sha1` on the exported certificate prints the hash.
 `mac-port.yml` (run it on a branch) shows the new `Authority` and requirement before a release.
-
-**A Developer ID instead**, should the project ever join the Apple Developer Program: put that
-certificate in the same two secrets, and add notarization (`xcrun notarytool submit --wait` and
-`xcrun stapler staple` on the `.dmg`; the Tauri CLI does both given `APPLE_ID`,
-`APPLE_PASSWORD` and `APPLE_TEAM_ID`). Its requirement is Apple's form (`anchor apple generic`
-and the Team ID), so users would see one more round of prompts then too; after it, the Team ID
-would also let the Keychain's **Always Allow** carry over.
 
 **Versions.** `CFBundleShortVersionString` and `CFBundleVersion` are the package version as is
 (`0.4.0-rc.1`, or a local build's stamp): macOS shows it in Finder and nothing compares it, since
@@ -499,8 +487,9 @@ runner; public ones get 4 vCPUs, roughly halving the compile steps):
 | **Total** | **about 55–80 min** | **about 25–35 min** |
 
 The job's timeout is 120 minutes. The Windows and macOS jobs run at the same time and take about
-as long (their Rust builds are the longest steps); on a private repository Windows minutes count
-double and macOS minutes ten times.
+as long (their Rust builds are the longest steps; the macOS job also waits for Apple's notary
+service, usually a few minutes); on a private repository Windows minutes count double and macOS
+minutes ten times.
 
 The repository is private, so the runs count against the account's included Actions minutes
 (Linux runners at a 1× rate: 2,000 minutes a month on GitHub Free, 3,000 on Team). A release is

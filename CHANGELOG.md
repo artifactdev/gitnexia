@@ -18,8 +18,10 @@ All notable changes to GitNexia (GitNex before this release, GitVolt before 1.5.
 - **Updates move to the new repository.** 1.6.0 publishes its packages under both `GitNexia_*`
   and the old `GitNex_*` asset names, and this version reads either; older builds may need a
   manual install if GitHub's repository redirect doesn't carry them.
-- **macOS releases are signed with a new certificate.** The first update signed with it asks once
-  more for folder permissions; the ones after it keep them (docs/releasing.md, "macOS signing").
+- **macOS releases are signed with an Apple Developer ID and notarized.** Gatekeeper accepts the
+  `.dmg`'s first launch, and the Team ID lets the Keychain's **Always Allow** carry over. The first
+  update signed with the new certificate asks once more for folder permissions; the ones after it
+  keep them (docs/releasing.md, "macOS signing").
 
 ## [1.5.3] - 2026-11-06
 

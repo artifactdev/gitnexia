@@ -33,8 +33,9 @@ current code; each point names where to look.
   it, runs unsandboxed and logs a warning.
 - On macOS, the helper apps in `GitNexia.app/Contents/Frameworks` enter Chromium's Seatbelt
   sandbox through the framework's `libcef_sandbox.dylib` before they load the framework itself.
-  This works without an Apple identity: the release is signed with GitNexia's self-signed
-  certificate, a local build ad-hoc (docs/releasing.md, "macOS signing"). GitNexia only runs from
+  The sandbox doesn't depend on the signature: the release is signed with GitNexia's Apple
+  Developer ID certificate and notarized, a local build ad-hoc (docs/releasing.md, "macOS
+  signing"). GitNexia only runs from
   its bundle there, which always ships the library: a helper without it fails to start rather
   than run unsandboxed.
 - The `.deb`, `.rpm` and Arch packages ship Chromium's `chrome-sandbox` helper owned by root with
@@ -288,10 +289,10 @@ GitNexia can download and install its own updates from GitHub Releases
   `%LOCALAPPDATA%\gitnexia\updates` on Windows, `~/Library/Caches/GitNexia/updates` on macOS).
 - **What `SHA256SUMS` proves.** It catches a corrupted or swapped download, but it comes from the
   same release, so it only proves the file is the one published there. **The Linux and Windows
-  packages aren't code-signed yet**, and the macOS app's certificate is self-signed (below). For
-  a stronger check, GitHub's build provenance attestations tie each package to the release
-  workflow that built it; verify one by hand with the GitHub CLI, giving `--repo` the repository
-  the release came from. That is `artifactdev/gitnexia`:
+  packages aren't code-signed yet**; the macOS app is signed with a Developer ID and notarized
+  (below). For a stronger check, GitHub's build provenance attestations tie each package to the
+  release workflow that built it; verify one by hand with the GitHub CLI, giving `--repo` the
+  repository the release came from. That is `artifactdev/gitnexia`:
 
   ```sh
   gh attestation verify GitNexia_0.7.0_amd64.deb --repo artifactdev/gitnexia
@@ -300,18 +301,19 @@ GitNexia can download and install its own updates from GitHub Releases
   A package built before the move was signed as `GitBoltApp/gitbolt`: verify it with
   `--repo GitBoltApp/gitbolt`.
 
-- **macOS code signing.** `GitNexia.app` (and its `.dmg`) is signed with GitNexia's own
-  self-signed certificate (SHA-1 `C7:51:CE:94:C4:B3:D5:EA:A9:D2:75:9C:E8:4F:3C:C8:48:26:36:61`),
-  not an Apple Developer ID, and isn't notarized, so Gatekeeper still blocks a downloaded copy's
-  first launch (README.md). Nothing trusts the certificate, so the signature doesn't prove who
-  built the app; what it gives is a designated requirement that stays the same in every release
-  (`identifier "com.gitnexia.desktop" and certificate root = H"c751ce94…"`), so Privacy &
-  Security's folder permissions carry over to updates. Check it with
-  `codesign -d -r- /Applications/GitNexia.app`. The Keychain still asks after an update: its
-  items' partition list names apps without a Team ID by their cdhash (docs/releasing.md, "macOS
-  signing"). The key lives in the repository's Actions secrets and the maintainer's password
-  manager, and reaches a build only in a throwaway keychain on the macOS runner. The updater
-  doesn't check the signature; the checksums above are its check.
+- **macOS code signing.** `GitNexia.app` (and its `.dmg`) is signed with GitNexia's Apple
+  Developer ID Application certificate (Team ID `CJKNBR45T2`, SHA-1
+  `F7:90:B0:B4:69:63:FC:69:DB:79:B6:4A:90:AA:DB:76:82:1F:A0:8B`) and notarized by Apple, so
+  Gatekeeper accepts a downloaded copy's first launch. The signature's designated requirement is
+  Apple's form (`identifier "com.gitnexia.desktop" and anchor apple generic and certificate
+  leaf[subject.OU] = "CJKNBR45T2"`, with codesign's certificate-field clauses), the same in every
+  release, so Privacy & Security's folder permissions carry over to updates; the Team ID also
+  lets the Keychain's **Always Allow** carry over (docs/releasing.md, "macOS signing"). Check it
+  with `codesign -d -r- /Applications/GitNexia.app` and `spctl --assess --type execute
+  --verbose=4 /Applications/GitNexia.app`. The certificate, its key and the notarization credentials live in
+  the repository's Actions secrets and the maintainer's password manager, and reach a build only
+  in a throwaway keychain on the macOS runner. The updater doesn't check the signature; the
+  checksums above are its check.
 - **The install.** GitNexia runs `pkexec apt install -y /<path>/<package>.deb`,
   `pkexec dnf install -y /<path>/<package>.rpm` (on openSUSE `pkexec zypper --non-interactive
   install --allow-unsigned-rpm`, else `pkexec rpm -U`) or `pkexec pacman -U --noconfirm

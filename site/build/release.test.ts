@@ -35,7 +35,7 @@ test('the cards: Linux, macOS, Windows, each file of the platform, the first one
   ]);
   expect(html).toContain('<b>Fedora 40+, openSUSE</b>');
   expect(html).toContain('<p>12 or later, Apple Silicon</p>');
-  expect(html).toContain('Ad-hoc signed, not notarized');
+  expect(html).toContain('Signed with an Apple Developer ID and notarized by Apple.');
   expect(html).toContain(`<code>${'4'.repeat(64)}  GitNexia_1.2.3_aarch64.dmg</code>`);
   expect(html).toContain(`Version 1.2.3. Needs Git 2.40 or newer on your <code>PATH</code>. <a href="${REL}/download/v1.2.3/SHA256SUMS"><code>SHA256SUMS</code></a> lists each file's checksum.`);
   expect(html.match(/<span class="youtag" hidden>Your system<\/span>/g)).toHaveLength(3);

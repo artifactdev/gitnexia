@@ -17,10 +17,11 @@
 #    and the Applications link.
 #
 # The signature: with GITNEXIA_MACOS_SIGNING_IDENTITY (a code-signing identity in the keychain
-# search list, by SHA-1 or name: the release's self-signed certificate, which
-# scripts/macos-keychain.sh imports), that identity; without it, ad-hoc. Either way each helper
-# app gets its own identifier (scripts/macos-codesign/codesign). See docs/releasing.md, "macOS
-# signing".
+# search list, by SHA-1 or name: the release's Apple Developer ID certificate, which
+# scripts/macos-keychain.sh imports), that identity; without it, ad-hoc. With APPLE_ID,
+# APPLE_PASSWORD and APPLE_TEAM_ID set, the Tauri CLI notarizes the app and staples the ticket;
+# the checks below then require it. Either way each helper app gets its own identifier
+# (scripts/macos-codesign/codesign). See docs/releasing.md, "macOS signing".
 #
 # The version follows scripts/package-version.sh: a stamped one for local builds, the plain one
 # with GITNEXIA_RELEASE_VERSION (the release workflow). CARGO_BUILD_JOBS defaults to 4. Needs
@@ -71,13 +72,25 @@ fi
 [ -f "$dmg" ] || fail "no $dmg: $(ls "$bundle/dmg" 2>/dev/null | tr '\n' ' ')"
 
 designated() { codesign -d -r- "$1" 2>/dev/null | sed -n 's/^designated => //p'; }
-# codesign's default for a certificate outside Apple's: the identifier and the hash of the chain's
-# root, which for a self-signed one is the certificate itself.
+# A Developer ID's requirement is Apple's form: the identifier, `anchor apple generic` and the
+# Team ID. A certificate outside Apple's (a self-signed one, a local build) gets the identifier
+# and the hash of the chain's root, which for a self-signed one is the certificate itself.
 names_cert() {
-  local req
-  req=$(designated "$1")
-  [ "$req" = "identifier \"$2\" and certificate root = H\"$3\"" ] || [ "$req" = "identifier \"$2\" and certificate leaf = H\"$3\"" ] ||
-    fail "$1: the designated requirement is '$req', not its identifier and the certificate's hash"
+  local path=$1 id=$2 leaf=$3 team=$4 req
+  req=$(designated "$path")
+  if [ -n "$team" ] && [ "$team" != 'not set' ]; then
+    # codesign may add certificate-field clauses and quote the identifier, so check the parts
+    # that matter rather than the exact text.
+    [[ $req == "identifier \"$id\" and anchor apple generic and "* ||
+      $req == "identifier $id and anchor apple generic and "* ]] &&
+      [[ $req == *"certificate leaf[subject.OU] = \"$team\"" ||
+        $req == *"certificate leaf[subject.OU] = $team" ]] ||
+      fail "$path: the designated requirement is '$req', not its identifier, Apple's anchor and Team ID $team"
+  else
+    [ "$req" = "identifier \"$id\" and certificate root = H\"$leaf\"" ] ||
+      [ "$req" = "identifier \"$id\" and certificate leaf = H\"$leaf\"" ] ||
+      fail "$path: the designated requirement is '$req', not its identifier and the certificate's hash"
+  fi
 }
 leaf_sha1() {
   local d
@@ -89,13 +102,14 @@ leaf_sha1() {
 # The signature, valid as `--strict` sees it, with the hardened runtime and CEF's entitlements
 # (without disable-library-validation the runtime would refuse CEF's framework under any identity
 # but Apple's). With an identity, the designated requirement, which Keychain and Privacy &
-# Security remember the app by, must be the identifier and the certificate's hash: the same in
-# every release. Ad-hoc, it's the cdhash, new with each build. The helpers: each its own
-# identifier, and the same certificate.
+# Security remember the app by, must be the identifier and either Apple's anchor with the Team ID
+# (Developer ID) or the certificate's hash (self-signed): the same in every release. Ad-hoc, it's
+# the cdhash, new with each build. The helpers: each its own identifier, and the same certificate.
 check_signature() {
-  local app=$1 info ents id leaf='' h hid hsig ids=() want
+  local app=$1 info ents id team leaf='' h hid hsig hinfo hteam ids=() want
   codesign --verify --deep --strict "$app" || fail "$app: the signature doesn't verify"
   info=$(codesign -dvv "$app" 2>&1)
+  team=$(sed -n 's/^TeamIdentifier=//p' <<<"$info")
   grep -Eq '^CodeDirectory .*flags=0x[0-9a-f]+\([^)]*runtime' <<<"$info" || fail "$app: no hardened runtime"
   # codesign's output is captured, not piped to `grep -q`: that stops reading at the match, and
   # codesign's next write then fails the pipeline (pipefail).
@@ -112,14 +126,17 @@ check_signature() {
     if [[ $identity =~ ^[0-9A-Fa-f]{40}$ ]] && [ "$(tr '[:upper:]' '[:lower:]' <<<"$identity")" != "$leaf" ]; then
       fail "$app: signed with the certificate $leaf, not $identity"
     fi
-    names_cert "$app" "$id" "$leaf"
+    names_cert "$app" "$id" "$leaf" "$team"
   fi
   for h in "$app"/Contents/Frameworks/*.app; do
     hid=$(plutil -extract CFBundleIdentifier raw "$h/Contents/Info.plist")
     ids+=("$hid")
-    hsig=$(codesign -dv "$h" 2>&1 | sed -n 's/^Identifier=//p')
+    hinfo=$(codesign -dvv "$h" 2>&1)
+    hsig=$(sed -n 's/^Identifier=//p' <<<"$hinfo")
     [ "$hsig" = "$hid" ] || fail "$h: signed as '$hsig', not $hid"
-    [ -z "$leaf" ] || names_cert "$h" "$hid" "$leaf"
+    hteam=$(sed -n 's/^TeamIdentifier=//p' <<<"$hinfo")
+    [ -z "$leaf" ] || [ "$hteam" = "$team" ] || fail "$h: Team ID '$hteam', not '$team'"
+    [ -z "$leaf" ] || names_cert "$h" "$hid" "$leaf" "$hteam"
   done
   want=$(printf '%s\n' "$id.helper" "$id.helper.alerts" "$id.helper.gpu" "$id.helper.plugin" "$id.helper.renderer")
   [ "$(printf '%s\n' "${ids[@]}" | sort)" = "$want" ] ||
@@ -129,6 +146,9 @@ check_signature() {
 check_app() {
   local app=$1 res=$1/Contents/Resources
   check_signature "$app"
+  if [ -n "${APPLE_ID:-}" ] && [ -n "${APPLE_PASSWORD:-}" ] && [ -n "${APPLE_TEAM_ID:-}" ]; then
+    xcrun stapler validate "$app" >/dev/null 2>&1 || fail "$app: no stapled notarization ticket"
+  fi
   [ "$(cat "$res/install-kind")" = dmg ] || fail "$app: no install-kind 'dmg' in Contents/Resources"
   for f in LICENSE THIRD-PARTY-NOTICES-rust.txt THIRD-PARTY-NOTICES-ui.txt CEF-LICENSE.txt CHROMIUM-CREDITS.html.gz DICTIONARY-en-US-LICENSE.txt; do
     [ -s "$res/licenses/$f" ] || fail "$app: licenses/$f is missing or empty"

@@ -66,7 +66,7 @@ const PLATFORMS: Array<{ os: Os; name: string; detail: (d: Download[]) => string
   {
     os: 'macos', name: 'macOS', lane: 'magenta',
     detail: (d) => (d.some((x) => x.arch === 'x86_64') ? '12 or later' : '12 or later, Apple Silicon'),
-    note: 'Ad-hoc signed, not notarized: the first launch asks you to allow it in System Settings › Privacy &amp; Security.',
+    note: 'Signed with an Apple Developer ID and notarized by Apple.',
   },
   { os: 'windows', name: 'Windows', detail: () => '10 and 11, x64', lane: 'blue', note: 'Not code-signed yet: SmartScreen warns once, <b>More info</b> › <b>Run anyway</b>.' },
 ];

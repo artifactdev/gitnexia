@@ -457,8 +457,8 @@ jobs:
         working-directory: ui
         run: npm ci
 
-      # As in release.yml: the self-signed certificate from the secrets (none on a fork's pull
-      # request: ad-hoc then).
+      # As in release.yml: the code-signing certificate from the secrets (none on a fork's pull
+      # request: ad-hoc then). This workflow doesn't notarize.
       - name: Signing keychain
         env:
           MACOS_CERTIFICATE_P12: ${{ secrets.MACOS_CERTIFICATE_P12 }}
@@ -510,7 +510,7 @@ jobs:
             echo '## codesign -d -r- (the designated requirement)'
             codesign -d -r- "$mnt/GitNexia.app" 2>&1
             echo
-            echo '## spctl --assess (not notarized: expect "rejected")'
+            echo '## spctl --assess (this workflow does not notarize: expect "rejected")'
             spctl --assess --type execute --verbose=4 "$mnt/GitNexia.app" 2>&1 || echo "(exit $?)"
             spctl --assess --type open --context context:primary-signature --verbose=4 "$dmg" 2>&1 || echo "(exit $?)"
             echo

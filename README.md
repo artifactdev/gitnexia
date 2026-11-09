@@ -55,10 +55,8 @@ Download the package for your system from the
   or `GitNexia_<version>_x64.msi` (installs for all users). They aren't code-signed yet, so
   Windows SmartScreen warns the first time: **More info** › **Run anyway**.
 - **macOS (Apple Silicon):** open `GitNexia_<version>_aarch64.dmg` and drag GitNexia to
-  Applications. The app is signed with GitNexia's own certificate, not an Apple Developer ID, and
-  isn't notarized, so the first launch is blocked ("Apple could not verify…"). Either run
-  `xattr -dr com.apple.quarantine /Applications/GitNexia.app` once, or try to open it, then
-  go to System Settings › Privacy & Security and click **Open Anyway**.
+  Applications. The app is signed with an Apple Developer ID and notarized, so the first launch
+  is accepted by Gatekeeper.
 
 GitNexia needs Git 2.40 or newer on your `PATH` (on Windows,
 [Git for Windows](https://gitforwindows.org/); on macOS, Xcode's command line tools or Homebrew's
