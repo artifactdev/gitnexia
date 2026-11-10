@@ -34,6 +34,10 @@ for f in "$wf"/*.yml; do
   if grep -qE '[[:space:]]["'"'"']?\+(HEAD|refs/)' "$f"; then fail "$name: pushes a forced refspec (+HEAD: or +refs/)"; fi
 done
 
+if grep -qiE 'git[ -]?nex([^i]|$)' "$wf/release.yml"; then
+  fail "release.yml: release builds must use only the current app name"
+fi
+
 beta=$wf/system-webview-beta.yml
 grep -qE '^  workflow_dispatch:$' "$beta" || fail "system-webview-beta.yml: not manually dispatched"
 grep -qF 'os: windows-latest' "$beta" && grep -qF 'os: macos-15' "$beta" ||

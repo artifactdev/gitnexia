@@ -314,14 +314,6 @@ jobs:
           [ "${rpm[0]}" = "target/release/bundle/rpm/GitNexia-${VERSION}-1.x86_64.rpm" ] || { echo "::error::Unexpected RPM name ${rpm[0]}"; exit 1; }
           echo "deb version: $(dpkg-deb -f "${deb[0]}" Version); Arch package: $(basename "${pkg[0]}"); RPM: $(basename "${rpm[0]}")"
           cp "${deb[0]}" "${pkg[0]}" "${rpm[0]}" dist/
-          # 1.6.0 also carries the pre-rename GitNex_* names, so an installed 1.5.x finds its
-          # package (docs/releasing.md, "Asset names are an API").
-          for f in dist/*; do
-            name=$(basename "$f")
-            case "$name" in
-              GitNexia*) cp "$f" "dist/GitNex${name#GitNexia}" ;;
-            esac
-          done
           (cd dist && sha256sum -- *.deb *.pkg.tar.zst *.rpm > SHA256SUMS && cat SHA256SUMS)
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -467,8 +459,6 @@ jobs:
           foreach ($f in $files) {
             if (-not (Test-Path "$out/$f")) { throw "Missing $f in ${out}: $((Get-ChildItem $out).Name -join ', ')" }
             Copy-Item "$out/$f" dist-windows/
-            # 1.6.0 also carries the pre-rename GitNex_* names (docs/releasing.md).
-            Copy-Item "$out/$f" "dist-windows/$($f -replace '^GitNexia', 'GitNex')"
           }
           # sha256sum's format, so the release job checks and merges it with the Linux one.
           $sums = foreach ($f in (Get-ChildItem dist-windows -File | Select-Object -ExpandProperty Name | Where-Object { $_ -ne 'SHA256SUMS' })) { "{0}  {1}" -f (Get-FileHash -Algorithm SHA256 "dist-windows/$f").Hash.ToLower(), $f }
@@ -652,9 +642,6 @@ jobs:
           [ -f "$dmg" ] || { echo "::error::Missing $dmg: $(ls target/release/bundle/dmg)"; exit 1; }
           mkdir -p dist-macos
           cp "$dmg" dist-macos/
-          # 1.6.0 also carries the pre-rename GitNex_* name (docs/releasing.md).
-          name=$(basename "$dmg")
-          cp "$dmg" "dist-macos/GitNex_${name#GitNexia_}"
           # sha256sum's format, so the release job checks and merges it with the others.
           (cd dist-macos && shasum -a 256 -- *.dmg > SHA256SUMS && cat SHA256SUMS)
 

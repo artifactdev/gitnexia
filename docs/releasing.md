@@ -74,14 +74,13 @@ See [the system-webview notes](macos-wkwebview-spike.md) for requirements and li
 ## Asset names are an API
 
 Installed GitNexias find their update by these names (`crates/gitnexia-core/src/updates/release.rs`),
-in the releases of `artifactdev/gitnexia` only. The repository was `artifactdev/gitnex` until
-1.6.0, and 1.6.0 publishes every package under both the new `GitNexia_*`/`GitNexia-*` names and
-the old `GitNex_*`/`GitNex-*` ones: an installed 1.5.x still asks for the old names, and this
-version reads either. From 1.6.1 on, the new names alone are enough. GitBolt 0.6.1 also takes
-these names from the old repositories and installs GitNexia. So keep the names exactly as they
-are, and keep `SHA256SUMS` in every release, listing every copy: an update whose package
-`SHA256SUMS` doesn't list is never installed. The website's downloads (`scripts/site-release.py`)
-find the packages by their new names too.
+in the releases of `artifactdev/gitnexia` only. New builds publish only the
+`GitNexia_*`/`GitNexia-*` names; no legacy `GitNex_*`/`GitNex-*` copies are produced.
+Existing releases are unchanged. GitNexia can still read older asset names, but an installed
+GitNex that only recognizes the old names may need a manual install to move to GitNexia.
+Keep the names exactly as they are, and keep `SHA256SUMS` in every release, listing every
+package: an update whose package `SHA256SUMS` doesn't list is never installed. The website's
+downloads (`scripts/site-release.py`) find the packages by their new names too.
 
 | Install | Asset |
 |---|---|
@@ -92,9 +91,6 @@ find the packages by their new names too.
 | Windows (MSI) | `GitNexia_<version>_x64.msi` |
 | macOS | `GitNexia_<version>_aarch64.dmg` (Apple Silicon; an Intel Mac takes `GitNexia_<version>_x64.dmg`, which no release has yet). The image holds `GitNexia.app` at its top level |
 | all | `SHA256SUMS` (`sha256sum` output listing each package) |
-
-For 1.6.0, the same rows exist with `GitNexia` replaced by `GitNex` (`GitNex_<version>_amd64.deb`,
-`GitNex-<version>-1.x86_64.rpm`, …), byte for byte identical and listed in `SHA256SUMS` too.
 
 The tag stays `v<version>`, and the release's body (the CHANGELOG section) is what the update
 dialog shows. Drafts are never offered; a release marked pre-release (or with a pre-release
@@ -133,10 +129,9 @@ data and CEF profile, and its keyring items (`gitnex`), to GitNexia's; the old f
 stay for a downgrade. Stack tables, Compare refs and interactive-rebase notes written by GitNex
 are still read.
 
-- **Publish the old asset names with 1.6.0.** The release workflow copies each package to its
-  `GitNex_*` name, and `SHA256SUMS` lists both. An installed 1.5.x checks `artifactdev/gitnex`;
-  if GitHub's repository redirect doesn't carry its API calls or downloads, it needs one manual
-  install of 1.6.0, after which updates work as before. The README says so.
+- **Legacy asset names are historical only.** Earlier release builds also copied each package
+  to its `GitNex_*` name and listed both in `SHA256SUMS`. New builds no longer make those copies.
+  An installed 1.5.x checks `artifactdev/gitnex` and may need a manual install of GitNexia.
 - **Keep the `artifactdev/gitnex` redirect.** Don't create a new repository with that name: it
   would take over the old address and capture the update checks and downloads of installs that
   still use it.
@@ -373,9 +368,8 @@ does the app while bundling, given `APPLE_ID`, `APPLE_PASSWORD` (an app-specific
 `APPLE_TEAM_ID`: it signs, submits, waits and staples the ticket. The job then notarizes and
 staples the `.dmg` itself (`xcrun notarytool submit --wait`, `xcrun stapler staple`), so
 Gatekeeper accepts the image when it is opened. `scripts/package-macos.sh` checks the stapled
-ticket in the app and in the mounted image when the credentials are set. The `.dmg`'s pre-rename
-`GitNex_*` compatibility copy is byte-identical, so it carries the same signature and ticket. An
-update downloaded by GitNexia itself carries no quarantine flag, so it needs neither.
+ticket in the app and in the mounted image when the credentials are set. An update downloaded
+by GitNexia itself carries no quarantine flag, so it needs neither.
 
 **How the release signs.** The certificate and its key are two repository secrets:
 `MACOS_CERTIFICATE_P12` (the `.p12`, base64, exported from Keychain Access with the "Developer ID

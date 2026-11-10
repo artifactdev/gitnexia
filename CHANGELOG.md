@@ -5,6 +5,11 @@ All notable changes to GitNexia (GitNex before this release, GitVolt before 1.5.
 
 ## [Unreleased]
 
+### Changed
+
+- **GitNexia-only build assets.** Linux, Windows and macOS release builds no longer produce
+  duplicate packages under the old GitNex names. Migration from existing installations is unchanged.
+
 ## [1.7.4] - 2026-11-10
 
 ### Added

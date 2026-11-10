@@ -40,7 +40,6 @@ scripts/test-windows-installers.sh
 scripts/fix-deb.sh
 scripts/package-arch.sh
 scripts/rpm-pkg.py
-.github/workflows/release.yml
 
 # A comment beside the localStorage migration.
 ui/src/main.tsx
