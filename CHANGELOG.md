@@ -5,6 +5,12 @@ All notable changes to GitNexia (GitNex before this release, GitVolt before 1.5.
 
 ## [Unreleased]
 
+### Added
+
+- **Git setup guidance.** When Git is missing, GitNexia shows operating-system-specific
+  installation instructions, a link to the official download page and an option to check again.
+  Too-old or unstartable Git installations show separate messages.
+
 ## [1.7.5] - 2026-11-10
 
 ### Changed
