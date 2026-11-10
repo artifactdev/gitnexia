@@ -3,12 +3,16 @@ import { api } from '../api/client';
 import type { GbError } from '../api/gen/GbError';
 import { isGbError } from './describe';
 
-interface GitCheck { problem: GbError | null; check(): Promise<void>; retry(): Promise<void> }
+export type GitProblem =
+  | { kind: 'missing' }
+  | { kind: 'tooOld'; error: GbError }
+  | { kind: 'unavailable'; error: GbError };
 
-/** The spawn failed because there is no git binary (ENOENT); any other Io says nothing about git itself. */
-const gitNotFound = (e: GbError) => e.kind === 'Io' && /failed to run git:.*(no such file|not found|os error 2)/i.test(e.message);
+interface GitCheck { problem: GitProblem | null; check(): Promise<void>; retry(): Promise<void> }
 
-/** git is too old (GitTooOld) or can't be run at all (not found): the app is blocked. */
+const spawnFailed = (e: GbError) => e.kind === 'Io' && e.message.startsWith('failed to run git:');
+const gitNotFound = (e: GbError) => spawnFailed(e) && /\bos error 2\)/i.test(e.message);
+
 export const useGitCheck = create<GitCheck>((set, get) => ({
   problem: null,
   async check() {
@@ -16,8 +20,10 @@ export const useGitCheck = create<GitCheck>((set, get) => ({
       await api.appInfo();
       set({ problem: null });
     } catch (e) {
-      if (isGbError(e) && (e.kind === 'GitTooOld' || gitNotFound(e))) set({ problem: e });
-      else console.warn('[gitnexia] git check failed; continuing', e);
+      if (isGbError(e) && e.kind === 'GitTooOld') set({ problem: { kind: 'tooOld', error: e } });
+      else if (isGbError(e) && spawnFailed(e)) {
+        set({ problem: gitNotFound(e) ? { kind: 'missing' } : { kind: 'unavailable', error: e } });
+      } else console.warn('[gitnexia] git check failed; continuing', e);
     }
   },
   /** Re-checks; once git is fine, reloads so boot opens the repos it skipped. */

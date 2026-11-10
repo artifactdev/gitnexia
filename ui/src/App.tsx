@@ -37,7 +37,7 @@ function boot(): Promise<void> {
     // one watches its active tab (spec §4.4: only the active tab is watched).
     await api.unwatchAll().catch((e: unknown) => console.warn('[gitnexia] unwatchAll failed', errorMessage(e)));
     await useAppState.getState().load();
-    // git too old or missing blocks the app (spec §5.5): the shell shows that screen, and no repo opens.
+    // Missing, too-old, or unstartable git blocks repo startup until the user fixes it.
     await useGitCheck.getState().check();
     if (useGitCheck.getState().problem) return;
     const fromUrl = new URLSearchParams(location.search).getAll('repo');

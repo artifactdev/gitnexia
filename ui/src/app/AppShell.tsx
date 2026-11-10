@@ -1,6 +1,8 @@
 import { Activity, useEffect } from 'react';
 import { TitleBar } from '../chrome/TitleBar';
 import { GitTooOldScreen } from '../errors/GitTooOldScreen';
+import { GitMissingScreen } from '../errors/GitMissingScreen';
+import { GitUnavailableScreen } from '../errors/GitUnavailableScreen';
 import { useGitCheck } from '../errors/gitCheck';
 import { ContextMenu } from '../menu/ContextMenu';
 import { ArmLayer } from '../ui/arm/ArmLayer';
@@ -68,7 +70,9 @@ export function AppShell({ error = null }: { error?: string | null }) {
           so the window can always be moved and closed. */}
       <TitleBar />
       {gitProblem ? (
-        <GitTooOldScreen error={gitProblem} />
+        gitProblem.kind === 'missing' ? <GitMissingScreen /> :
+          gitProblem.kind === 'tooOld' ? <GitTooOldScreen error={gitProblem.error} /> :
+            <GitUnavailableScreen error={gitProblem.error} />
       ) : error ? (
         <div className="center-message" role="alert">{error}</div>
       ) : !loaded ? (
