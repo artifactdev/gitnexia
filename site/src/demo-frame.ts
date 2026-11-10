@@ -1,5 +1,5 @@
 // The hero's live demo (website spec §3, §4.5, §6.3): the demo build (demo/demo.html) in an iframe
-// over the hero's still screenshot. It starts after the page has loaded and gone idle, and only
+// over the hero's still screenshot. It starts only when the visitor clicks Load Demo, and only
 // where its frame can be 960 px wide (a 992 px viewport, less the gutters); the still stays until
 // the demo reports its graph is up (ui/src/demo/frame.ts), and stays if the demo can't start.
 
@@ -21,8 +21,6 @@ export interface HeroDemoOptions {
   origin: string;
   timeoutMs: number;
   wide: WideQuery;
-  /** Calls `start` once the page has loaded and the browser is idle. */
-  schedule(start: () => void): void;
   /** Where the demo's messages arrive. */
   messages: Pick<Window, 'addEventListener'>;
 }
@@ -38,32 +36,27 @@ export function demoReport(e: MessageEvent, frame: HTMLIFrameElement | null, ori
   return null;
 }
 
-/** After the load event, when the browser is idle: the demo's code and data never compete with the page's own. */
-export function afterLoadAndIdle(win: Window, run: () => void): void {
-  const idle = () => {
-    if (typeof win.requestIdleCallback === 'function') win.requestIdleCallback(() => run(), { timeout: 2000 });
-    else win.setTimeout(run, 200);
-  };
-  if (win.document.readyState === 'complete') idle();
-  else win.addEventListener('load', idle, { once: true });
-}
-
 export function initHeroDemo(root: HTMLElement, options: Partial<HeroDemoOptions> = {}): HeroDemo {
   const src = options.src ?? DEMO_SRC;
   const origin = options.origin ?? location.origin;
   const timeoutMs = options.timeoutMs ?? READY_TIMEOUT_MS;
   const wide = options.wide ?? matchMedia(WIDE_ENOUGH);
-  const schedule = options.schedule ?? ((start: () => void) => afterLoadAndIdle(window, start));
   const messages = options.messages ?? window;
   const stage = root.querySelector<HTMLElement>('.stage');
   const badge = root.querySelector<HTMLElement>('.demo-badge');
-  if (!stage || !badge) throw new Error('the hero has no .stage or .demo-badge');
+  const load = root.querySelector<HTMLButtonElement>('[data-action="load"]');
+  const reset = root.querySelector<HTMLButtonElement>('[data-action="reset"]');
+  const full = root.querySelector<HTMLButtonElement>('[data-action="fullscreen"]');
+  if (!stage || !badge || !load) throw new Error('the hero has no .stage, .demo-badge or Load Demo button');
 
   let frame: HTMLIFrameElement | null = null;
-  let scheduled = false;
   let timer: ReturnType<typeof setTimeout> | undefined;
 
   let detail = '';
+  const updateLoad = () => {
+    load.disabled = !wide.matches;
+    load.title = wide.matches ? 'Start the live demo' : 'The live demo needs a window at least 992 px wide.';
+  };
   // Below the wide breakpoint the still shows whatever the demo is doing, so the badge says so.
   const label = () => {
     const state = root.dataset.state as DemoState;
@@ -75,9 +68,13 @@ export function initHeroDemo(root: HTMLElement, options: Partial<HeroDemoOptions
     detail = why;
     badge.textContent = label();
     badge.title = badge.textContent;
+    load.hidden = state === 'loading' || state === 'ready';
+    updateLoad();
+    if (reset) reset.disabled = state === 'still' || state === 'loading';
+    if (full) full.disabled = state !== 'ready';
   };
   const start = () => {
-    scheduled = true;
+    if (!wide.matches || root.dataset.state === 'loading') return;
     clearTimeout(timer);
     frame?.remove();
     frame = root.ownerDocument.createElement('iframe');
@@ -97,17 +94,12 @@ export function initHeroDemo(root: HTMLElement, options: Partial<HeroDemoOptions
     if (report.type === 'ready') show('ready');
     else show('failed', report.message);
   });
-  const startWhenWide = () => {
-    if (!wide.matches || frame || scheduled) return;
-    scheduled = true;
-    schedule(() => { if (!frame) start(); });
-  };
+  load.addEventListener('click', start);
   show('still');
-  startWhenWide();
   wide.addEventListener('change', () => {
+    updateLoad();
     badge.textContent = label();
     badge.title = badge.textContent;
-    startWhenWide();
   });
 
   return {
