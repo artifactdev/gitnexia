@@ -11,7 +11,8 @@ vi.mock('../api/client', () => ({ api: { listOpeners, openIn }, errorMessage: St
 const { useRuntime } = await import('../app/runtime');
 const { useMenu } = await import('../menu/menuStore');
 const { useToast } = await import('../ui/toastStore');
-const { refreshRepoEditors, repoEditorRows, showRepoEditors } = await import('./repoEditors');
+const { refreshRepoEditors, repoEditorRows, openRepoInEditor } = await import('./repoEditors');
+const { EMPTY_PROFILE, EMPTY_REPO_SETTINGS, useAppState } = await import('../app/state');
 const editors: OpenerPayload[] = [
   { id: 'vscode', name: 'VS Code', kind: 'editor' },
   { id: 'zed', name: 'Zed', kind: 'editor' },
@@ -23,6 +24,8 @@ const actions = (rows: MenuRow[]) => rows.filter((r) => r.kind === 'action');
 
 beforeEach(() => {
   vi.clearAllMocks();
+  localStorage.clear();
+  useAppState.setState({ profile: { ...EMPTY_PROFILE } });
   useRuntime.setState({ tabs: {} });
   useRuntime.getState().patch('target', {
     repo: { id: nextRepo++, name: 'orbital', path: '/projects/orbital', worktree: '/projects/orbital' },
@@ -73,13 +76,42 @@ describe('repository editors', () => {
     expect(actions(repoEditorRows('missing'))[0].label).toBe('Still loading');
   });
 
-  it('opens a keyboard-accessible picker and refreshes it when detection finishes', async () => {
-    const button = document.createElement('button');
-    button.className = 'tb-open-editor';
-    document.body.append(button);
-    showRepoEditors('target');
-    expect(useMenu.getState().label).toBe('Open repository in editor');
-    await vi.waitFor(() => expect(actions(useMenu.getState().rows!)[1].label).toBe('Open in Zed'));
-    button.remove();
+  it('opens the default editor directly without showing a picker', async () => {
+    await openRepoInEditor('target');
+    expect(openIn).toHaveBeenCalledWith(expect.any(Number), expect.objectContaining({ opener: 'vscode', path: '.' }));
+    expect(useMenu.getState().rows).toBeNull();
+  });
+
+  it('remembers a picked editor for the next main-button click', async () => {
+    await load();
+    actions(repoEditorRows('target'))[1].run();
+    openIn.mockClear();
+    await openRepoInEditor('target');
+    expect(openIn).toHaveBeenCalledExactlyOnceWith(expect.any(Number), expect.objectContaining({ opener: 'zed' }));
+  });
+
+  it('prefers the target repository setting over the last-used editor and the profile', async () => {
+    await load();
+    actions(repoEditorRows('target'))[1].run();
+    useAppState.setState({ profile: {
+      ...EMPTY_PROFILE,
+      editor: { kind: 'opener', id: 'zed' },
+      tabs: [{ id: 'target', kind: 'repo', path: '/projects/orbital', alias: null, worktree: null }],
+      repos: { '/projects/orbital': { ...EMPTY_REPO_SETTINGS, editor: { kind: 'opener', id: 'vscode' } } },
+    } });
+    openIn.mockClear();
+    await openRepoInEditor('target');
+    expect(openIn).toHaveBeenCalledWith(expect.any(Number), expect.objectContaining({ opener: 'vscode' }));
+  });
+
+  it('reports detection failure and missing editors without opening a picker', async () => {
+    listOpeners.mockRejectedValueOnce(new Error('Detection failed'));
+    await openRepoInEditor('target');
+    expect(useToast.getState().message).toContain('Detection failed');
+    listOpeners.mockResolvedValueOnce([]);
+    await openRepoInEditor('target');
+    expect(useToast.getState().message).toContain('No supported editor');
+    expect(openIn).not.toHaveBeenCalled();
+    expect(useMenu.getState().rows).toBeNull();
   });
 });

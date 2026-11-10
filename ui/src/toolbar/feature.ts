@@ -16,7 +16,7 @@ import { isTypingTarget } from '../ui/keys';
 import { registerToolbarButton } from './registry';
 import { Toolbar } from './Toolbar';
 import { jumpToWip, openWipCount, useWipButtonView } from './wipJump';
-import { refreshRepoEditors, repoEditorRows, showRepoEditors } from '../openIn/repoEditors';
+import { openRepoInEditor, refreshRepoEditors, repoEditorRows } from '../openIn/repoEditors';
 
 /** The toolbar (spec §6.3) in each repo tab's `toolbar` slot, and its Fetch (spec §15). */
 const repoTab = () => {
@@ -26,17 +26,17 @@ const repoTab = () => {
 
 const offs = [
   registerActions([{
-    id: 'repo.openEditor', label: 'Open repository in editor…', group: 'Repository', icon: ICONS.editorApp,
-    tooltip: 'Open the whole active worktree folder in an installed editor',
+    id: 'repo.openEditor', label: 'Open repository in editor', group: 'Repository', icon: ICONS.editorApp,
+    tooltip: 'Open the whole active worktree folder in the default or last-used editor',
     when: () => !!repoTab(),
     run: () => {
       const tab = repoTab();
       if (!tab) return;
-      showRepoEditors(tab.id);
+      return openRepoInEditor(tab.id);
     },
   }]),
   registerToolbarButton({
-    action: 'repo.openEditor', label: 'Open in editor', order: 30, className: 'tb-open-editor',
+    action: 'repo.openEditor', label: 'Open in editor', placement: 'end', order: 7, className: 'tb-open-editor',
     menuRows: ({ tabId }) => repoEditorRows(tabId),
     prepareMenu: async ({ tabId }) => { refreshRepoEditors(tabId); },
   }),

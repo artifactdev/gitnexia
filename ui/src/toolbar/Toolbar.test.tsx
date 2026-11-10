@@ -70,7 +70,7 @@ describe('Toolbar (spec §6.3)', () => {
       const store = withGraph([wip(2, 1), commit('a')]);
       renderToolbar();
       const b = screen.getByRole('button', { name: '3 changes' });
-      expect([...document.querySelector('.toolbar .tb-end')!.children].map((c) => c.getAttribute('aria-label'))).toEqual(['3 changes', 'Search']);
+      expect([...document.querySelector('.toolbar .tb-end')!.children].map((c) => c.getAttribute('aria-label') ?? c.querySelector('button')?.getAttribute('aria-label'))).toEqual(['3 changes', 'Open in editor', 'Search']);
       expect(b).toHaveAttribute('aria-pressed', 'false');
       fireEvent.mouseEnter(b);
       expect(await screen.findByRole('tooltip')).toHaveTextContent('Show the working directory changes (Ctrl+Shift+G)');
@@ -118,15 +118,18 @@ describe('Toolbar (spec §6.3)', () => {
 
   it('offers the whole project in an installed editor from the toolbar', async () => {
     renderToolbar();
+    expect(screen.getByRole('button', { name: 'Open in editor' }).closest('.tb-end')).not.toBeNull();
+    expect(document.querySelector('.tb-center .tb-open-editor')).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Open in editor' }));
-    await vi.waitFor(() => expect(useMenu.getState().rows?.[0]).toMatchObject({ label: 'Open in Zed' }));
-    const row = useMenu.getState().rows![0];
-    if (row.kind !== 'action') throw new Error('Expected editor action');
-    row.run();
+    await vi.waitFor(() => expect(api.openIn).toHaveBeenCalled());
+    expect(useMenu.getState().rows).toBeNull();
     expect(api.listOpeners).toHaveBeenCalledWith(4);
     expect(api.openIn).toHaveBeenCalledWith(4, {
       worktree: '/r', path: '.', line: null, opener: 'zed', source: null, fallback: null,
     });
+    fireEvent.click(screen.getByRole('button', { name: 'Open in editor options' }));
+    await vi.waitFor(() => expect(useMenu.getState().rows?.[0]).toMatchObject({ label: 'Open in Zed' }));
+    expect(api.openIn).toHaveBeenCalledTimes(1);
   });
 
   it('Fetch runs the default (Fetch All: a user fetch), and its caret opens the default picker', async () => {
@@ -193,7 +196,7 @@ describe('Toolbar (spec §6.3)', () => {
     const names = (g: Element) => [...g.querySelectorAll('[aria-label]')].map((b) => b.getAttribute('aria-label'));
     expect(names(centre).indexOf('Fetch')).toBeLessThan(names(centre).indexOf('MidBtn'));
     // The WIP button's place is kept while there are no changes (no layout shift).
-    expect(names(end)).toEqual(['EndBtn', '0 changes']);
+    expect(names(end)).toEqual(['EndBtn', '0 changes', 'Open in editor', 'Open in editor options']);
     offA(); offB(); offC();
   });
 
@@ -207,7 +210,7 @@ describe('Toolbar (spec §6.3)', () => {
     const names = screen.getAllByRole('button').map((b) => b.getAttribute('aria-label'));
     expect(names.slice(names.indexOf('Fetch options') + 1, names.indexOf('Search'))).toEqual(['Open in editor', 'Open in editor options']);
     const end = document.querySelector('.toolbar .tb-end')!;
-    expect([...end.children].map((b) => b.getAttribute('aria-label'))).toEqual(['0 changes', 'Search']);
+    expect([...end.children].map((b) => b.getAttribute('aria-label') ?? b.querySelector('button')?.getAttribute('aria-label'))).toEqual(['0 changes', 'Open in editor', 'Search']);
     fireEvent.click(screen.getByRole('button', { name: 'Search' }));
     expect(run).toHaveBeenCalledTimes(1);
     off();

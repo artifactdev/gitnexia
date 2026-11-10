@@ -7,6 +7,9 @@ All notable changes to GitNexia (GitNex before this release, GitVolt before 1.5.
 
 ### Changed
 
+- **Open in editor toolbar placement.** Moved the button to the right-hand group beside Actions
+  and Search. The main button opens the project in the default or last-used editor; the dropdown
+  arrow selects another editor.
 - **GitNexia-only build assets.** Linux, Windows and macOS release builds no longer produce
   duplicate packages under the old GitNex names. Migration from existing installations is unchanged.
 
