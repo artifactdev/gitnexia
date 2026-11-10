@@ -5,6 +5,8 @@ All notable changes to GitNexia (GitNex before this release, GitVolt before 1.5.
 
 ## [Unreleased]
 
+## [1.7.5] - 2026-11-10
+
 ### Changed
 
 - **Open in editor toolbar placement.** Moved the button to the right-hand group beside Actions
