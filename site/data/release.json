@@ -1,66 +1,66 @@
 {
   "schema": 1,
   "release": {
-    "version": "1.7.4",
-    "tag": "v1.7.4",
+    "version": "1.7.5",
+    "tag": "v1.7.5",
     "prerelease": false,
-    "published": "2026-11-10T10:29:33Z",
-    "url": "https://github.com/artifactdev/gitnexia/releases/tag/v1.7.4",
-    "sums": "https://github.com/artifactdev/gitnexia/releases/download/v1.7.4/SHA256SUMS",
+    "published": "2026-11-10T12:41:01Z",
+    "url": "https://github.com/artifactdev/gitnexia/releases/tag/v1.7.5",
+    "sums": "https://github.com/artifactdev/gitnexia/releases/download/v1.7.5/SHA256SUMS",
     "downloads": [
       {
         "os": "linux",
         "kind": "deb",
         "arch": "x86_64",
-        "file": "GitNexia_1.7.4_amd64.deb",
-        "url": "https://github.com/artifactdev/gitnexia/releases/download/v1.7.4/GitNexia_1.7.4_amd64.deb",
-        "bytes": 170255810,
-        "sha256": "231fbc41334e41d728276d7db69e7c734e4a078a72746efef30b086abac7f568"
+        "file": "GitNexia_1.7.5_amd64.deb",
+        "url": "https://github.com/artifactdev/gitnexia/releases/download/v1.7.5/GitNexia_1.7.5_amd64.deb",
+        "bytes": 170255012,
+        "sha256": "c691dbf6af2c4af78df669f1ce1e9829bc8dd2fa2590be577c028ff7c2ea6d59"
       },
       {
         "os": "linux",
         "kind": "rpm",
         "arch": "x86_64",
-        "file": "GitNexia-1.7.4-1.x86_64.rpm",
-        "url": "https://github.com/artifactdev/gitnexia/releases/download/v1.7.4/GitNexia-1.7.4-1.x86_64.rpm",
-        "bytes": 132255622,
-        "sha256": "cd99c1cd2cc223565b1bda203647c19f9dcd8fa6f49efac8db16a61394998feb"
+        "file": "GitNexia-1.7.5-1.x86_64.rpm",
+        "url": "https://github.com/artifactdev/gitnexia/releases/download/v1.7.5/GitNexia-1.7.5-1.x86_64.rpm",
+        "bytes": 132135486,
+        "sha256": "327ee39db58cfac3089585df6f8289f967347eebbed01dd5ffa12624eb4741fd"
       },
       {
         "os": "linux",
         "kind": "arch",
         "arch": "x86_64",
-        "file": "GitNexia-1.7.4-1-x86_64.pkg.tar.zst",
-        "url": "https://github.com/artifactdev/gitnexia/releases/download/v1.7.4/GitNexia-1.7.4-1-x86_64.pkg.tar.zst",
-        "bytes": 132128882,
-        "sha256": "180d9bca30b863102c5c016ff9abfdfbdbfd9d734447f86c8eb1fa1c0c42bb44"
+        "file": "GitNexia-1.7.5-1-x86_64.pkg.tar.zst",
+        "url": "https://github.com/artifactdev/gitnexia/releases/download/v1.7.5/GitNexia-1.7.5-1-x86_64.pkg.tar.zst",
+        "bytes": 132219596,
+        "sha256": "4ef07620dca7b845e99749aee6bb51492af82d606b42f20b6eeb92a297c5e71e"
       },
       {
         "os": "macos",
         "kind": "dmg",
         "arch": "aarch64",
-        "file": "GitNexia_1.7.4_aarch64.dmg",
-        "url": "https://github.com/artifactdev/gitnexia/releases/download/v1.7.4/GitNexia_1.7.4_aarch64.dmg",
-        "bytes": 170136658,
-        "sha256": "ebe1dc3e490436b1395cc5e2170cecbcfefabf2e0b0ec885a636a590a59c97d4"
+        "file": "GitNexia_1.7.5_aarch64.dmg",
+        "url": "https://github.com/artifactdev/gitnexia/releases/download/v1.7.5/GitNexia_1.7.5_aarch64.dmg",
+        "bytes": 170136022,
+        "sha256": "e7bbfd2bd4d9e9fd027e869af002994a3b87a4b023a34edb4e10b0f9efcc2133"
       },
       {
         "os": "windows",
         "kind": "nsis",
         "arch": "x86_64",
-        "file": "GitNexia_1.7.4_x64-setup.exe",
-        "url": "https://github.com/artifactdev/gitnexia/releases/download/v1.7.4/GitNexia_1.7.4_x64-setup.exe",
-        "bytes": 192778712,
-        "sha256": "6be18608bcc4218862b3464ed2c37f841b8f8386a627f5e1daec0eab7965a8bc"
+        "file": "GitNexia_1.7.5_x64-setup.exe",
+        "url": "https://github.com/artifactdev/gitnexia/releases/download/v1.7.5/GitNexia_1.7.5_x64-setup.exe",
+        "bytes": 192780582,
+        "sha256": "d30aeb88b4ea8f123088ae62ce89e93b0a1d57ee5b90caeb734feb00b74ab1a6"
       },
       {
         "os": "windows",
         "kind": "msi",
         "arch": "x86_64",
-        "file": "GitNexia_1.7.4_x64.msi",
-        "url": "https://github.com/artifactdev/gitnexia/releases/download/v1.7.4/GitNexia_1.7.4_x64.msi",
-        "bytes": 172011520,
-        "sha256": "0d9b523d3b7ca3979ffba3caa3d6ca20368c7424bbb3a3fce44dae514bd708c5"
+        "file": "GitNexia_1.7.5_x64.msi",
+        "url": "https://github.com/artifactdev/gitnexia/releases/download/v1.7.5/GitNexia_1.7.5_x64.msi",
+        "bytes": 172019712,
+        "sha256": "c41087b4204368b0b3021b9bf91696594053af192ff10dc192da7e6b2c71d699"
       }
     ]
   }
