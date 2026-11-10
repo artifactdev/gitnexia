@@ -15,9 +15,11 @@ test.describe('desktop', () => {
     test.setTimeout(240_000);
     const origin = new URL(baseURL ?? '').origin;
     const foreign: string[] = [];
+    const demoRequests: string[] = [];
     const errors: string[] = [];
     page.on('request', (r) => {
       const u = r.url();
+      if (u.includes('/demo/')) demoRequests.push(u);
       if (!u.startsWith(`${origin}/`) && !/^(?:data|blob|about):/.test(u)) foreign.push(u);
     });
     page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
@@ -44,11 +46,31 @@ test.describe('desktop', () => {
     });
 
     const hero = page.locator('.hero-demo');
+    const stageBox = () => hero.locator('.stage').evaluate((el) => {
+      const r = el.getBoundingClientRect();
+      return [r.x + scrollX, r.y + scrollY, r.width, r.height];
+    });
+    let screenshotBox: number[];
+    await test.step('the screenshot and Load Demo wait for activation without loading demo resources', async () => {
+      await page.waitForTimeout(2500);
+      await expect(hero).toHaveAttribute('data-state', 'still');
+      await expect(hero.locator('.still')).toBeVisible();
+      await expect(page.locator('iframe')).toHaveCount(0);
+      expect(demoRequests).toEqual([]);
+      await expect(hero.getByRole('button', { name: 'Reset demo' })).toBeDisabled();
+      const load = hero.getByRole('button', { name: 'Load Demo', exact: true });
+      await expect(load).toBeVisible();
+      screenshotBox = await stageBox();
+      await load.focus();
+      await page.keyboard.press('Enter');
+    });
     await test.step('the live demo boots in its frame, then the still steps aside', async () => {
       await expect(hero).toHaveAttribute('data-state', 'ready', { timeout: 90_000 });
       await expect(page.frameLocator('iframe[title="GitNexia live demo"]').getByRole('grid', { name: 'Commit graph' })).toBeVisible();
       await expect(hero.locator('.still')).toBeHidden();
       await expect(hero.getByRole('status')).toHaveText('Live demo');
+      await expect(hero.getByRole('button', { name: 'Load Demo', exact: true })).toBeHidden();
+      expect(await stageBox()).toEqual(screenshotBox);
     });
 
     await test.step('keyboard: Tab reaches the Download CTA from the top, then Reset and Full screen in order', async () => {
@@ -116,17 +138,20 @@ test.describe('desktop', () => {
   });
 
   for (const [width, iframes] of [[992, 1], [991, 0]] as const) {
-    test(`at ${width}px the demo ${iframes ? 'boots' : 'stays a still'}`, async ({ browser, baseURL }) => {
+    test(`at ${width}px the demo ${iframes ? 'loads only on demand' : 'stays a still'}`, async ({ browser, baseURL }) => {
       const context = await browser.newContext({ userAgent: LINUX, viewport: { width, height: 860 }, baseURL });
       const page = await context.newPage();
       await page.goto('./');
+      await page.waitForTimeout(2500);
+      await expect(page.locator('iframe')).toHaveCount(0);
+      await expect(page.locator('.hero-demo .still')).toBeVisible();
       if (iframes) {
+        await page.getByRole('button', { name: 'Load Demo', exact: true }).click();
         await expect(page.locator('.hero-demo')).toHaveAttribute('data-state', 'ready', { timeout: 90_000 });
         await expect(page.locator('iframe')).toHaveCount(1);
       } else {
-        await page.waitForTimeout(2500);
-        await expect(page.locator('iframe')).toHaveCount(0);
-        await expect(page.locator('.hero-demo .still')).toBeVisible();
+        await expect(page.getByRole('button', { name: 'Load Demo', exact: true })).toBeVisible();
+        await expect(page.getByRole('button', { name: 'Load Demo', exact: true })).toBeDisabled();
       }
       await context.close();
     });
@@ -142,7 +167,6 @@ test('a phone gets the screenshot and the note, never the demo', async ({ browse
   await page.waitForLoadState('load');
   await expect(page.getByText('Try the live demo on a desktop.')).toBeVisible();
   await expect(page.locator('.hero-demo .still')).toBeVisible();
-  // Past the load-and-idle start a wide screen would have made.
   await page.waitForTimeout(2500);
   await expect(page.locator('iframe')).toHaveCount(0);
   expect(demo).toEqual([]);

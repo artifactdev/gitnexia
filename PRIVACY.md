@@ -393,7 +393,8 @@ Beyond that:
   (`ui/scripts/check-site.mjs`), including each page's Content-Security-Policy, and stops if a
   page would.
 - **No cookies, analytics or tracking.**
-- **The demo stays in the tab.** Its repositories download with the page and live in memory.
+- **The demo stays in the tab.** Its code and repositories download only when you activate
+  **Load Demo**, not when the page loads. The repositories live in memory.
   Nothing you do in it leaves the tab, and it's gone when you reload or reset the demo.
 - **Browser storage.** Like the app, the demo's UI keeps preferences and unsent drafts in your
   browser's storage for the site. Clearing the site's data in your browser deletes them.

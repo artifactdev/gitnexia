@@ -6,6 +6,12 @@ Pages: the landing page (`site/`), the live demo (`ui/demo.html`, built with
 workflows publish it; nothing else does. It loads nothing from other hosts
 ([PRIVACY.md](../PRIVACY.md#the-website)).
 
+The hero initially shows only a screenshot with a **Load Demo** button over it. Only activating
+that button loads the demo's iframe, code and repository data; page load, idle time and resizing
+never start it. Below a 992 px viewport the screenshot and desktop note remain instead,
+with the overlaid button visible but disabled until the window is wide enough.
+The screenshot stays visible while the demo loads or if it fails; the button allows another try.
+
 ## Deploying
 
 - **Site** (`.github/workflows/site.yml`) runs on a push to main that changes one of:
@@ -132,6 +138,10 @@ To browse it as Pages serves it:
 ```sh
 python3 -m http.server -d site/dist 8000   # http://localhost:8000/
 ```
+
+For the landing page's dev server, run `just demo-build` before `just site-dev`.
+The dev server serves the last demo build from `site/dist/demo/`; starting it alone does not
+build the demo. Without that build, **Load Demo** cannot open a working demo.
 
 ## Link previews
 

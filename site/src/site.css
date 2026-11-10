@@ -101,6 +101,11 @@ header.top { position: sticky; top: 0; padding-top: 12px; z-index: 20; }
 .demo-bar { display: flex; justify-content: center; align-items: center; gap: 12px; margin-top: 18px; color: var(--dim); font-size: 14px; flex-wrap: wrap; }
 .btn { border: 1px solid var(--edge); background: var(--glass-fill); backdrop-filter: blur(10px); color: var(--ink); padding: 8px 14px; border-radius: 9px; font: 500 14px var(--body); cursor: pointer; }
 .btn:hover { background: rgba(255, 255, 255, .09); }
+.btn:disabled { opacity: .5; cursor: default; }
+.demo-load { position: absolute; z-index: 1; top: 50%; left: 50%; transform: translate(-50%, -50%); border: 1px solid #bb66da; background: linear-gradient(135deg, rgba(80, 35, 122, .96), rgba(31, 24, 67, .96)); color: var(--ink); min-width: 208px; padding: 14px 32px; font: 600 18px var(--display); white-space: nowrap; box-shadow: 0 0 0 6px rgba(7, 12, 29, .55), 0 8px 40px rgba(142, 0, 194, .45); }
+.demo-load:hover { background: linear-gradient(135deg, #653397, #30225e); border-color: #d6a0ed; }
+.demo-load:disabled { opacity: 1; color: var(--muted); background: var(--card); border-color: var(--edge); }
+.demo-load[hidden] { display: none; }
 /* Arm in place: both labels are laid out at once, so arming changes no size. */
 .btn-stack { display: inline-grid; }
 .btn-stack > span { grid-area: 1 / 1; justify-self: center; }

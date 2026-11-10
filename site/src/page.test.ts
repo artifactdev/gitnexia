@@ -37,5 +37,5 @@ test('every generated part has its marker', () => {
 });
 
 test('Reset demo carries both its labels, so arming shifts nothing', () => {
-  expect(html).toContain('<button type="button" class="btn" data-action="reset"><span class="btn-stack"><span class="when-idle">Reset demo</span><span class="when-armed">Reset and lose your changes</span></span></button>');
+  expect(html).toContain('<button type="button" class="btn" data-action="reset" disabled><span class="btn-stack"><span class="when-idle">Reset demo</span><span class="when-armed">Reset and lose your changes</span></span></button>');
 });
