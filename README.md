@@ -206,6 +206,8 @@ checksums. After that, GitNexia updates itself (see [Updates](#updates)).
   **Hex** shows any file's bytes.
 - **File View:** read a file rendered or as source, and edit or create a working-tree file.
   **Open in** your editor, file manager or default app, old versions included.
+- **Open repository in editor:** open the whole active worktree folder in an installed editor
+  such as VS Code or Zed, from the toolbar, repository tab menu or command palette.
 
 #### History, merges and undo
 

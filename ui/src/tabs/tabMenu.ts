@@ -19,6 +19,7 @@ import { registerMenu } from '../menu/registry';
 import type { MenuRow } from '../menu/types';
 import { useToast } from '../ui/toastStore';
 import { resolveChord } from '../ui/platformKeys';
+import { repoEditorRows } from '../openIn/repoEditors';
 
 /** Which tab's rename input shows (`TabBar`'s double-click / the tab menu's Rename). */
 export const useTabUi = create<{ renaming: string | null; startRename(id: string): void; stopRename(): void }>((set) => ({
@@ -99,6 +100,11 @@ registerMenu<TabTarget, TabEnv>({
         () => { if (repo) openRepoFolder(repo.id, worktreeOf(rt) ?? repo.path); },
         repo ? {} : { disabledReason: 'Still loading' },
       ),
+      {
+        kind: 'submenu', id: 'tab.openEditor', label: 'Open in editor', icon: ICONS.editorApp,
+        tooltip: "Open the tab's whole worktree folder in an installed editor",
+        rows: repoEditorRows(tab.id),
+      },
     ];
   },
 });

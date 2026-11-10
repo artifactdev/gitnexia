@@ -5,6 +5,11 @@ All notable changes to GitNexia (GitNex before this release, GitVolt before 1.5.
 
 ## [Unreleased]
 
+### Added
+
+- **Open repository in editor.** Open the whole active worktree folder in an installed editor
+  such as VS Code or Zed from the toolbar, repository tab menu or command palette.
+
 ## [1.7.3] - 2026-11-09
 
 ### Added
