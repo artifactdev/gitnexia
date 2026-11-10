@@ -5,6 +5,12 @@ All notable changes to GitNexia (GitNex before this release, GitVolt before 1.5.
 
 ## [Unreleased]
 
+### Fixed
+
+- **AI CLI runtime lookup.** Commands configured with an executable path now include its
+  directory in the child process's `PATH`, so tools such as GitHub Copilot CLI installed through
+  NVM can find a sibling `node` executable even when it is missing from the app's `PATH`.
+
 ## [1.7.6] - 2026-11-10
 
 ### Added
