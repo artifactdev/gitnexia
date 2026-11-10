@@ -288,7 +288,9 @@ pub enum Request {
     /// application, which a folder never opens in), at `line` when it supports one. `source` is
     /// the version shown: the working-tree file (`worktree`, or none), or a stored one (`object`,
     /// `atCommit`), which opens as a read-only copy (spec §14.5). The file manager shows the
-    /// working-tree folder (its nearest existing parent if it's gone). Returns `null`.
+    /// working-tree folder (its nearest existing parent if it's gone). `path: "."` opens the
+    /// worktree root in an editor or file manager, without a line, source or fallback.
+    /// Returns `null`.
     OpenIn {
         repo: u32,
         worktree: String,
@@ -3988,6 +3990,13 @@ impl Api {
                         })?,
                     }
                 };
+                let project = path == ".";
+                if project && (line.is_some() || source.is_some() || fallback.is_some()) {
+                    return Err(GbError::new(
+                        GbErrorKind::InvalidInput,
+                        "opening a project doesn't take a line or file version",
+                    ));
+                }
                 // A file manager that can show the file selected (File Explorer) gets the file
                 // while it's in the working tree; the others, or a file that's gone, its folder.
                 let reveal = (o.kind == OpenerKind::FileManager)
@@ -3998,11 +4007,15 @@ impl Api {
                             .and_then(|f| o.reveal_command(&f))
                     })
                     .flatten();
-                let target = match o.kind {
-                    OpenerKind::FileManager => folder_target(&root, &path)?,
-                    OpenerKind::Editor | OpenerKind::Chooser | OpenerKind::DefaultApp => {
-                        self.open_in_file(&h, &root, &path, source, fallback)
-                            .await?
+                let target = if project {
+                    root.clone()
+                } else {
+                    match o.kind {
+                        OpenerKind::FileManager => folder_target(&root, &path)?,
+                        OpenerKind::Editor | OpenerKind::Chooser | OpenerKind::DefaultApp => {
+                            self.open_in_file(&h, &root, &path, source, fallback)
+                                .await?
+                        }
                     }
                 };
                 if o.kind == OpenerKind::Editor {
@@ -9228,6 +9241,86 @@ mod tests {
                     "/fake/nautilus".into(),
                     wt.join("src").to_string_lossy().into_owned()
                 ],
+            ]
+        );
+    }
+
+    #[tokio::test]
+    async fn open_in_project_opens_the_whole_validated_worktree() {
+        let r = TestRepo::new();
+        fixtures::details(&r);
+        let (api, launches) = with_openers(api());
+        let id = open(&api, &r).await;
+        let wt = crate::platform::fs::canonicalize(r.path()).unwrap();
+        for opener in ["vscode", "jetbrains-phpstorm", "file-manager"] {
+            api.dispatch(req(serde_json::json!({
+                "method": "openIn",
+                "params": {"repo": id, "worktree": wt, "path": ".", "opener": opener, "line": null}
+            })))
+            .await
+            .unwrap();
+        }
+        let got: Vec<Vec<String>> = launches.lock().unwrap().iter().map(argv).collect();
+        let root = wt.to_string_lossy().into_owned();
+        assert_eq!(
+            got,
+            [
+                vec!["/fake/code".to_string(), root.clone()],
+                vec!["/fake/phpstorm".to_string(), root.clone()],
+                vec!["/fake/nautilus".to_string(), root],
+            ]
+        );
+        for extra in [
+            serde_json::json!({"line": 12}),
+            serde_json::json!({"source": {"kind": "object", "oid": "a".repeat(40)}}),
+            serde_json::json!({"fallback": {"kind": "object", "oid": "a".repeat(40)}}),
+            serde_json::json!({"worktree": wt.join("src")}),
+        ] {
+            let mut params = serde_json::json!({
+                "repo": id, "worktree": wt, "path": ".", "opener": "vscode", "line": null
+            });
+            params
+                .as_object_mut()
+                .unwrap()
+                .extend(extra.as_object().unwrap().clone());
+            assert!(
+                api.dispatch(req(serde_json::json!({
+                    "method": "openIn", "params": params
+                })))
+                .await
+                .is_err()
+            );
+        }
+        assert_eq!(launches.lock().unwrap().len(), 3);
+    }
+
+    #[tokio::test]
+    async fn open_in_project_uses_the_linked_worktree_not_the_main_folder() {
+        let r = TestRepo::new();
+        fixtures::details(&r);
+        let parent = tempfile::tempdir().unwrap();
+        let linked = parent.path().join("topic checkout");
+        r.git(&[
+            "worktree",
+            "add",
+            "-b",
+            "editor-topic",
+            linked.to_str().unwrap(),
+        ]);
+        let (api, launches) = with_openers(api());
+        let id = open(&api, &r).await;
+        api.dispatch(req(serde_json::json!({
+            "method": "openIn",
+            "params": {"repo": id, "worktree": linked, "path": ".", "opener": "vscode", "line": null}
+        })))
+        .await
+        .unwrap();
+        let root = crate::platform::fs::canonicalize(&linked).unwrap();
+        assert_eq!(
+            argv(&launches.lock().unwrap()[0]),
+            vec![
+                "/fake/code".to_string(),
+                root.to_string_lossy().into_owned()
             ]
         );
     }

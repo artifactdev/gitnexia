@@ -585,6 +585,12 @@ commands, the actions you ran, the activity log of fetches and clones, **Copy di
 GTK 3 dialog that would clash with CEF's GTK 4. Without a portal, it picks nothing and logs a
 warning.
 
+**Open repository in editor.** The toolbar, tab menu and command palette use the existing
+installed-editor detection (`openers/`), scoped to the target repository for its custom editor.
+`ui/src/openIn/repoEditors.ts` builds the shared picker. Choosing an editor sends `openIn` with
+`path: "."`: the core validates the worktree and passes its whole folder to the editor, without
+a file version or line. Linked-worktree tabs open their own checkout, not the main one.
+
 ## Testing
 
 Tests live in three layers. Use the cheapest one that proves the behavior.

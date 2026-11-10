@@ -30,6 +30,7 @@ import { displayChord } from '../ui/platformKeys';
 import { beginWindowDrag, useDragOrClick } from '../chrome/dragRegion';
 import { runTitleBarAction, useCompactTitleBar, useCustomTitleBar, useWindowChrome } from '../chrome/windowChrome';
 import { buttonSets } from '../chrome/buttonLayout';
+import { refreshRepoEditors } from '../openIn/repoEditors';
 import { titleBarMouse, WindowButtons } from '../chrome/TitleBar';
 
 function RenameInput({ tab }: { tab: TabState }) {
@@ -308,7 +309,10 @@ export function TabBar() {
               onClick={() => { if (!consumeClick()) update((p) => activateTab(p, t.id)); }}
               onAuxClick={(e) => { if (e.button === 1) guardTabClose([t.id], () => update((p) => closeTab(p, t.id))); }}
               onDoubleClick={() => useTabUi.getState().startRename(t.id)}
-              onContextMenu={(e) => openContextMenu(e, () => buildMenu<TabTarget, TabEnv>('tab', { tab: t, index }, { tabCount: tabs.length, closedCount }))}
+              onContextMenu={(e) => {
+                if (t.kind === 'repo') refreshRepoEditors(t.id);
+                openContextMenu(e, () => buildMenu<TabTarget, TabEnv>('tab', { tab: t, index }, { tabCount: tabs.length, closedCount }));
+              }}
               onKeyDown={(e) => onTabKeyDown(e, t.id)}
             >
               {renaming === t.id ? (

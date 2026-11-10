@@ -5,7 +5,11 @@ import type { GraphPayload } from '../api/gen/GraphPayload';
 import type { LocalBranch } from '../api/gen/LocalBranch';
 import type { RowPayload } from '../api/gen/RowPayload';
 
-const api = vi.hoisted(() => ({ fetch: vi.fn(async () => ({ status: 'done', changed: false })) }));
+const api = vi.hoisted(() => ({
+  fetch: vi.fn(async () => ({ status: 'done', changed: false })),
+  listOpeners: vi.fn(async () => [{ id: 'zed', name: 'Zed', kind: 'editor' }]),
+  openIn: vi.fn(async () => null),
+}));
 vi.mock('../api/client', () => ({ api, errorMessage: String, onEvent: () => () => {} }));
 const checkoutLocal = vi.hoisted(() => vi.fn());
 vi.mock('../branches/checkout', () => ({ checkoutLocal }));
@@ -112,6 +116,19 @@ describe('Toolbar (spec §6.3)', () => {
     expect(screen.getByRole('button', { name: 'Branch: main' })).toBeInTheDocument();
   });
 
+  it('offers the whole project in an installed editor from the toolbar', async () => {
+    renderToolbar();
+    fireEvent.click(screen.getByRole('button', { name: 'Open in editor' }));
+    await vi.waitFor(() => expect(useMenu.getState().rows?.[0]).toMatchObject({ label: 'Open in Zed' }));
+    const row = useMenu.getState().rows![0];
+    if (row.kind !== 'action') throw new Error('Expected editor action');
+    row.run();
+    expect(api.listOpeners).toHaveBeenCalledWith(4);
+    expect(api.openIn).toHaveBeenCalledWith(4, {
+      worktree: '/r', path: '.', line: null, opener: 'zed', source: null, fallback: null,
+    });
+  });
+
   it('Fetch runs the default (Fetch All: a user fetch), and its caret opens the default picker', async () => {
     renderToolbar();
     useToast.getState().dismiss();
@@ -188,7 +205,7 @@ describe('Toolbar (spec §6.3)', () => {
     const off = registerActions([{ id: 'edit.find', label: 'Find', group: 'Edit', icon: Search, tooltip: 'Find commits', shortcuts: ['Ctrl+F'], run }]);
     renderToolbar();
     const names = screen.getAllByRole('button').map((b) => b.getAttribute('aria-label'));
-    expect(names.indexOf('Search')).toBe(names.indexOf('Fetch options') + 1);
+    expect(names.slice(names.indexOf('Fetch options') + 1, names.indexOf('Search'))).toEqual(['Open in editor', 'Open in editor options']);
     const end = document.querySelector('.toolbar .tb-end')!;
     expect([...end.children].map((b) => b.getAttribute('aria-label'))).toEqual(['0 changes', 'Search']);
     fireEvent.click(screen.getByRole('button', { name: 'Search' }));
