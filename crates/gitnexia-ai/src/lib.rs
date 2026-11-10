@@ -300,6 +300,9 @@ fn generate_cli(
     if let Some(env) = env {
         command.env_clear().envs(env.iter().map(|(k, v)| (k, v)));
     }
+    if let Some(path) = path_with_program_dir(program, env)? {
+        command.env("PATH", path);
+    }
     let output = command
         .output()
         .map_err(|e| GbError::new(GbErrorKind::Network, format!("Couldn't run {program}: {e}")))?;
@@ -459,6 +462,33 @@ fn path_from(
     .or_else(|| std::env::var_os("PATH"))
 }
 
+/// A CLI invoked by its full path may still need sibling executables (for example, `env node`).
+fn path_with_program_dir(
+    program: &str,
+    vars: Option<&[(std::ffi::OsString, std::ffi::OsString)]>,
+) -> Result<Option<std::ffi::OsString>, GbError> {
+    let Some(dir) = std::path::Path::new(program)
+        .parent()
+        .filter(|dir| !dir.as_os_str().is_empty())
+    else {
+        return Ok(None);
+    };
+    let mut paths: Vec<std::path::PathBuf> = path_from(vars)
+        .as_deref()
+        .map(std::env::split_paths)
+        .map(Iterator::collect)
+        .unwrap_or_default();
+    if !paths.iter().any(|path| path == dir) {
+        paths.insert(0, dir.to_path_buf());
+    }
+    std::env::join_paths(paths).map(Some).map_err(|e| {
+        GbError::new(
+            GbErrorKind::InvalidInput,
+            format!("Couldn't prepare PATH for {program}: {e}"),
+        )
+    })
+}
+
 fn on_path(command: &str, path: Option<&OsStr>) -> bool {
     let Some(path) = path else { return false };
     for dir in std::env::split_paths(path) {
@@ -615,6 +645,42 @@ mod tests {
         );
         assert!(on_path("copilot", path_from(Some(&vars)).as_deref()));
         assert_eq!(generate_cli(&request, Some(&vars)).unwrap(), "hi");
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn a_full_path_cli_can_find_its_shebang_interpreter() {
+        use std::os::unix::fs::PermissionsExt;
+        let dir = tempfile::tempdir().unwrap();
+        let cli = dir.path().join("copilot");
+        let node = dir.path().join("node");
+        std::fs::write(&cli, "#!/usr/bin/env node\n").unwrap();
+        std::fs::write(&node, "#!/bin/sh\nprintf '%s' 'A commit message'\n").unwrap();
+        for path in [&cli, &node] {
+            std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o755)).unwrap();
+        }
+        let vars = vec![(
+            std::ffi::OsString::from("PATH"),
+            std::ffi::OsString::from("/usr/bin:/bin"),
+        )];
+        let settings = AiCommitSettings {
+            enabled: true,
+            provider: AiProviderKind::Cli,
+            endpoint: String::new(),
+            model: String::new(),
+            command: format!("{} -s -p {{prompt}}", cli.display()),
+        };
+        let request = AiRequest {
+            settings: &settings,
+            token: None,
+            prompt: "ignored",
+            worktree: dir.path(),
+        };
+
+        assert_eq!(
+            generate_cli(&request, Some(&vars)).unwrap(),
+            "A commit message"
+        );
     }
 
     #[cfg(unix)]
