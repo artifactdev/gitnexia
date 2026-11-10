@@ -58,10 +58,11 @@ Download the package for your system from the
   Applications. The app is signed with an Apple Developer ID and notarized, so the first launch
   is accepted by Gatekeeper.
 
-GitNexia needs Git 2.40 or newer on your `PATH` (on Windows,
+GitNexia doesn't bundle Git; it needs Git 2.40 or newer on your `PATH` (on Windows,
 [Git for Windows](https://gitforwindows.org/); on macOS, Xcode's command line tools or Homebrew's
-`git`). `SHA256SUMS` in each release lists the files'
-checksums. After that, GitNexia updates itself (see [Updates](#updates)).
+`git`). If Git is missing, GitNexia shows installation instructions for your system and a link
+to the official download page. `SHA256SUMS` in each release lists the files' checksums. After
+that, GitNexia updates itself (see [Updates](#updates)).
 
 ## Features
 

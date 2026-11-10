@@ -37,6 +37,7 @@ const { registerAppSlot, registerTabSlot } = await import('./slots');
 const { useRepoContext } = await import('./repoContext');
 const { useRepoView } = await import('./seams1b');
 const { openMenuAt } = await import('../menu/menuStore');
+const { useGitCheck } = await import('../errors/gitCheck');
 
 const emit = (ev: AppEvent) => act(() => { for (const h of [...listeners]) h(ev); });
 const activate = (id: string) => act(() => useAppState.getState().updateProfile((p) => ({ ...p, activeTab: id })));
@@ -54,6 +55,7 @@ describe('AppShell: tabs inside <Activity> (spec §4.4, Review Focus 1)', () => 
       loaded: true,
       profile: { ...EMPTY_PROFILE, id: 'default', tabs: [{ id: 'a', kind: 'repo', path: '/a', alias: null }, { id: 'b', kind: 'repo', path: '/b', alias: null }], activeTab: 'a' },
     });
+    useGitCheck.setState({ problem: null });
   });
   afterEach(() => { document.title = ''; });
 
@@ -69,6 +71,13 @@ describe('AppShell: tabs inside <Activity> (spec §4.4, Review Focus 1)', () => 
     expect(changed).toHaveBeenCalledTimes(1);
     activate('b');
     await waitFor(() => expect(wip().isWatched()).toBe(false));
+  });
+
+  it('shows the Git setup screen only for the missing-Git state', () => {
+    useGitCheck.setState({ problem: { kind: 'missing' } });
+    render(<AppShell />);
+    expect(screen.getByRole('heading', { name: 'GitNexia needs Git' })).toBeInTheDocument();
+    expect(api.openRepo).not.toHaveBeenCalled();
   });
 
   it('an index change reloads the graph alone, even with submodules; the core\'s `submodules` reloads the sidebar', async () => {
