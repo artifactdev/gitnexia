@@ -68,11 +68,12 @@ that, GitNexia updates itself (see [Updates](#updates)).
 
 ### Highlights
 
-- **Code review on GitHub and GitLab.** Comment on a line or a range from the diff's gutter, in
-  every diff mode and on a rendered Markdown diff's blocks; collect the comments as drafts in a
-  pending review, then send them with Comment, Approve or Request changes. Suggested changes show
-  as a diff of the lines they replace, and **Apply** puts one in your working copy. GitHub.com
-  and GitLab, self-managed included.
+- **Code review across five forges.** Add inline comments on changed lines from the diff's gutter;
+  ranges are supported where the forge allows them. GitHub, GitLab, Forgejo, Bitbucket Data
+  Center / Server and Azure DevOps Services are supported. GitHub, GitLab and Forgejo support
+  pending reviews and suggested changes you can apply to your working copy. Bitbucket keeps
+  review drafts locally until you submit them; Azure DevOps comments post immediately and don't
+  support batched draft reviews.
 - **Worktrees.** Each worktree with changes has its own WIP row in the graph, with its name and
   change counts, linked to the commit it has checked out. Switch the tab to another worktree from
   that row, the sidebar or the toolbar, without reopening the repository, or open one in its own
@@ -257,7 +258,7 @@ that, GitNexia updates itself (see [Updates](#updates)).
 | Rendered Markdown | 🟡 Files only | ✅ Files, diffs and MR/PR threads |
 | Mermaid diagrams in Markdown | ❌ | ✅ |
 | Pull/merge requests: list, view, create, comment, approve, merge | ✅ | ✅ Also auto-merge, and updating a branch that's behind |
-| Inline code review comments | ✅ GitHub | ✅ GitHub, GitLab and Forgejo: lines and ranges, a pending review, suggested changes you can apply |
+| Inline code review comments | ✅ GitHub | ✅ GitHub, GitLab, Forgejo and Bitbucket Data Center / Server: lines and ranges, review drafts; suggested changes you can apply. Azure DevOps Services: comments on diff lines, posted immediately |
 | Stacked pull/merge requests | 🟡 GitHub.com only | ✅ GitHub, GitLab and Forgejo |
 | Forges | GitHub, GitLab, Bitbucket, Azure DevOps; self-hosted on paid plans | GitHub, GitLab, Forgejo (including Codeberg and Gitea), Bitbucket Data Center / Server and Azure DevOps Services; self-hosted included for supported providers. Azure DevOps supports PAT accounts, repository discovery, clone, HTTPS git authentication and core PR workflows. Bitbucket Cloud and Azure DevOps Server aren't supported |
 | Commit signing | ✅ | ✅ Through your git config |
@@ -283,8 +284,9 @@ that, GitNexia updates itself (see [Updates](#updates)).
 - **Not planned:** Intel Macs, an integrated terminal, AI features, issue tracker integrations,
   cloud workspaces and team features, and Bitbucket Cloud, Azure DevOps Server or GitHub Enterprise Server
   support. Use the tools you already have for those.
-- **Azure DevOps Services:** PR reviews/approvals, inline comments, pipelines, cross-repository
-  PRs and Microsoft Entra/OAuth sign-in are not included. See [connection setup](docs/azure-devops.md).
+- **Azure DevOps Services:** approvals, batched draft reviews, pipelines, cross-repository PRs
+  and Microsoft Entra/OAuth sign-in are not included. Inline comments on diff lines are supported
+  and post immediately. See [connection setup](docs/azure-devops.md).
 
 ## Updates
 

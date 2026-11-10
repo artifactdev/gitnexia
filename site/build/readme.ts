@@ -17,7 +17,7 @@ const REPO = 'https://github.com/artifactdev/gitnexia';
  * (worktrees, branch visibility, context menus), the diffs and file colours, then history and forges. The README's "Free and MIT
  * licensed" is in the hero. */
 export const HIGHLIGHTS: Highlight[] = [
-  { lead: 'Code review on GitHub and GitLab', kicker: 'Code review', lane: 'violet', shot: 'review' },
+  { lead: 'Code review across five forges', kicker: 'Code review', lane: 'violet', shot: 'review' },
   { lead: 'Worktrees', kicker: 'Worktrees', lane: 'teal', shot: 'worktrees' },
   { lead: 'Branch visibility', kicker: 'Graph', lane: 'blue', shot: 'presets' },
   { lead: 'Context menus', kicker: 'Menus', lane: 'orange', shot: 'menus' },
