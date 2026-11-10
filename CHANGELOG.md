@@ -5,6 +5,8 @@ All notable changes to GitNexia (GitNex before this release, GitVolt before 1.5.
 
 ## [Unreleased]
 
+## [1.7.7] - 2026-11-10
+
 ### Fixed
 
 - **AI CLI runtime lookup.** Commands configured with an executable path now include its
