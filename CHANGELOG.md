@@ -5,6 +5,8 @@ All notable changes to GitNexia (GitNex before this release, GitVolt before 1.5.
 
 ## [Unreleased]
 
+## [1.7.4] - 2026-11-10
+
 ### Added
 
 - **Open repository in editor.** Open the whole active worktree folder in an installed editor
