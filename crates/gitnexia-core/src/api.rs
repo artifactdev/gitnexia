@@ -7777,6 +7777,81 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn commits_use_the_active_profiles_identity_after_switching() {
+        let r = TestRepo::new();
+        r.commit("base");
+        let cli = GitCli::new(Arc::new(CommandLog::new(100)))
+            .with_env(isolated_git_env())
+            .with_command_hook(Arc::new(|cmd: &mut std::process::Command| {
+                for key in [
+                    "GIT_AUTHOR_NAME",
+                    "GIT_AUTHOR_EMAIL",
+                    "GIT_COMMITTER_NAME",
+                    "GIT_COMMITTER_EMAIL",
+                ] {
+                    cmd.env_remove(key);
+                }
+            }));
+        let api = Api::new(cli, None);
+        let repo = open(&api, &r).await as u32;
+        let mut first = api.store().active_profile();
+        first.git_name = Some("Robin Example".into());
+        first.git_email = Some("robin@example.com".into());
+        api.dispatch(req(
+            serde_json::json!({"method": "saveProfile", "params": {"profile": first}}),
+        ))
+        .await
+        .unwrap();
+        let second = api.dispatch(req(serde_json::json!({"method": "createProfile", "params": {"name": "Work", "color": "#00f"}}))).await.unwrap();
+        let second_id = second["id"].as_str().unwrap();
+        api.dispatch(req(
+            serde_json::json!({"method": "switchProfile", "params": {"id": second_id}}),
+        ))
+        .await
+        .unwrap();
+        let mut second = api.store().active_profile();
+        second.git_name = Some("Morgan Example".into());
+        second.git_email = Some("morgan@example.com".into());
+        api.dispatch(req(
+            serde_json::json!({"method": "saveProfile", "params": {"profile": second}}),
+        ))
+        .await
+        .unwrap();
+
+        for (profile, expected) in [
+            (second_id, "Morgan Example <morgan@example.com>"),
+            ("default", "Robin Example <robin@example.com>"),
+            (second_id, "Morgan Example <morgan@example.com>"),
+        ] {
+            api.dispatch(req(
+                serde_json::json!({"method": "switchProfile", "params": {"id": profile}}),
+            ))
+            .await
+            .unwrap();
+            r.write("profile.txt", profile);
+            r.git(&["add", "profile.txt"]);
+            api.dispatch(Request::Commit {
+                repo,
+                worktree: crate::platform::fs::canonicalize(r.path())
+                    .unwrap()
+                    .display()
+                    .to_string(),
+                summary: "Profile commit".into(),
+                description: String::new(),
+                amend: false,
+                stage_all: false,
+                expect: Default::default(),
+            })
+            .await
+            .unwrap();
+            assert_eq!(
+                r.git(&["log", "-1", "--format=%an <%ae>|%cn <%ce>"]),
+                format!("{expected}|{expected}")
+            );
+        }
+    }
+
+    #[tokio::test]
     async fn patches_create_and_apply() {
         let source = TestRepo::new();
         source.commit("base");

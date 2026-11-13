@@ -1722,6 +1722,43 @@ mod tests {
         assert!(h.git_token(&store, url, None).await.unwrap().is_none());
     }
 
+    #[tokio::test]
+    async fn gitlab_accounts_and_tokens_follow_the_active_profile() {
+        let conn = Arc::new(FakeConnector::default());
+        for (token, id) in [(TOKEN, 1), (TOKEN2, 2)] {
+            let mut provider = FakeProvider::new(ForgeKind::GitLab, HOST);
+            provider.user.id = id.into();
+            conn.add(token, provider);
+        }
+        let hub = hub(conn, MemTokens::new(TokenStorage::File));
+        let store = SettingsStore::in_memory();
+        let url = "https://gitlab.example.com/group/project.git";
+        hub.add_account(&store, HOST, ForgeKind::GitLab, Secret::new(TOKEN), None)
+            .await
+            .unwrap();
+        let work = store.create_profile("Work", "#00f").unwrap();
+        store.switch_profile(&work.id).unwrap();
+        assert!(hub.git_token(&store, url, None).await.unwrap().is_none());
+        let work_account = hub
+            .add_account(&store, HOST, ForgeKind::GitLab, Secret::new(TOKEN2), None)
+            .await
+            .unwrap();
+        for (id, expected, user_id) in [
+            (work.id.as_str(), TOKEN2, 2_u64),
+            ("default", TOKEN, 1_u64),
+            (work.id.as_str(), TOKEN2, 2_u64),
+        ] {
+            store.switch_profile(id).unwrap();
+            assert_eq!(
+                hub.git_token(&store, url, None).await.unwrap(),
+                Some(Secret::new(expected))
+            );
+            let (account, _) = hub.provider_for_host(&store, HOST).await.unwrap().unwrap();
+            assert_eq!(account.user.id, user_id);
+        }
+        assert_eq!(hub.accounts(&store)[0].account.id, work_account.account.id);
+    }
+
     fn setup(
         storage: TokenStorage,
     ) -> (

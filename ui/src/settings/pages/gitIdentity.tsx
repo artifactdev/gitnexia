@@ -4,7 +4,7 @@ import { api } from '../../api/client';
 import type { GitIdentityInfo } from '../../api/gen/GitIdentityInfo';
 import { examplePath } from '../../app/osPath';
 import { useRuntime } from '../../app/runtime';
-import { useAppState } from '../../app/state';
+import { flushSaves, useAppState } from '../../app/state';
 import { profileField } from '../bindings';
 import { TextField } from '../frame/fields';
 import { registerSettings, registerSettingsPage, type SettingsCtx } from '../registry';
@@ -35,6 +35,7 @@ function GitIdentityControl({ ctx }: { ctx: SettingsCtx }) {
   const repoId = useRuntime((r) => (ctx.tabId ? r.tabs[ctx.tabId]?.repo?.id ?? null : null));
   const worktree = useRuntime((r) => (ctx.tabId ? r.tabs[ctx.tabId]?.worktree ?? null : null));
   const extra = useAppState((s) => s.profile.extraGitconfig);
+  const profileId = useAppState((s) => s.profile.id);
   const ownName = useAppState((s) => s.profile.gitName ?? '');
   const ownEmail = useAppState((s) => s.profile.gitEmail ?? '');
   const [info, setInfo] = useState<GitIdentityInfo | null>(null);
@@ -46,9 +47,9 @@ function GitIdentityControl({ ctx }: { ctx: SettingsCtx }) {
   }, []);
   useEffect(() => {
     let live = true;
-    api.gitIdentity(repoId, repoId === null ? null : worktree ?? ctx.repoPath).then((i) => { if (live) setInfo(i); }, () => { if (live) setInfo(null); });
+    flushSaves().then(() => api.gitIdentity(repoId, repoId === null ? null : worktree ?? ctx.repoPath)).then((i) => { if (live) setInfo(i); }, () => { if (live) setInfo(null); });
     return () => { live = false; };
-  }, [repoId, worktree, extra, focusTick]);
+  }, [repoId, worktree, ctx.repoPath, profileId, extra, ownName, ownEmail, focusTick]);
   const from = ctx.repoName ? `From ${ctx.repoName}'s git config` : 'From your global git config';
   const signed = info && signedText(info);
   return (
