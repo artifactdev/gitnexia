@@ -78,12 +78,13 @@ They install with a separate identity/profile and have no automatic update chann
   token query parameters, `Authorization` headers and known GitHub and GitLab token formats.
 - Removing an account (Settings › Accounts) deletes its token from the keyring and from the
   fallback file. It doesn't revoke the token on the forge.
-- A GitLab account's PAT is also available to matching HTTPS Git operations, including clone.
+- A GitHub or GitLab account's PAT is also available to matching HTTPS Git operations, including clone.
   A temporary repository-URL-scoped helper reads it only for the live operation and its
   registered remote; the selected account for a forge-search clone is preserved. The PAT is not
   put in argv, environment variables, URLs or saved git configuration, and the helper ignores
   Git's store/erase requests. Other helpers are bypassed only for that repository URL, HTTPS
-  redirects are disabled, and SSH uses normal SSH credentials.
+  redirects are disabled, and SSH uses normal SSH credentials. If the profile changes before
+  the helper retrieves a token, the operation fails rather than using another profile's token.
 - Azure DevOps Services accounts are scoped to one `dev.azure.com/<organization>` key.
   PATs are sent as Basic authentication with an empty username, only to that organization's
   API; redirects are not followed. Both the raw PAT and its Basic-auth encoding are removed

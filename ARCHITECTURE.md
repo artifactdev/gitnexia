@@ -294,11 +294,13 @@ host) also offers that remote's SSH URL, the forge's when an account covers the 
 derived from the HTTPS one. Choosing it cancels the prompt; the operation fails as Cancelled
 with the switch to make, and the UI runs `git remote set-url`, then the same request again. `docs/dev-setup.md` has a walk-through for trying this without real keys.
 
-Matching Azure DevOps HTTPS remotes also use the binary as a temporary, URL-scoped git
-credential helper. It retrieves the selected organization's PAT over the same authenticated
-socket, only for a live operation's registered repository. Background operations can authenticate
-without prompting. The PAT is never put in argv, environment variables or saved git configuration;
-HTTP redirects are disabled for those URLs, and SSH credentials are unchanged.
+Matching GitHub, GitLab and Azure DevOps HTTPS remotes also use the binary as a temporary,
+URL-scoped git credential helper. It retrieves the selected account's PAT over the same
+authenticated socket, only for a live operation's registered repository. If the profile changes
+before retrieval, the operation fails rather than using another profile's token. Background
+operations can authenticate without prompting. The PAT is never put in argv, environment
+variables or saved git configuration; HTTP redirects are disabled for those URLs, and SSH
+credentials are unchanged.
 
 ## The graph
 

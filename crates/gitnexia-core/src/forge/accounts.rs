@@ -272,7 +272,7 @@ pub fn token_page_url_for(kind: ForgeKind, host: &str, classic: bool) -> String 
     match kind {
         ForgeKind::GitLab => format!("https://{host}/-/user_settings/personal_access_tokens?{DESCRIPTION}&scopes=api"),
         ForgeKind::GitHub if classic => "https://github.com/settings/tokens/new?description=GitNexia%20desktop%20client&scopes=repo,read:org".to_string(),
-        ForgeKind::GitHub => format!("https://github.com/settings/personal-access-tokens/new?{DESCRIPTION}&pull_requests=write&issues=write&checks=read&statuses=read&metadata=read&profile=read"),
+        ForgeKind::GitHub => format!("https://github.com/settings/personal-access-tokens/new?{DESCRIPTION}&contents=write&pull_requests=write&issues=write&checks=read&statuses=read&metadata=read&profile=read"),
         ForgeKind::Forgejo => format!("https://{host}/user/settings/applications/tokens/new"),
         ForgeKind::Bitbucket => format!("https://{host}/plugins/servlet/access-tokens/manage"),
         ForgeKind::AzureDevOps => format!("https://{host}/_usersSettings/tokens"),
@@ -399,7 +399,7 @@ mod tests {
         );
         assert_eq!(
             token_page_url(ForgeKind::GitHub, "github.com"),
-            "https://github.com/settings/personal-access-tokens/new?name=GitNexia&description=GitNexia%20desktop%20client&pull_requests=write&issues=write&checks=read&statuses=read&metadata=read&profile=read"
+            "https://github.com/settings/personal-access-tokens/new?name=GitNexia&description=GitNexia%20desktop%20client&contents=write&pull_requests=write&issues=write&checks=read&statuses=read&metadata=read&profile=read"
         );
         assert_eq!(
             token_page_url(ForgeKind::Forgejo, "code.example.org:3000"),

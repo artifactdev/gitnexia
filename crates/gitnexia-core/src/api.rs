@@ -2991,11 +2991,16 @@ impl Api {
         // An HTTPS prompt's "Use SSH instead" asks the forge for the project's SSH URL first.
         if let Some(hub) = self.forge.clone() {
             let (tokens, token_store) = (hub.clone(), self.store.clone());
-            server.set_forge_git_token(Arc::new(move |remote| {
+            server.set_forge_git_token(Arc::new(move |remote, profile| {
                 let (hub, store) = (tokens.clone(), token_store.clone());
                 Box::pin(async move {
-                    hub.git_token(&store, &remote.url, remote.account.as_deref())
-                        .await
+                    hub.git_token_for_profile(
+                        &store,
+                        &remote.url,
+                        remote.account.as_deref(),
+                        profile.as_deref(),
+                    )
+                    .await
                 })
             }));
             let store = self.store.clone();
@@ -3013,8 +3018,8 @@ impl Api {
     /// Environment for a network command belonging to `op`: askpass's (none if askpass isn't
     /// running: git then fails a prompt at once, `GIT_TERMINAL_PROMPT=0`), and for a GitNexia-started
     /// (non-interactive) op, `GCM_INTERACTIVE=never` too, so Git Credential Manager never shows
-    /// its own prompt for a background fetch either. A covered GitLab or Azure HTTPS remote uses
-    /// the saved PAT through a temporary URL-scoped helper, not the user's credential manager.
+    /// its own prompt for a background fetch either. A covered GitHub, GitLab or Azure HTTPS
+    /// remote uses the saved PAT through a temporary URL-scoped helper.
     pub(crate) fn net_env(&self, op: OpId) -> Vec<(std::ffi::OsString, std::ffi::OsString)> {
         let mut env = self
             .askpass
@@ -3026,6 +3031,7 @@ impl Api {
             && let Some(entry) = self.ops.get(op)
         {
             let profile = self.store.active_profile();
+            entry.set_profile(profile.id.clone());
             let selected = entry.repo.and_then(|id| {
                 let repos = self.repos.lock().expect("repos poisoned");
                 let handle = repos.get(&id)?;
@@ -3046,7 +3052,9 @@ impl Api {
                     && profile.forge_accounts.iter().any(|a| {
                         matches!(
                             a.kind,
-                            crate::forge::ForgeKind::AzureDevOps | crate::forge::ForgeKind::GitLab
+                            crate::forge::ForgeKind::AzureDevOps
+                                | crate::forge::ForgeKind::GitLab
+                                | crate::forge::ForgeKind::GitHub
                         ) && a.host == host
                     })
                     && !urls.contains(&scope)
@@ -8467,6 +8475,74 @@ mod tests {
             )
         );
         assert!(!params.contains("FAKE-gitlab"));
+    }
+
+    #[tokio::test]
+    async fn github_git_auth_uses_the_active_profiles_account_and_scopes_the_helper() {
+        use crate::forge::fake::{FakeConnector, FakeProvider, MemTokens};
+        use crate::forge::{ForgeKind, TokenStorage};
+        let host = "github.com";
+        let conn = Arc::new(FakeConnector::default());
+        conn.add("FAKE-github", FakeProvider::new(ForgeKind::GitHub, host));
+        let api = api().with_forge(conn, MemTokens::new(TokenStorage::File));
+        let dir = tempfile::tempdir().unwrap();
+        api.start_askpass(dir.path(), "/bin/false".into())
+            .await
+            .unwrap();
+        let remote = |url: &str| crate::ops::OpRemote {
+            name: "origin".into(),
+            url: url.into(),
+            settable: true,
+            account: None,
+        };
+        let url = "https://github.com/example/project.git";
+        let op = api.ops().begin(crate::events::OpKind::Push, None, true);
+        op.set_remotes(vec![remote(url)]);
+        assert!(
+            !api.net_env(op.id)
+                .iter()
+                .any(|(key, _)| key == "GIT_CONFIG_PARAMETERS")
+        );
+        api.dispatch(req(serde_json::json!({"method":"addForgeAccount","params":{"host":host,"kind":"github","token":"FAKE-github"}}))).await.unwrap();
+        let op = api.ops().begin(crate::events::OpKind::Push, None, true);
+        op.set_remotes(vec![remote(url)]);
+        let env = api.net_env(op.id);
+        assert_eq!(op.profile().as_deref(), Some("default"));
+        let params = env
+            .iter()
+            .find(|(key, _)| key == "GIT_CONFIG_PARAMETERS")
+            .unwrap()
+            .1
+            .to_string_lossy();
+        assert!(params.contains("credential.https://github.com/example/project.git.helper="));
+        assert!(
+            params.contains("credential.https://github.com/example/project.git.useHttpPath=true")
+        );
+        assert!(
+            params.contains("http.https://github.com/example/project.git.followRedirects=false")
+        );
+        assert!(!params.contains("FAKE-github"));
+        for other in [
+            "git@github.com:example/project.git",
+            "https://github.com:8443/example/project.git",
+            "https://github.other.example/example/project.git",
+        ] {
+            op.set_remotes(vec![remote(other)]);
+            assert!(
+                !api.net_env(op.id)
+                    .iter()
+                    .any(|(key, _)| key == "GIT_CONFIG_PARAMETERS")
+            );
+        }
+        let work = api.store().create_profile("Work", "#00f").unwrap();
+        api.store().switch_profile(&work.id).unwrap();
+        op.set_remotes(vec![remote(url)]);
+        assert!(
+            !api.net_env(op.id)
+                .iter()
+                .any(|(key, _)| key == "GIT_CONFIG_PARAMETERS")
+        );
+        assert_eq!(op.profile().as_deref(), Some("default"));
     }
 
     #[tokio::test]

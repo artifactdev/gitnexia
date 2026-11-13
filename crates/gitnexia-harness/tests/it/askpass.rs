@@ -58,7 +58,7 @@ async fn forge_pats_reach_real_git_without_a_prompt_or_persistent_helper() {
     let provided = token.clone();
     let calls = Arc::new(AtomicUsize::new(0));
     let counted = calls.clone();
-    server.set_forge_git_token(Arc::new(move |remote| {
+    server.set_forge_git_token(Arc::new(move |remote, _profile| {
         assert_eq!(remote.account.as_deref(), Some("chosen-account"));
         counted.fetch_add(1, Ordering::SeqCst);
         let token = provided.clone();
@@ -103,6 +103,7 @@ async fn forge_pats_reach_real_git_without_a_prompt_or_persistent_helper() {
             true,
             "oauth2",
         ),
+        ("https://github.com/group/project.git", true, "oauth2"),
     ] {
         let op = ops.begin(OpKind::Fetch, Some(1), interactive);
         op.set_remotes(vec![OpRemote {
@@ -177,7 +178,7 @@ async fn forge_pats_reach_real_git_without_a_prompt_or_persistent_helper() {
     }
     assert_eq!(
         calls.load(Ordering::SeqCst),
-        6,
+        7,
         "store/erase must neither read nor delete the account token"
     );
     assert!(std::fs::read(repo.path().join(".git/config")).unwrap() == before);

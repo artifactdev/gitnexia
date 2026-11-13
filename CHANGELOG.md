@@ -5,6 +5,17 @@ All notable changes to GitNexia (GitNex before this release, GitVolt before 1.5.
 
 ## [Unreleased]
 
+### Changed
+
+- **GitHub HTTPS authentication.** Git operations use the active profile's selected GitHub
+  account when configured. GitHub tokens need access to the repository, including Contents
+  write permission for pushes; SSH continues to use your existing SSH configuration.
+
+### Fixed
+
+- **Git identity display.** Settings refreshes the displayed commit identity after a profile
+  switch or an edit to the profile's name, email or extra Git config.
+
 ## [1.7.7] - 2026-11-10
 
 ### Fixed

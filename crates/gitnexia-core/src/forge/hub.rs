@@ -467,11 +467,22 @@ impl ForgeHub {
         Ok((account, provider))
     }
 
-    pub(crate) async fn git_token(
+    #[cfg(test)]
+    async fn git_token(
         &self,
         store: &Arc<SettingsStore>,
         url: &str,
         selected: Option<&str>,
+    ) -> Result<Option<Secret>, GbError> {
+        self.git_token_for_profile(store, url, selected, None).await
+    }
+
+    pub(crate) async fn git_token_for_profile(
+        &self,
+        store: &Arc<SettingsStore>,
+        url: &str,
+        selected: Option<&str>,
+        expected_profile: Option<&str>,
     ) -> Result<Option<Secret>, GbError> {
         let Some(scope) = crate::askpass::git_credential_scope(url) else {
             return Ok(None);
@@ -479,14 +490,22 @@ impl ForgeHub {
         let Some(host) = crate::remotes::forge_host(&scope) else {
             return Ok(None);
         };
-        let kind = if crate::askpass::azure_credential_scope(&scope).is_some() {
-            ForgeKind::AzureDevOps
-        } else {
-            ForgeKind::GitLab
-        };
         let profile = store.active_profile();
+        if expected_profile.is_some_and(|id| id != profile.id) {
+            return Err(GbError::new(
+                GbErrorKind::AuthFailed,
+                "The profile changed during this Git operation. Retry it with the intended profile active.",
+            ));
+        }
         let Some(account) = account_for_selected(&profile.forge_accounts, &host, selected)
-            .filter(|a| a.kind == kind && a.host == host)
+            .filter(|a| {
+                a.host == host
+                    && if crate::askpass::azure_credential_scope(&scope).is_some() {
+                        a.kind == ForgeKind::AzureDevOps
+                    } else {
+                        matches!(a.kind, ForgeKind::GitLab | ForgeKind::GitHub)
+                    }
+            })
             .cloned()
         else {
             return Ok(None);
@@ -1757,6 +1776,67 @@ mod tests {
             assert_eq!(account.user.id, user_id);
         }
         assert_eq!(hub.accounts(&store)[0].account.id, work_account.account.id);
+    }
+
+    #[tokio::test]
+    async fn github_git_tokens_follow_profile_and_repository_account() {
+        let host = "github.com";
+        const TOKEN3: &str = "FAKE-github-work";
+        let conn = Arc::new(FakeConnector::default());
+        for (token, id) in [(TOKEN, 1), (TOKEN2, 2), (TOKEN3, 3)] {
+            let mut provider = FakeProvider::new(ForgeKind::GitHub, host);
+            provider.user.id = id.into();
+            conn.add(token, provider);
+        }
+        let hub = hub(conn, MemTokens::new(TokenStorage::File));
+        let store = SettingsStore::in_memory();
+        let url = "https://github.com/example/project.git";
+        hub.add_account(&store, host, ForgeKind::GitHub, Secret::new(TOKEN), None)
+            .await
+            .unwrap();
+        let second = hub
+            .add_account(&store, host, ForgeKind::GitHub, Secret::new(TOKEN2), None)
+            .await
+            .unwrap();
+        assert_eq!(
+            hub.git_token(&store, url, None).await.unwrap(),
+            Some(Secret::new(TOKEN))
+        );
+        assert_eq!(
+            hub.git_token(&store, url, Some(&second.account.id))
+                .await
+                .unwrap(),
+            Some(Secret::new(TOKEN2))
+        );
+        for other in [
+            "http://github.com/example/project.git",
+            "https://github.com:8443/example/project.git",
+            "git@github.com:example/project.git",
+            "https://github.other.example/example/project.git",
+        ] {
+            assert!(hub.git_token(&store, other, None).await.unwrap().is_none());
+        }
+        let work = store.create_profile("Work", "#00f").unwrap();
+        store.switch_profile(&work.id).unwrap();
+        assert!(hub.git_token(&store, url, None).await.unwrap().is_none());
+        hub.add_account(&store, host, ForgeKind::GitHub, Secret::new(TOKEN3), None)
+            .await
+            .unwrap();
+        assert_eq!(
+            hub.git_token(&store, url, None).await.unwrap(),
+            Some(Secret::new(TOKEN3))
+        );
+        let err = hub
+            .git_token_for_profile(&store, url, None, Some("default"))
+            .await
+            .unwrap_err();
+        assert_eq!(err.kind, GbErrorKind::AuthFailed);
+        assert!(err.message.contains("profile changed"));
+        store.switch_profile("default").unwrap();
+        assert_eq!(
+            hub.git_token(&store, url, None).await.unwrap(),
+            Some(Secret::new(TOKEN))
+        );
     }
 
     fn setup(

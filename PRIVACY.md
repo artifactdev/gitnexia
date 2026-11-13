@@ -28,11 +28,12 @@ core.
 - It never prompts. A fetch that needs credentials is skipped.
 - Sends: what `git fetch` sends to each of the repository's remotes, including any credentials
   that your git configuration, credential helper or ssh agent supplies.
-- Matching GitLab HTTPS remotes also use the configured account's PAT through a temporary,
+- Matching GitHub and GitLab HTTPS remotes also use the configured account's PAT through a temporary,
   repository-URL-scoped helper for clone and network operations, including background fetch.
   The selected account is used where one is known; no PAT is sent to another host or repository,
   saved in git configuration, or stored by another credential helper. Redirects are disabled for
-  these authenticated URLs; SSH continues to use your normal SSH credentials.
+  these authenticated URLs; SSH continues to use your normal SSH credentials. If the profile
+  changes before a token is retrieved, the operation fails rather than using another profile.
 - Matching Azure DevOps HTTPS remotes also use the organization's saved PAT through a temporary
   git credential helper. This applies to background fetch and user-started network operations;
   the repository's selected forge account wins, otherwise its organization's first account.

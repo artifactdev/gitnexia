@@ -48,7 +48,7 @@ export function statusChip(v: ForgeAccountView): { tone: 'ok' | 'warn' | 'err'; 
 type Panel = { mode: 'add' } | { mode: 'replace'; account: ForgeAccount };
 const TOKEN_HELP: Record<ForgeKind, string> = {
   gitlab: 'Opens your profile\'s token page with the api scope selected. Copy the token, then paste it here.',
-  github: 'Opens GitHub\'s fine-grained token page with the permissions GitNexia needs selected. Some organizations cap these tokens\' lifetime (e.g. 90 days); use a classic token for those.',
+  github: 'Opens GitHub\'s fine-grained token page with the permissions GitNexia needs selected. HTTPS pushes need Contents: Read and write for the repository. Some organizations cap these tokens\' lifetime (e.g. 90 days); use a classic token for those.',
   forgejo: 'Opens the new-token form in your Applications settings. Generate a token with the read:user, write:repository and write:issue scopes, then paste it here.',
   bitbucket: 'Use a personal access token (user HTTP access token) from Manage account › HTTP access tokens, with repository read/write permissions for the actions you need. Merges open in your browser. Bitbucket Cloud is not supported.',
   azuredevops: 'Enter https://dev.azure.com/your-organization and use a personal access token with Code (Read) access to browse, or Code (Read & write) for pull request changes. Azure DevOps Server is not supported.',

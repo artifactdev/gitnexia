@@ -9,7 +9,7 @@ use crate::events::OpKind;
 use std::collections::HashMap;
 use std::ops::Deref;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
-use std::sync::{Arc, Mutex, MutexGuard};
+use std::sync::{Arc, Mutex, MutexGuard, OnceLock};
 use tokio_util::sync::CancellationToken;
 
 pub type OpId = u64;
@@ -28,6 +28,7 @@ pub struct OpEntry {
     prompt_cancelled: AtomicBool,
     /// The remotes it talks to, in the order it does (a credential prompt's remote, spec §5.4).
     remotes: Mutex<Vec<OpRemote>>,
+    profile: OnceLock<String>,
     /// The remotes whose credential prompt the user turned into "Use SSH instead".
     ssh_switches: Mutex<Vec<SshOffer>>,
     secrets: Mutex<Vec<crate::redact::RedactionGuard>>,
@@ -74,6 +75,14 @@ impl OpEntry {
 
     pub fn remotes(&self) -> Vec<OpRemote> {
         lock(&self.remotes).clone()
+    }
+
+    pub(crate) fn set_profile(&self, profile: String) {
+        let _ = self.profile.set(profile);
+    }
+
+    pub(crate) fn profile(&self) -> Option<String> {
+        self.profile.get().cloned()
     }
 
     /// The user chose "Use SSH for <remote> instead" on one of its prompts (and so cancelled it).
@@ -127,6 +136,7 @@ impl OpRegistry {
             auth_denied: AtomicBool::new(false),
             prompt_cancelled: AtomicBool::new(false),
             remotes: Mutex::default(),
+            profile: OnceLock::new(),
             ssh_switches: Mutex::default(),
             secrets: Mutex::default(),
         });

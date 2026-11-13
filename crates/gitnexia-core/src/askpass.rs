@@ -78,6 +78,7 @@ pub type ForgeSshUrl =
 pub type ForgeGitToken = Arc<
     dyn Fn(
             OpRemote,
+            Option<String>,
         ) -> futures_util::future::BoxFuture<
             'static,
             Result<Option<crate::redact::Secret>, GbError>,
@@ -609,7 +610,7 @@ impl AskpassServer {
             return Ok(None);
         };
         let token = tokio::select! {
-            result = get(remote) => result?,
+            result = get(remote, entry.profile()) => result?,
             _ = entry.cancel.cancelled() => return Ok(None),
         };
         if self.ops.get(op).is_none() || entry.cancel.is_cancelled() {
@@ -823,7 +824,7 @@ mod tests {
         let token = crate::redact::Secret::new(format!("FAKE-azure-{}", random_hex(16)));
         let (provided, calls) = (token.clone(), Arc::new(AtomicUsize::new(0)));
         let counted = calls.clone();
-        s.set_forge_git_token(Arc::new(move |remote| {
+        s.set_forge_git_token(Arc::new(move |remote, _profile| {
             assert_eq!(remote.account.as_deref(), Some("chosen-account"));
             counted.fetch_add(1, Ordering::SeqCst);
             let token = provided.clone();
@@ -879,7 +880,7 @@ mod tests {
         let op = ops.begin(OpKind::Fetch, None, true);
         let url = "https://dev.azure.com/orbital/Space/_git/Orbit";
         op.set_remotes(vec![op_remote("origin", url, true)]);
-        s.set_forge_git_token(Arc::new(|_| {
+        s.set_forge_git_token(Arc::new(|_, _| {
             Box::pin(async { panic!("must not read credentials") })
         }));
         let path = s.socket_path().to_path_buf();
@@ -902,7 +903,7 @@ mod tests {
         let op = ops.begin(OpKind::Fetch, None, true);
         let url = "https://dev.azure.com/orbital/Space/_git/Orbit";
         op.set_remotes(vec![op_remote("origin", url, true)]);
-        s.set_forge_git_token(Arc::new(|_| Box::pin(futures_util::future::pending())));
+        s.set_forge_git_token(Arc::new(|_, _| Box::pin(futures_util::future::pending())));
         let (server, id) = (s.clone(), op.id);
         let request = tokio::spawn(async move { server.credential(id, url).await });
         op.cancel.cancel();
