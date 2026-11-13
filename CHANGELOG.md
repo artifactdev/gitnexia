@@ -5,6 +5,8 @@ All notable changes to GitNexia (GitNex before this release, GitVolt before 1.5.
 
 ## [Unreleased]
 
+## [1.7.8] - 2026-11-13
+
 ### Changed
 
 - **GitHub HTTPS authentication.** Git operations use the active profile's selected GitHub
