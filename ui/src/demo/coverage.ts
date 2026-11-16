@@ -48,6 +48,8 @@ export const COVERAGE = {
   createProfile: 'notInDemo',
   switchProfile: 'notInDemo',
   deleteProfile: 'notInDemo',
+  ssh: 'notInDemo',
+  pickSshKey: 'notInDemo',
   authAnswer: 'notInDemo',
   authUseSsh: 'notInDemo',
   cancelOp: 'real',

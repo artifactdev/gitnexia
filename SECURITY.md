@@ -83,7 +83,8 @@ They install with a separate identity/profile and have no automatic update chann
   registered remote; the selected account for a forge-search clone is preserved. The PAT is not
   put in argv, environment variables, URLs or saved git configuration, and the helper ignores
   Git's store/erase requests. Other helpers are bypassed only for that repository URL, HTTPS
-  redirects are disabled, and SSH uses normal SSH credentials. If the profile changes before
+  redirects are disabled. SSH uses normal credentials unless an account has a dedicated key.
+  If the profile changes before
   the helper retrieves a token, the operation fails rather than using another profile's token.
 - Azure DevOps Services accounts are scoped to one `dev.azure.com/<organization>` key.
   PATs are sent as Basic authentication with an empty username, only to that organization's
@@ -95,17 +96,38 @@ They install with a separate identity/profile and have no automatic update chann
   Credentials are not put in argv, environment variables, URLs or saved git configuration,
   and the helper ignores git's store/erase requests. Other credential helpers are bypassed only
   for these URLs, and HTTP redirects are disabled. The PAT and its Basic-auth encodings are
-  registered with the redaction filter for the operation's lifetime. SSH still uses normal
-  SSH credentials.
+  registered with the redaction filter for the operation's lifetime. SSH uses normal credentials
+  unless an account has a dedicated key.
 - Bitbucket Data Center / Server uses user personal access tokens (also called user HTTP access
   tokens), not browser session cookies. Matching HTTPS Git operations use the selected account's
   username and PAT through the temporary repository-URL-scoped credential helper. Both the
   authority (including port) and the configured installation's `/scm/` path must match.
   Tokens and their Basic-auth encodings are redacted during the operation; tokens are never
-  saved in Git configuration or passed to other helpers. Redirects are disabled. SSH keeps its
-  normal credentials. Account setup does not install a persistent helper or override merge checks.
+  saved in Git configuration or passed to other helpers. Redirects are disabled.
+  Account setup does not install a persistent helper or override merge checks.
   Merges restricted by token authentication
   open the PR's page in the system browser; GitNexia never substitutes a local merge and push.
+
+### SSH keys and system configuration
+
+- SSH defaults to the user's existing configuration and agent. An account can instead select
+  a private key, independently within each profile. Missing selected keys fail without falling
+  back to another identity. Switching profiles cannot change an operation's already-bound identity.
+- Dedicated identities use a private, operation-lifetime `ssh -F` configuration, override
+  `GIT_SSH_COMMAND`, `GIT_SSH` and `core.sshCommand`, disable agents/certificates and offer only
+  the selected key. System Host aliases, proxies and custom host-key policies are not inherited
+  for covered hosts. Default known-host verification is not weakened. An operation selecting
+  conflicting identities for one hostname is refused.
+- Generated private keys have mode 0600 in private 0700 directories under the app data directory.
+  Unique directories prevent overwriting existing keys. Passphrases are `Secret` values, fed
+  to detached `ssh-keygen` over stdin; they are not saved or put in arguments/environment.
+  Imported public keys are derived from the private key rather than trusting an unrelated file.
+- Only the public key and title go to the selected account's authenticated forge API. Rejected
+  registrations remain errors, with manual copy/registration available. Removing an account or
+  profile, replacing a key or choosing System SSH never deletes private keys or revokes forge keys.
+- Global configuration edits require an explicit in-place confirmation in the UI. SSH file edits
+  retain private backups beside the file and reject stale contents and symlink targets. Clearing
+  empties only the user's SSH config file; it never removes included files or private keys.
 
 ### Credential prompts
 

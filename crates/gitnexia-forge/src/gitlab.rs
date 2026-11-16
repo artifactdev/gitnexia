@@ -1776,6 +1776,19 @@ pub const REQUEST_CHANGES_MUTATION: &str = "mutation($path: ID!, $iid: String!) 
 // --- end 4B T3 ---
 
 impl ForgeProvider for GitLabProvider {
+    fn add_ssh_key<'a>(&'a self, title: &'a str, key: &'a str) -> ForgeFuture<'a, ()> {
+        Box::pin(async move {
+            self.http
+                .send_json(
+                    Method::Post,
+                    "/user/keys",
+                    &serde_json::json!({"title": title, "key": key, "usage_type": "auth"}),
+                )
+                .await?;
+            Ok(())
+        })
+    }
+
     fn kind(&self) -> ForgeKind {
         ForgeKind::GitLab
     }

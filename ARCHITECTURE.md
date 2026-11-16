@@ -299,10 +299,21 @@ URL-scoped git credential helper. It retrieves the selected account's PAT over t
 authenticated socket, only for a live operation's registered repository. If the profile changes
 before retrieval, the operation fails rather than using another profile's token. Background
 operations can authenticate without prompting. The PAT is never put in argv, environment
-variables or saved git configuration; HTTP redirects are disabled for those URLs, and SSH
-credentials are unchanged.
+variables or saved git configuration; HTTP redirects are disabled for those URLs.
 Bitbucket uses the account's username with its PAT and restricts matching to the configured
 installation's exact authority and `/scm/<project>/<repository>` clone path.
+
+`ssh.rs` stores account-owned identity metadata per profile, independently of debounced UI
+profile saves. An explicit key selects an operation-lifetime private OpenSSH configuration via
+`GIT_SSH_COMMAND`: only that identity, no agent or certificates, and public-key authentication
+only. This isolated mode intentionally ignores system host aliases, proxies and custom host-key
+policies for covered hosts; URL usernames and ports and normal known-host verification remain.
+Unconfigured hosts retain SSH configuration includes, though a custom SSH executable/wrapper
+is bypassed for the whole operation. Conflicting identities on one host fail before spawning Git.
+System SSH remains the default. Generation uses `ssh-keygen` in a new private directory and
+session, with passphrases on stdin, never argv/environment or saved settings. Public-key
+registration goes through the account's `ForgeProvider`; unsupported providers and denied
+requests fail explicitly. See [docs/ssh.md](docs/ssh.md).
 
 ## The graph
 

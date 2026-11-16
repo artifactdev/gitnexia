@@ -337,6 +337,13 @@ pub enum Request {
     },
     /// Forgets the AI endpoint token: `null`.
     AiClearToken,
+    /// Account SSH settings and explicitly requested system configuration changes.
+    Ssh {
+        profile: String,
+        account: String,
+        action: crate::ssh::SshAction,
+    },
+    PickSshKey,
     /// The models an OpenAI-compatible `endpoint` lists, using the stored token: `string[]`.
     AiModels {
         endpoint: String,
@@ -1944,6 +1951,8 @@ impl Request {
             | Request::AiTokenStatus
             | Request::AiSetToken { .. }
             | Request::AiClearToken
+            | Request::Ssh { .. }
+            | Request::PickSshKey
             | Request::AiModels { .. }
             | Request::AiGenerateCommitMessage { .. }
             | Request::AuthAnswer { .. }
@@ -2117,6 +2126,7 @@ pub struct Api {
     pub(crate) ssh_switched: Mutex<crate::write::remotes::SshSwitched>,
     /// The system folder picker (spec §13); `pickFolder` answers `null` without one.
     pub(crate) folder_picker: Option<FolderPicker>,
+    pub(crate) file_picker: Option<crate::openers::folder_picker::FilePicker>,
     /// The user's home, for the suggested repos folder (`~/repos`).
     pub(crate) home: Option<PathBuf>,
     /// `scanRepos` results per root, until a `refresh`.
@@ -2425,6 +2435,7 @@ impl Api {
             askpass: std::sync::OnceLock::new(),
             ssh_switched: Mutex::default(),
             folder_picker: None,
+            file_picker: None,
             home: crate::paths::home_dir(),
             scans: Mutex::new(HashMap::new()),
             watchers: Mutex::new(HashMap::new()),
@@ -2836,6 +2847,11 @@ impl Api {
         self
     }
 
+    pub fn with_file_picker(mut self, picker: crate::openers::folder_picker::FilePicker) -> Self {
+        self.file_picker = Some(picker);
+        self
+    }
+
     /// The home `suggestReposFolder` looks in (the user's own unless changed; the harness's is
     /// a temp dir).
     pub fn with_home(mut self, home: Option<PathBuf>) -> Self {
@@ -3020,17 +3036,23 @@ impl Api {
     /// (non-interactive) op, `GCM_INTERACTIVE=never` too, so Git Credential Manager never shows
     /// its own prompt for a background fetch either. A covered HTTPS remote uses the saved PAT
     /// through a temporary URL-scoped helper.
-    pub(crate) fn net_env(&self, op: OpId) -> Vec<(std::ffi::OsString, std::ffi::OsString)> {
+    pub(crate) fn net_env(
+        &self,
+        op: OpId,
+    ) -> Result<Vec<(std::ffi::OsString, std::ffi::OsString)>, GbError> {
         let mut env = self
             .askpass
             .get()
             .map(|s| s.env_for(Some(op)))
             .unwrap_or_default();
-        if self.forge.is_some()
-            && let Some(server) = self.askpass.get()
-            && let Some(entry) = self.ops.get(op)
-        {
+        if let Some(entry) = self.ops.get(op) {
             let profile = self.store.active_profile();
+            if entry.profile().is_some_and(|id| id != profile.id) {
+                return Err(GbError::new(
+                    GbErrorKind::AuthFailed,
+                    "The active profile changed before this network operation started",
+                ));
+            }
             entry.set_profile(profile.id.clone());
             let selected = entry.repo.and_then(|id| {
                 let repos = self.repos.lock().expect("repos poisoned");
@@ -3060,12 +3082,17 @@ impl Api {
                 }
             }
             entry.set_remotes(remotes);
-            env.extend(server.credential_env(&urls));
+            if self.forge.is_some()
+                && let Some(server) = self.askpass.get()
+            {
+                env.extend(server.credential_env(&urls));
+            }
+            env.extend(self.ssh_env(&entry, &profile)?);
         }
         if self.ops.get(op).is_some_and(|e| !e.interactive) {
             env.push(("GCM_INTERACTIVE".into(), "never".into()));
         }
-        env
+        Ok(env)
     }
 
     pub fn with_store(mut self, store: Arc<SettingsStore>) -> Self {
@@ -4090,6 +4117,11 @@ impl Api {
             }
             Request::AiDetect => to_json(self.ai_detect().await?),
             Request::AiTokenStatus => to_json(self.ai_token_status().await?),
+            Request::Ssh {
+                profile,
+                account,
+                action,
+            } => to_json(self.manage_ssh(&profile, &account, action).await?),
             Request::AiSetToken { token } => {
                 self.ai_set_token(token).await?;
                 to_json(())
@@ -4915,6 +4947,16 @@ impl Api {
                     )
                 })?;
                 to_json(updates.relaunch()?)
+            }
+            Request::PickSshKey => {
+                let picker = self.file_picker.clone().ok_or_else(|| GbError::other("The file picker is unavailable. Enter the private key's absolute path instead."))?;
+                let start = self
+                    .home
+                    .as_ref()
+                    .map(|p| p.join(".ssh"))
+                    .filter(|p| p.is_dir());
+                let picked = blocking(move || Ok(picker(start.as_deref()))).await?;
+                to_json(picked.map(|p| p.display().to_string()))
             }
             Request::PickFolder { start } => {
                 let Some(picker) = self.folder_picker.clone() else {
@@ -8274,7 +8316,7 @@ mod tests {
         .unwrap();
         assert!(op.cancel.is_cancelled());
         assert!(
-            api.net_env(op.id).is_empty(),
+            api.net_env(op.id).unwrap().is_empty(),
             "no askpass: no askpass environment"
         );
         let dir = tempfile::tempdir().unwrap();
@@ -8291,7 +8333,7 @@ mod tests {
             GbErrorKind::InvalidInput,
             "no such prompt"
         );
-        let env = api.net_env(op.id);
+        let env = api.net_env(op.id).unwrap();
         assert!(
             env.iter()
                 .any(|(k, v)| k == crate::askpass::ENV_OP && *v == *op.id.to_string())
@@ -8304,7 +8346,7 @@ mod tests {
         let background = api
             .ops()
             .begin(crate::events::OpKind::Fetch, Some(1), false);
-        let env = api.net_env(background.id);
+        let env = api.net_env(background.id).unwrap();
         assert!(
             env.iter()
                 .any(|(k, v)| k == "GCM_INTERACTIVE" && v == "never"),
@@ -8313,6 +8355,7 @@ mod tests {
         assert!(
             super::Api::new(GitCli::new(Arc::new(CommandLog::new(10))), None)
                 .net_env(background.id)
+                .unwrap()
                 .is_empty(),
             "an op this Api doesn't know"
         );
@@ -8321,7 +8364,7 @@ mod tests {
             .ops()
             .begin(crate::events::OpKind::Fetch, Some(1), false);
         assert_eq!(
-            plain.net_env(bg.id),
+            plain.net_env(bg.id).unwrap(),
             vec![("GCM_INTERACTIVE".into(), "never".into())],
             "even without askpass"
         );
@@ -8373,7 +8416,7 @@ mod tests {
             .ops()
             .begin(crate::events::OpKind::Fetch, Some(id), true);
         crate::netops::note_op_remotes(&op, r.path(), None, gix::remote::Direction::Fetch);
-        let env = api.net_env(op.id);
+        let env = api.net_env(op.id).unwrap();
         assert_eq!(op.remotes()[0].account.as_deref(), Some(selected.as_str()));
         let params = env
             .iter()
@@ -8391,7 +8434,7 @@ mod tests {
             .ops()
             .begin(crate::events::OpKind::Fetch, Some(id), false);
         crate::netops::note_op_remotes(&background, r.path(), None, gix::remote::Direction::Fetch);
-        let background_env = api.net_env(background.id);
+        let background_env = api.net_env(background.id).unwrap();
         assert_eq!(
             background.remotes()[0].account.as_deref(),
             Some(selected.as_str())
@@ -8419,6 +8462,7 @@ mod tests {
             }]);
             assert!(
                 !api.net_env(op.id)
+                    .unwrap()
                     .iter()
                     .any(|(key, _)| key == "GIT_CONFIG_PARAMETERS"),
                 "{url}"
@@ -8452,7 +8496,7 @@ mod tests {
             settable: false,
             account: Some(selected.clone()),
         }]);
-        let env = api.net_env(op.id);
+        let env = api.net_env(op.id).unwrap();
         assert_eq!(op.remotes()[0].account.as_deref(), Some(selected.as_str()));
         let params = env
             .iter()
@@ -8497,13 +8541,14 @@ mod tests {
         op.set_remotes(vec![remote(url)]);
         assert!(
             !api.net_env(op.id)
+                .unwrap()
                 .iter()
                 .any(|(key, _)| key == "GIT_CONFIG_PARAMETERS")
         );
         api.dispatch(req(serde_json::json!({"method":"addForgeAccount","params":{"host":host,"kind":"github","token":"FAKE-github"}}))).await.unwrap();
         let op = api.ops().begin(crate::events::OpKind::Push, None, true);
         op.set_remotes(vec![remote(url)]);
-        let env = api.net_env(op.id);
+        let env = api.net_env(op.id).unwrap();
         assert_eq!(op.profile().as_deref(), Some("default"));
         let params = env
             .iter()
@@ -8527,6 +8572,7 @@ mod tests {
             op.set_remotes(vec![remote(other)]);
             assert!(
                 !api.net_env(op.id)
+                    .unwrap()
                     .iter()
                     .any(|(key, _)| key == "GIT_CONFIG_PARAMETERS")
             );
@@ -8534,10 +8580,9 @@ mod tests {
         let work = api.store().create_profile("Work", "#00f").unwrap();
         api.store().switch_profile(&work.id).unwrap();
         op.set_remotes(vec![remote(url)]);
-        assert!(
-            !api.net_env(op.id)
-                .iter()
-                .any(|(key, _)| key == "GIT_CONFIG_PARAMETERS")
+        assert_eq!(
+            api.net_env(op.id).unwrap_err().kind,
+            GbErrorKind::AuthFailed
         );
         assert_eq!(op.profile().as_deref(), Some("default"));
     }
@@ -8600,7 +8645,7 @@ mod tests {
                 settable: repo.is_some(),
                 account: repo.is_none().then(|| selected.clone()),
             }]);
-            let env = api.net_env(op.id);
+            let env = api.net_env(op.id).unwrap();
             assert_eq!(op.remotes()[0].account.as_deref(), Some(selected.as_str()));
             let parameters = env
                 .iter()
@@ -8629,6 +8674,7 @@ mod tests {
             }]);
             assert!(
                 !api.net_env(op.id)
+                    .unwrap()
                     .iter()
                     .any(|(key, _)| key == "GIT_CONFIG_PARAMETERS"),
                 "{other}"
@@ -10830,6 +10876,8 @@ mod tests {
             json!({"method": "createProfile", "params": {"name": "p", "color": "#336699"}}),
             json!({"method": "switchProfile", "params": {"id": "none"}}),
             json!({"method": "deleteProfile", "params": {"id": "none"}}),
+            json!({"method": "ssh", "params": {"profile": "none", "account": "none", "action": {"kind": "get"}}}),
+            json!({"method": "pickSshKey"}),
             json!({"method": "authAnswer", "params": {"prompt": 1, "answer": null}}),
             json!({"method": "authUseSsh", "params": {"prompt": 1}}),
             json!({"method": "cancelOp", "params": {"op": 1}}),
@@ -11133,6 +11181,8 @@ mod tests {
         "openIn",
         "switchProfile",
         "deleteProfile",
+        "ssh",
+        "pickSshKey",
         "authAnswer",
         "authUseSsh",
         "saveProfile",

@@ -195,7 +195,7 @@ fn network_invocation(
         .cancel(op.cancel.clone())
         .detach_terminal()
         .stream_stderr(out)
-        .envs(api.net_env(op.id))
+        .checked_env(api.net_env(op.id))
         .env("GIT_NO_LAZY_FETCH", "0")
 }
 
@@ -363,7 +363,7 @@ impl WriteCx<'_> {
             .cancel(self.op.cancel.clone())
             .detach_terminal()
             .stream_stderr(self.out.clone())
-            .envs(self.api.net_env(self.op.id));
+            .checked_env(self.api.net_env(self.op.id));
         if self.hooks {
             inv = inv.timeout(None);
         }

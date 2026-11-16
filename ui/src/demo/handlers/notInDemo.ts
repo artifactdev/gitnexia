@@ -12,6 +12,8 @@ const WHAT: Record<NotInDemoMethod, string> = {
   createProfile: 'profiles',
   switchProfile: 'profiles',
   deleteProfile: 'profiles',
+  ssh: 'SSH keys and system configuration',
+  pickSshKey: 'SSH key files',
   authAnswer: 'credentials',
   authUseSsh: 'credentials',
   switchRemoteToSsh: 'SSH remotes',

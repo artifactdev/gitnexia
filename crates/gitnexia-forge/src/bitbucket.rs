@@ -18,6 +18,7 @@ pub struct BitbucketProvider {
     installation: String,
     http: HttpClient,
     build_http: HttpClient,
+    ssh_http: HttpClient,
     checks: crate::pipelines::PipelineCache,
     versions: Mutex<HashMap<(String, u64), Value>>,
     comments: Mutex<CommentVersions>,
@@ -301,6 +302,13 @@ impl BitbucketProvider {
             headers: vec![("Accept", "application/json")],
             timeout: Duration::from_secs(45),
         });
+        let ssh_http = HttpClient::new(ClientConfig {
+            host: host.to_owned(),
+            api_base: format!("{}/rest/ssh/1.0", endpoints.web),
+            token: Some(token.clone()),
+            headers: vec![("Accept", "application/json")],
+            timeout: Duration::from_secs(45),
+        });
         let build_http = HttpClient::new(ClientConfig {
             host: host.to_owned(),
             api_base: format!("{}/rest/build-status/1.0", endpoints.web),
@@ -308,19 +316,21 @@ impl BitbucketProvider {
             headers: vec![("Accept", "application/json")],
             timeout: Duration::from_secs(45),
         });
-        let (http, build_http) = if let Some(changes) = changes {
+        let (http, build_http, ssh_http) = if let Some(changes) = changes {
             (
                 http.with_change_counter(changes.clone()),
-                build_http.with_change_counter(changes),
+                build_http.with_change_counter(changes.clone()),
+                ssh_http.with_change_counter(changes),
             )
         } else {
-            (http, build_http)
+            (http, build_http, ssh_http)
         };
         Self {
             host: host.to_owned(),
             installation: endpoints.web.clone(),
             http,
             build_http,
+            ssh_http,
             checks: Default::default(),
             versions: Mutex::default(),
             comments: Mutex::default(),
@@ -673,6 +683,15 @@ impl BitbucketProvider {
 }
 
 impl ForgeProvider for BitbucketProvider {
+    fn add_ssh_key<'a>(&'a self, title: &'a str, key: &'a str) -> ForgeFuture<'a, ()> {
+        Box::pin(async move {
+            self.ssh_http
+                .send_json(Method::Post, "/keys", &json!({"label": title, "text": key}))
+                .await?;
+            Ok(())
+        })
+    }
+
     fn kind(&self) -> ForgeKind {
         ForgeKind::Bitbucket
     }
@@ -682,19 +701,24 @@ impl ForgeProvider for BitbucketProvider {
     fn rate_limit(&self) -> RateLimitState {
         let mut api = self.http.rate_limit();
         let builds = self.build_http.rate_limit();
-        api.limited_until = api.limited_until.max(builds.limited_until);
+        api.limited_until = api
+            .limited_until
+            .max(builds.limited_until)
+            .max(self.ssh_http.rate_limit().limited_until);
         api
     }
     fn expire_fresh(&self) {
         self.http.expire_fresh();
         self.build_http.expire_fresh();
+        self.ssh_http.expire_fresh();
     }
     fn take_request_stats(&self) -> RequestStats {
         let mut api = self.http.take_stats();
-        let builds = self.build_http.take_stats();
-        api.sent += builds.sent;
-        api.not_modified += builds.not_modified;
-        api.fresh += builds.fresh;
+        for stats in [self.build_http.take_stats(), self.ssh_http.take_stats()] {
+            api.sent += stats.sent;
+            api.not_modified += stats.not_modified;
+            api.fresh += stats.fresh;
+        }
         api
     }
     fn current_user(&self) -> ForgeFuture<'_, ForgeUser> {

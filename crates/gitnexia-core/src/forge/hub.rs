@@ -427,7 +427,23 @@ impl ForgeHub {
         account: ForgeAccount,
     ) -> Result<(ForgeAccount, Arc<dyn ForgeProvider>), GbError> {
         let profile = store.active_profile();
-        let key = Self::key_for(&profile.id, &account);
+        self.provider_for_profile_account(store, &profile.id, account)
+            .await
+    }
+
+    pub(crate) async fn provider_for_profile_account(
+        &self,
+        store: &Arc<SettingsStore>,
+        profile: &str,
+        account: ForgeAccount,
+    ) -> Result<(ForgeAccount, Arc<dyn ForgeProvider>), GbError> {
+        if store.active_profile().id != profile {
+            return Err(GbError::new(
+                GbErrorKind::AuthFailed,
+                "The active profile changed before the forge request started",
+            ));
+        }
+        let key = Self::key_for(profile, &account);
         if let Some(p) = self
             .providers
             .lock()
@@ -462,7 +478,7 @@ impl ForgeHub {
             .insert(key, provider.clone());
         drop(held);
         let account = self
-            .refresh_version(store, &profile.id, account, &provider)
+            .refresh_version(store, profile, account, &provider)
             .await;
         Ok((account, provider))
     }

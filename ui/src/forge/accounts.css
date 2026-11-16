@@ -54,6 +54,17 @@
 .account-foot { display: flex; justify-content: flex-end; align-items: center; gap: 8px; border-top: 1px solid var(--section-border); padding-top: 12px; }
 .account-foot .account-add-error { margin: 0 auto 0 0; min-height: 1.4em; line-height: 1.4em; }
 .account-submit { min-width: 112px; }
+.account-ssh { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 10px; min-width: 0; border-top: 1px solid var(--section-border); padding-top: 12px; }
+.account-ssh h4, .account-ssh p { margin: 0; }
+.account-ssh label { display: flex; flex-direction: column; gap: 5px; }
+.account-ssh input:not([type=checkbox]), .account-ssh textarea { box-sizing: border-box; width: 100%; padding: 6px 9px; font: inherit; color: var(--text-selected); background: var(--app-bg0); border: 1px solid var(--section-border); border-radius: 5px; }
+.account-ssh textarea, .account-ssh-fingerprint { font-family: var(--font-mono); overflow-wrap: anywhere; }
+.account-ssh .account-ssh-check { flex-direction: row; align-items: center; }
+.account-ssh-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.account-ssh-path { flex: 1; min-width: 180px; }
+.account-ssh-status { min-height: 2.8em; }
+.account-ssh details { display: flex; flex-direction: column; }
+.account-ssh details > * + * { margin-top: 10px; }
 
 .account-add .link-btn { background: none; border: 0; padding: 0; color: var(--link); text-decoration: underline; cursor: pointer; font: inherit; }
 

@@ -38,15 +38,24 @@ static PANEL_OPEN: AtomicBool = AtomicBool::new(false);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Choose {
     Folder,
+    File,
     App,
 }
 
 /// Asks for one folder, starting in `start` when given. `None` when the user cancels.
 #[cfg(target_os = "macos")]
-pub(super) fn pick_folder(start: Option<&Path>) -> Option<PathBuf> {
+pub(super) fn pick_path(start: Option<&Path>, directory: bool) -> Option<PathBuf> {
     let start = start.map(Path::to_path_buf);
     ask(&PANEL_OPEN, on_main_queue, move |reply| {
-        show_panel(Choose::Folder, start.as_deref(), reply)
+        show_panel(
+            if directory {
+                Choose::Folder
+            } else {
+                Choose::File
+            },
+            start.as_deref(),
+            reply,
+        )
     })
 }
 
@@ -140,6 +149,11 @@ fn show_panel(choose: Choose, start: Option<&Path>, reply: Sender<Option<PathBuf
             panel.setCanChooseFiles(false);
             // Create Worktree usually points at a folder that doesn't exist yet.
             panel.setCanCreateDirectories(true);
+        }
+        Choose::File => {
+            panel.setCanChooseDirectories(false);
+            panel.setCanChooseFiles(true);
+            panel.setShowsHiddenFiles(true);
         }
         Choose::App => {
             panel.setCanChooseDirectories(false);

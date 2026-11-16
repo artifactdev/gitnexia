@@ -30,6 +30,7 @@ pub fn pick_folder(
 
 /// Picks one folder for the app to use.
 pub type FolderPicker = Arc<dyn Fn(Option<&Path>) -> Option<PathBuf> + Send + Sync>;
+pub type FilePicker = FolderPicker;
 
 /// This OS's folder picker, or `None` where there's none yet (spec §4). `parent_window` supplies
 /// the dialog's parent, computed by the app from its own window fresh on every call, since the
@@ -38,14 +39,29 @@ pub type FolderPicker = Arc<dyn Fn(Option<&Path>) -> Option<PathBuf> + Send + Sy
 pub fn system_folder_picker(
     parent_window: impl Fn() -> String + Send + Sync + 'static,
 ) -> Option<FolderPicker> {
+    system_path_picker(parent_window, true)
+}
+
+pub fn system_file_picker(
+    parent_window: impl Fn() -> String + Send + Sync + 'static,
+) -> Option<FilePicker> {
+    system_path_picker(parent_window, false)
+}
+
+fn system_path_picker(
+    parent_window: impl Fn() -> String + Send + Sync + 'static,
+    directory: bool,
+) -> Option<FolderPicker> {
     #[cfg(target_os = "linux")]
     return Some(Arc::new(move |start: Option<&Path>| {
-        pick_folder(start, |s| linux::portal_pick_folder(s, parent_window()))
+        pick_folder(start, |s| {
+            linux::portal_pick_path(s, parent_window(), directory)
+        })
     }));
     #[cfg(windows)]
     return Some(Arc::new(move |start: Option<&Path>| {
         pick_folder(start, |s| {
-            super::win32::pick_folder(s, win32_parent(&parent_window()))
+            super::win32::pick_path(s, win32_parent(&parent_window()), directory)
                 .map_err(|e| PortalError::Failed(e.message))
         })
     }));
@@ -53,11 +69,13 @@ pub fn system_folder_picker(
     #[cfg(target_os = "macos")]
     {
         let _ = parent_window;
-        Some(Arc::new(super::macos::pick_folder))
+        Some(Arc::new(move |start| {
+            super::macos::pick_path(start, directory)
+        }))
     }
     #[cfg(not(any(target_os = "linux", windows, target_os = "macos")))]
     {
-        let _ = parent_window;
+        let _ = (parent_window, directory);
         None
     }
 }
@@ -162,9 +180,10 @@ mod linux {
             .map_err(|e| PortalError::Failed(e.to_string()))
     }
 
-    pub(super) fn portal_pick_folder(
+    pub(super) fn portal_pick_path(
         start: Option<&Path>,
         parent_window: String,
+        directory: bool,
     ) -> Result<Option<PathBuf>, PortalError> {
         let bus = chooser_linux::shared_bus()?;
         let start_nul: Option<Vec<u8>> = start.map(|p| {
@@ -173,7 +192,7 @@ mod linux {
             b
         });
         let result = with_timeout(
-            move || pick_once(&bus, &parent_window, start_nul.as_deref()),
+            move || pick_once(&bus, &parent_window, start_nul.as_deref(), directory),
             PICKER_TIMEOUT,
         );
         if let Err(why) = &result {
@@ -186,6 +205,7 @@ mod linux {
         bus: &zbus::blocking::Connection,
         parent_window: &str,
         start: Option<&[u8]>,
+        directory: bool,
     ) -> Result<Option<PathBuf>, PortalError> {
         let token = unique_token();
         let predicted_path = request_path(bus, &token)?;
@@ -193,7 +213,7 @@ mod linux {
 
         let mut options: HashMap<&str, Value<'_>> = HashMap::from([
             ("handle_token", Value::from(token.as_str())),
-            ("directory", Value::from(true)),
+            ("directory", Value::from(directory)),
             ("multiple", Value::from(false)),
         ]);
         if let Some(bytes) = start {
@@ -205,7 +225,15 @@ mod linux {
                 "/org/freedesktop/portal/desktop",
                 Some("org.freedesktop.portal.FileChooser"),
                 "OpenFile",
-                &(parent_window, "Select a Directory", options),
+                &(
+                    parent_window,
+                    if directory {
+                        "Select a Directory"
+                    } else {
+                        "Select a File"
+                    },
+                    options,
+                ),
             )
             .map_err(chooser_linux::classify_zbus_error)?;
 

@@ -1551,6 +1551,19 @@ pub fn merge_refused(number: u64, e: GbError) -> GbError {
 }
 
 impl ForgeProvider for ForgejoProvider {
+    fn add_ssh_key<'a>(&'a self, title: &'a str, key: &'a str) -> ForgeFuture<'a, ()> {
+        Box::pin(async move {
+            self.http
+                .send_json(
+                    Method::Post,
+                    "/user/keys",
+                    &serde_json::json!({"title": title, "key": key, "read_only": false}),
+                )
+                .await?;
+            Ok(())
+        })
+    }
+
     fn kind(&self) -> ForgeKind {
         ForgeKind::Forgejo
     }

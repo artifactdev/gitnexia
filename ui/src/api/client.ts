@@ -282,6 +282,9 @@ export const api = {
   createProfile: (name: string, color: string) => call<ProfileMeta>({ method: 'createProfile', params: { name, color } }),
   switchProfile: (id: string) => call<StatePayload>({ method: 'switchProfile', params: { id } }),
   deleteProfile: (id: string) => call<ProfileMeta[]>({ method: 'deleteProfile', params: { id } }),
+  ssh: (profile: string, account: string, action: import('./gen/SshAction').SshAction) =>
+    call<import('./gen/SshState').SshState>({ method: 'ssh', params: { profile, account, action } }),
+  pickSshKey: () => call<string | null>({ method: 'pickSshKey' }),
   /** Starts the file watcher for the active tab's repo (spec §4.4); idempotent. */
   watchRepo: (repo: number) => t().call({ method: 'watchRepo', params: { repo } }) as Promise<null>,
   unwatchRepo: (repo: number) => t().call({ method: 'unwatchRepo', params: { repo } }) as Promise<null>,

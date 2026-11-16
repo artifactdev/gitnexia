@@ -5,6 +5,16 @@ All notable changes to GitNexia (GitNex before this release, GitVolt before 1.5.
 
 ## [Unreleased]
 
+### Added
+
+- **Per-account SSH management.** Each profile can select an existing SSH key or generate
+  an Ed25519 key (RSA for Azure DevOps), with an optional passphrase. Dedicated keys override
+  system identities and the SSH agent for matching remotes. Public keys can be registered
+  using the account's token on GitHub, GitLab, Forgejo and Bitbucket, with explicit errors
+  and manual copy/registration when permissions or server policy prevent uploads.
+- **System SSH settings.** Inspect, edit or clear the user's SSH configuration with confirmation
+  and backups, and remove Git's global SSH command. Private key files are never deleted.
+
 ## [1.7.9] - 2026-11-16
 
 ### Fixed

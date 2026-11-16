@@ -50,6 +50,7 @@ pub mod shelldata;
 pub mod shellenv;
 pub mod signature;
 pub mod snapshot;
+pub mod ssh;
 pub mod status;
 pub mod submodules;
 pub mod tree;

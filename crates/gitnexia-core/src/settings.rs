@@ -521,6 +521,10 @@ pub struct Profile {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub git_email: Option<String>,
+    /// Account-owned SSH identities. Private key contents never enter settings.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    #[ts(skip)]
+    pub ssh_keys: BTreeMap<String, crate::ssh::SshKey>,
     /// AI commit messages (Settings › AI): disabled until the user turns them on. The token is in
     /// the token store, never here.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -574,6 +578,7 @@ impl Default for Profile {
             extra_gitconfig: None,
             git_name: None,
             git_email: None,
+            ssh_keys: BTreeMap::new(),
             ai_commit: None,
             host_overrides: BTreeMap::new(),
             bitbucket_bases: Some(BTreeMap::new()),
@@ -989,6 +994,7 @@ impl SettingsStore {
                 .profiles
                 .get(&profile.id)
                 .and_then(|p| p.bitbucket_bases.clone());
+            profile.ssh_keys = g.profiles[&profile.id].ssh_keys.clone();
             if let Some(bases) = &profile.bitbucket_bases {
                 for host in bases.keys() {
                     profile
@@ -1021,8 +1027,38 @@ impl SettingsStore {
             g.deleted.remove(&id);
             g.profiles.insert(id, profile);
         }
+
         self.schedule();
         Ok(meta)
+    }
+
+    pub(crate) fn set_ssh_key(
+        self: &Arc<Self>,
+        profile: &str,
+        account: &str,
+        key: Option<crate::ssh::SshKey>,
+    ) -> Result<(), GbError> {
+        {
+            let mut g = self.lock();
+            let p = g
+                .profiles
+                .get_mut(profile)
+                .ok_or_else(|| GbError::other("The profile was removed"))?;
+            if !p.forge_accounts.iter().any(|a| a.id == account) {
+                return Err(GbError::other("The account was removed"));
+            }
+            match key {
+                Some(key) => {
+                    p.ssh_keys.insert(account.into(), key);
+                }
+                None => {
+                    p.ssh_keys.remove(account);
+                }
+            }
+            g.dirty_profiles.insert(profile.into());
+        }
+        self.schedule();
+        Ok(())
     }
 
     pub fn switch_profile(self: &Arc<Self>, id: &str) -> Result<StatePayload, GbError> {
@@ -1105,6 +1141,8 @@ impl SettingsStore {
                 )
             })?;
             let r = change(&mut p.forge_accounts);
+            p.ssh_keys
+                .retain(|id, _| p.forge_accounts.iter().any(|a| &a.id == id));
             let bases: BTreeMap<_, _> = p
                 .forge_accounts
                 .iter()

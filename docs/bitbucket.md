@@ -24,7 +24,8 @@ the account's username and PAT through a temporary, repository-URL-scoped creden
 ahead of system credential helpers. Tokens are never copied into git configuration or clone
 URLs. Missing or rejected tokens do not silently select another account; without a matching
 configured account, Git uses your normal terminal credentials. SSH continues to use your
-existing keys and agent, not the PAT.
+existing keys and agent, not the PAT, unless you configure a dedicated account key in
+**Settings > Accounts > SSH**. See [SSH management](ssh.md).
 
 Custom HTTPS ports and installation context paths are preserved separately from project
 identities. An HTTPS clone such as
@@ -94,6 +95,7 @@ the user's repository/PR permissions; token validation does not certify write ac
 | Notifications | PR `/watch` | Watch/unwatch |
 | Inline reviews | PR `/diff` and `/comments` | Local drafts, incremental submission; successful comments are not resent |
 | Build statuses | `/rest/build-status/1.0/commits/{sha}` | Read statuses already reported to Bitbucket |
+| Account SSH key | `/rest/ssh/1.0/keys` | Public-key registration with the account token; manual fallback if denied |
 | Merge | PR web page | Browser handoff; no API merge or local git workaround |
 
 Reference: [Bitbucket Server 7.21 REST](https://docs.atlassian.com/bitbucket-server/rest/7.21.0/bitbucket-rest.html),

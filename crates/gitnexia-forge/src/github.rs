@@ -1180,6 +1180,19 @@ impl ForgeProvider for GitHubProvider {
         Box::pin(async { Ok(None) })
     }
 
+    fn add_ssh_key<'a>(&'a self, title: &'a str, key: &'a str) -> ForgeFuture<'a, ()> {
+        Box::pin(async move {
+            self.http
+                .send_json(
+                    Method::Post,
+                    "/user/keys",
+                    &serde_json::json!({"title": title, "key": key}),
+                )
+                .await?;
+            Ok(())
+        })
+    }
+
     fn project<'a>(&'a self, path: &'a str) -> ForgeFuture<'a, Fresh<ForgeProject>> {
         Box::pin(async move {
             let r = self.http.get(&Self::repo_url(path)?).await?;

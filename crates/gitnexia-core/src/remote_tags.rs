@@ -227,7 +227,7 @@ impl Api {
                 .timeout(None)
                 .cancel(cancel.clone())
                 .detach_terminal()
-                .envs(self.net_env(quiet.id));
+                .checked_env(self.net_env(quiet.id));
             match self.cli.run(inv).await {
                 Ok(out) => listed.push((
                     remote.clone(),

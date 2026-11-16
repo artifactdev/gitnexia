@@ -47,6 +47,8 @@ pub(crate) fn project(
 }
 
 pub(crate) struct FakeProvider {
+    pub ssh_keys: Mutex<Vec<(String, String)>>,
+    pub ssh_error: Mutex<Option<GbError>>,
     pub kind: ForgeKind,
     pub host: String,
     /// Every token check and request fails with AuthFailed.
@@ -100,6 +102,8 @@ pub(crate) struct FakeProvider {
 impl FakeProvider {
     pub fn new(kind: ForgeKind, host: &str) -> Self {
         Self {
+            ssh_keys: Mutex::default(),
+            ssh_error: Mutex::default(),
             kind,
             host: host.into(),
             reject: false,
@@ -172,6 +176,20 @@ impl FakeProvider {
 }
 
 impl ForgeProvider for FakeProvider {
+    fn add_ssh_key<'a>(&'a self, title: &'a str, key: &'a str) -> ForgeFuture<'a, ()> {
+        Box::pin(async move {
+            self.check()?;
+            if let Some(error) = self.ssh_error.lock().unwrap().clone() {
+                return Err(error);
+            }
+            self.ssh_keys
+                .lock()
+                .unwrap()
+                .push((title.into(), key.into()));
+            Ok(())
+        })
+    }
+
     fn kind(&self) -> ForgeKind {
         self.kind
     }

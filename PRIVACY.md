@@ -32,7 +32,8 @@ core.
   repository-URL-scoped helper for clone and network operations, including background fetch.
   The selected account is used where one is known; no PAT is sent to another host or repository,
   saved in git configuration, or stored by another credential helper. Redirects are disabled for
-  these authenticated URLs; SSH continues to use your normal SSH credentials. If the profile
+  these authenticated URLs. SSH uses your normal credentials unless you select a dedicated
+  account key, described below. If the profile
   changes before a token is retrieved, the operation fails rather than using another profile.
 - Matching Azure DevOps HTTPS remotes also use the organization's saved PAT through a temporary
   git credential helper. This applies to background fetch and user-started network operations;
@@ -44,7 +45,8 @@ core.
   account username and PAT through the same temporary helper, including for background fetch.
   Only repositories under the configured installation's `/scm/` path and exact HTTPS authority
   (including port) are covered. Redirects are disabled; no credentials are saved in Git
-  configuration or by other helpers. SSH still uses your existing keys and agent.
+  configuration or by other helpers. SSH uses existing keys and the agent unless a dedicated
+  account key is selected.
 - Turn off: Settings › Fetch and push › **Background fetch interval: Off**. "Prune deleted remote branches
   on fetch" chooses between `--prune` and `--no-prune`.
 
@@ -77,7 +79,8 @@ makes no forge requests (apart from images you choose to load, below).
   - GitLab: `https://<your host>/api/v4`.
   - Forgejo: `https://<your host>/api/v1`.
   - Bitbucket Data Center / Server: your configured HTTPS installation base, including its
-    port and context path, under `/rest/api/1.0` and `/rest/build-status/1.0`. Bitbucket Cloud
+    port and context path, under `/rest/api/1.0`, `/rest/build-status/1.0` and, for public-key
+    registration you request, `/rest/ssh/1.0`. Bitbucket Cloud
     is not contacted by this integration.
   - Azure DevOps Services: `https://dev.azure.com/<your organization>`, for authenticated
     identity, accessible Git repositories and PR operations. No organization enumeration,
@@ -99,7 +102,15 @@ makes no forge requests (apart from images you choose to load, below).
     filter accessible repositories locally by project/repository name. Adding an account validates
     identity and repository read access; opening a repository resolves its remote. Matching HTTPS
     git remotes also use the saved PAT, as described above; SSH remotes continue to use your
-    existing SSH credentials.
+    existing SSH credentials unless a dedicated account key is selected.
+- **SSH key registration:** Settings > Accounts > SSH can generate/import a local key and
+  register its public key with GitHub, GitLab, Forgejo or Bitbucket using that account's token.
+  The registration checkbox is enabled initially; disable it for local-only generation/import.
+  Only the public key and a title containing the profile name are uploaded, never the private
+  key or passphrase. Server/token refusals are shown, not replaced with another account.
+  Azure DevOps keys are registered manually in the browser. Dedicated identities bypass the
+  system agent and identity configuration for matching SSH hosts. Generating keys itself needs
+  no network. Local files and remote registrations are retained when accounts/profiles are removed.
 - **When:**
   - for the shown tab's repository, when the tab opens and after GitNexia writes something to the
     forge;

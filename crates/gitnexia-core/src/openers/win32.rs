@@ -147,29 +147,37 @@ pub(super) fn open_with_dialog(file: &Path) -> Result<(), GbError> {
 
 /// Asks for a folder (`IFileOpenDialog` picking folders), starting in `start` when it exists,
 /// owned by the window `parent` when given. `Ok(None)` when the user cancels.
-pub(super) fn pick_folder(
+pub(super) fn pick_path(
     start: Option<&Path>,
     parent: Option<isize>,
+    directory: bool,
 ) -> Result<Option<PathBuf>, GbError> {
     let start = start.map(Path::to_path_buf);
     joined(
         on_sta_thread("folder picker", move || {
-            pick(start.as_deref(), parent)
+            pick(start.as_deref(), parent, directory)
                 .map_err(|e| GbError::other(format!("the folder picker failed: {e}")))
         }),
         "folder picker",
     )
 }
 
-fn pick(start: Option<&Path>, parent: Option<isize>) -> windows::core::Result<Option<PathBuf>> {
+fn pick(
+    start: Option<&Path>,
+    parent: Option<isize>,
+    directory: bool,
+) -> windows::core::Result<Option<PathBuf>> {
     // SAFETY: COM calls on this thread's apartment (`on_sta_thread`); `parent` is the app's own
     // window, which outlives the dialog, or none.
     unsafe {
         let dialog: IFileOpenDialog =
             CoCreateInstance(&FileOpenDialog, None, CLSCTX_INPROC_SERVER)?;
-        dialog.SetOptions(
-            dialog.GetOptions()? | FOS_PICKFOLDERS | FOS_FORCEFILESYSTEM | FOS_PATHMUSTEXIST,
-        )?;
+        let options = dialog.GetOptions()? | FOS_FORCEFILESYSTEM | FOS_PATHMUSTEXIST;
+        dialog.SetOptions(if directory {
+            options | FOS_PICKFOLDERS
+        } else {
+            options
+        })?;
         // A start folder that's gone is simply not used.
         if let Some(item) = start.and_then(|s| {
             SHCreateItemFromParsingName::<_, _, IShellItem>(&HSTRING::from(s), None::<&IBindCtx>)

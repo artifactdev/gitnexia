@@ -68,6 +68,7 @@ pub struct GitInvocation {
     ok_exit: Vec<i32>,
     /// Keep at most this many bytes of stdout (`stdout_limit`).
     stdout_limit: Option<u64>,
+    preflight_error: Option<Box<GbError>>,
 }
 
 /// How long a cancelled or timed-out write has to exit after SIGTERM before SIGKILL (spec #2 §3.3).
@@ -185,6 +186,7 @@ impl GitInvocation {
             term_grace: None,
             ok_exit: Vec::new(),
             stdout_limit: None,
+            preflight_error: None,
         }
     }
 
@@ -222,6 +224,14 @@ impl GitInvocation {
     /// [`Self::env`] for several variables.
     pub fn envs(mut self, vars: impl IntoIterator<Item = (OsString, OsString)>) -> Self {
         self.envs.extend(vars);
+        self
+    }
+
+    pub(crate) fn checked_env(mut self, env: Result<Vec<(OsString, OsString)>, GbError>) -> Self {
+        match env {
+            Ok(env) => self.envs.extend(env),
+            Err(error) => self.preflight_error = Some(Box::new(error)),
+        }
         self
     }
 
@@ -351,6 +361,9 @@ impl GitCli {
         git: bool,
         mut inv: GitInvocation,
     ) -> Result<GitOutput, GbError> {
+        if let Some(error) = inv.preflight_error.take() {
+            return Err(*error);
+        }
         let id = self.log.next_id();
         crate::log::note_command(id);
         let started = Instant::now();

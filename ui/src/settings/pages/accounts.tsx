@@ -12,7 +12,7 @@ const offs = [
   registerSettings([
     {
       id: 'forgeAccounts', label: 'Forge accounts', page: 'accounts', group: 'Accounts', labelFor: 'group',
-      keywords: 'gitlab github forgejo gitea codeberg bitbucket azure devops organization repositories clone token personal access token pat account login keyring merge request pull request forks',
+      keywords: 'gitlab github forgejo gitea codeberg bitbucket azure devops organization repositories clone token personal access token pat account login keyring merge request pull request forks ssh key ed25519 passphrase agent',
       description: 'Forge accounts for repositories, merge requests, pull requests, forks and avatars. Azure DevOps Services supports repository access.',
       Control: ManageAccounts,
     },

@@ -32,6 +32,7 @@ pub struct OpEntry {
     /// The remotes whose credential prompt the user turned into "Use SSH instead".
     ssh_switches: Mutex<Vec<SshOffer>>,
     secrets: Mutex<Vec<crate::redact::RedactionGuard>>,
+    ssh_configs: Mutex<Vec<tempfile::NamedTempFile>>,
 }
 
 /// One remote an op talks to (`remotes::op_remotes`): its URL for the op, and whether that's
@@ -45,6 +46,16 @@ pub struct OpRemote {
 }
 
 impl OpEntry {
+    pub(crate) fn keep_ssh_config(&self, file: tempfile::NamedTempFile) -> std::path::PathBuf {
+        let path = file.path().to_path_buf();
+        lock(&self.ssh_configs).push(file);
+        path
+    }
+
+    #[cfg(test)]
+    pub(crate) fn ssh_configs_for_test(&self) -> std::path::PathBuf {
+        lock(&self.ssh_configs).last().unwrap().path().to_path_buf()
+    }
     pub(crate) fn protect_credential(&self, secret: &crate::redact::Secret, username: &str) {
         lock(&self.secrets).push(crate::redact::RedactionGuard::with_username(
             secret, username,
@@ -141,6 +152,7 @@ impl OpRegistry {
             profile: OnceLock::new(),
             ssh_switches: Mutex::default(),
             secrets: Mutex::default(),
+            ssh_configs: Mutex::default(),
         });
         self.ops().insert(id, entry.clone());
         OpGuard {

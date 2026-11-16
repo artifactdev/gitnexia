@@ -488,7 +488,7 @@ impl Api {
                 .cancel(op.cancel.clone())
                 .detach_terminal()
                 .stream_stderr(tx)
-                .envs(self.net_env(op.id))
+                .checked_env(self.net_env(op.id))
                 .env("GIT_NO_LAZY_FETCH", "0") // a network op may lazy-fetch (a clone's checkout needs it)
                 // Every queued user op cancels a background fetch (spec #2 §3.6): SIGTERM first,
                 // so git drops its ref locks rather than leaving them for the next fetch.
@@ -657,7 +657,7 @@ impl Api {
             .cancel(op.cancel.clone())
             .detach_terminal()
             .stream_stderr(tx)
-            .envs(self.net_env(op.id))
+            .checked_env(self.net_env(op.id))
             .env("GIT_NO_LAZY_FETCH", "0") // a network op may lazy-fetch (a clone's checkout needs it)
             .term_grace(crate::git::WRITE_TERM_GRACE); // git removes its own junk on SIGTERM
         let res = self.cli.run(inv).await;

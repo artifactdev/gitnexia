@@ -535,6 +535,13 @@ pub fn run() {
             None => built,
         };
     let window_store = store.clone();
+    let picker_parent = parent.clone();
+    let built = match gitnexia_core::openers::folder_picker::system_file_picker(move || {
+        picker_parent.get().map(|f| f()).unwrap_or_default()
+    }) {
+        Some(picker) => built.with_file_picker(picker),
+        None => built,
+    };
     let backend = Arc::new(built.with_store(store));
     let warm = backend.clone();
     let forward = backend.clone();

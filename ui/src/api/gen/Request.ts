@@ -32,6 +32,7 @@ import type { RemoteBranchRef } from "./RemoteBranchRef";
 import type { ResetMode } from "./ResetMode";
 import type { Resolution } from "./Resolution";
 import type { ReviewSubmit } from "./ReviewSubmit";
+import type { SshAction } from "./SshAction";
 import type { StageSelection } from "./StageSelection";
 import type { TestIntent } from "./TestIntent";
 import type { UiDiagnostics } from "./UiDiagnostics";
@@ -53,7 +54,7 @@ view?: ViewSpec, } } | { "method": "graphReveal", "params": { repo: number, limi
 /**
  * A WIP file's stored version, opened (as a copy) when the working-tree file is gone.
  */
-fallback: BlobSource | null, } } | { "method": "loadState" } | { "method": "saveSettings", "params": { settings: AppSettings, } } | { "method": "saveProfile", "params": { profile: Profile, } } | { "method": "createProfile", "params": { name: string, color: string, } } | { "method": "switchProfile", "params": { id: string, } } | { "method": "deleteProfile", "params": { id: string, } } | { "method": "aiDetect" } | { "method": "aiTokenStatus" } | { "method": "aiSetToken", "params": { token: string, } } | { "method": "aiClearToken" } | { "method": "aiModels", "params": { endpoint: string, } } | { "method": "aiGenerateCommitMessage", "params": { repo: number, worktree: string, } } | { "method": "authAnswer", "params": { prompt: number, answer: string | null, } } | { "method": "authUseSsh", "params": { prompt: number, } } | { "method": "cancelOp", "params": { op: number, } } | { "method": "fetch", "params": { repo: number, background: boolean, remote?: string, 
+fallback: BlobSource | null, } } | { "method": "loadState" } | { "method": "saveSettings", "params": { settings: AppSettings, } } | { "method": "saveProfile", "params": { profile: Profile, } } | { "method": "createProfile", "params": { name: string, color: string, } } | { "method": "switchProfile", "params": { id: string, } } | { "method": "deleteProfile", "params": { id: string, } } | { "method": "aiDetect" } | { "method": "aiTokenStatus" } | { "method": "aiSetToken", "params": { token: string, } } | { "method": "aiClearToken" } | { "method": "ssh", "params": { profile: string, account: string, action: SshAction, } } | { "method": "pickSshKey" } | { "method": "aiModels", "params": { endpoint: string, } } | { "method": "aiGenerateCommitMessage", "params": { repo: number, worktree: string, } } | { "method": "authAnswer", "params": { prompt: number, answer: string | null, } } | { "method": "authUseSsh", "params": { prompt: number, } } | { "method": "cancelOp", "params": { op: number, } } | { "method": "fetch", "params": { repo: number, background: boolean, remote?: string,
 /**
  * With `remote`: only that MR/PR's head (`refs/merge-requests/<n>/head`,
  * `refs/pull/<n>/head`), into `refs/gitnexia/compare/<remote>/mr/<n>` or `…/pr/<n>`, so its

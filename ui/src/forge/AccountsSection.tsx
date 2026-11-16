@@ -17,6 +17,7 @@ import { bareHost, detectHostKind } from './hostKind';
 import { forgeName } from './labels';
 import { effectiveKind } from './urls';
 import './accounts.css';
+import { SshManager } from './SshManager';
 
 export const FILE_WARNING = 'Stored in a file, not the system keyring: install or start a Secret Service (GNOME Keyring, KWallet), then restart GitNexia to secure it.';
 const KINDS: Array<[ForgeKind, string]> = [['gitlab', 'GitLab'], ['github', 'GitHub'], ['forgejo', 'Forgejo'], ['bitbucket', 'Bitbucket'], ['azuredevops', 'Azure DevOps']];
@@ -165,6 +166,8 @@ export function AccountsSection() {
 }
 
 function AccountRow({ v, isDefault, onReplace, onRemove }: { v: ForgeAccountView; isDefault: boolean; onReplace(): void; onRemove(): void }) {
+  const [sshOpen, setSshOpen] = useState(false);
+  const profile = useAppState((s) => s.profile.id);
   const a = v.account;
   const who = `@${a.user.username} on ${a.host}`;
   const note = statusText(v);
@@ -190,9 +193,11 @@ function AccountRow({ v, isDefault, onReplace, onRemove }: { v: ForgeAccountView
         {note && chip.tone === 'err' && <p className="account-note is-err" role="status">{note}</p>}
       </div>
       <div className="account-actions">
+        <button type="button" className="ghost" aria-label={`SSH for ${who}`} aria-expanded={sshOpen} onClick={() => setSshOpen(!sshOpen)}>SSH</button>
         <button type="button" className={chip.tone === 'err' ? undefined : 'ghost'} aria-label={`Replace the token for ${who}`} onClick={onReplace}>Replace token</button>
         <button type="button" className="ghost danger" aria-label={`Remove ${who}`} onClick={onRemove}>Remove</button>
       </div>
+      {sshOpen && <SshManager key={`${profile}/${a.id}`} profile={profile} account={a} />}
     </li>
   );
 }

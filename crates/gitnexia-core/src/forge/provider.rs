@@ -195,6 +195,10 @@ pub trait ForgeProvider: Send + Sync {
     /// GitLab's version (`19.1.0-ee`); `None` where the forge has none (GitHub).
     fn version(&self) -> ForgeFuture<'_, Option<String>>;
 
+    fn add_ssh_key<'a>(&'a self, _title: &'a str, _key: &'a str) -> ForgeFuture<'a, ()> {
+        unsupported("Registering an SSH public key; copy it to your account's SSH settings instead")
+    }
+
     // Projects (4A).
     /// The project at `path` (`project_from_remote`, spec #4 §3.3).
     fn project<'a>(&'a self, path: &'a str) -> ForgeFuture<'a, Fresh<ForgeProject>>;
