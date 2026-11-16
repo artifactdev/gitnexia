@@ -5,6 +5,8 @@ All notable changes to GitNexia (GitNex before this release, GitVolt before 1.5.
 
 ## [Unreleased]
 
+## [1.7.9] - 2026-11-16
+
 ### Fixed
 
 - **Bitbucket HTTPS authentication.** Clone, fetch, pull and push now use the active profile's
