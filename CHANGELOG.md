@@ -5,6 +5,12 @@ All notable changes to GitNexia (GitNex before this release, GitVolt before 1.5.
 
 ## [Unreleased]
 
+### Fixed
+
+- **Bitbucket HTTPS authentication.** Clone, fetch, pull and push now use the active profile's
+  selected Bitbucket Data Center / Server account and personal access token. Custom HTTPS ports
+  and installation context paths are respected; SSH continues to use existing keys.
+
 ## [1.7.8] - 2026-11-13
 
 ### Changed

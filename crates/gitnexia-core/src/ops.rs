@@ -45,8 +45,10 @@ pub struct OpRemote {
 }
 
 impl OpEntry {
-    pub(crate) fn protect_secret(&self, secret: &crate::redact::Secret) {
-        lock(&self.secrets).push(crate::redact::RedactionGuard::new(secret));
+    pub(crate) fn protect_credential(&self, secret: &crate::redact::Secret, username: &str) {
+        lock(&self.secrets).push(crate::redact::RedactionGuard::with_username(
+            secret, username,
+        ));
     }
 
     /// Askpass refused a prompt for this (non-interactive) op: its failure means "needs

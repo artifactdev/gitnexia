@@ -3018,8 +3018,8 @@ impl Api {
     /// Environment for a network command belonging to `op`: askpass's (none if askpass isn't
     /// running: git then fails a prompt at once, `GIT_TERMINAL_PROMPT=0`), and for a GitNexia-started
     /// (non-interactive) op, `GCM_INTERACTIVE=never` too, so Git Credential Manager never shows
-    /// its own prompt for a background fetch either. A covered GitHub, GitLab or Azure HTTPS
-    /// remote uses the saved PAT through a temporary URL-scoped helper.
+    /// its own prompt for a background fetch either. A covered HTTPS remote uses the saved PAT
+    /// through a temporary URL-scoped helper.
     pub(crate) fn net_env(&self, op: OpId) -> Vec<(std::ffi::OsString, std::ffi::OsString)> {
         let mut env = self
             .askpass
@@ -3048,15 +3048,12 @@ impl Api {
                     remote.account = selected.clone();
                 }
                 if let Some(scope) = crate::askpass::git_credential_scope(&remote.url)
-                    && let Some(host) = crate::remotes::forge_host(&scope)
-                    && profile.forge_accounts.iter().any(|a| {
-                        matches!(
-                            a.kind,
-                            crate::forge::ForgeKind::AzureDevOps
-                                | crate::forge::ForgeKind::GitLab
-                                | crate::forge::ForgeKind::GitHub
-                        ) && a.host == host
-                    })
+                    && crate::forge::hub::git_account_for_url(
+                        &profile.forge_accounts,
+                        &scope,
+                        remote.account.as_deref(),
+                    )
+                    .is_some()
                     && !urls.contains(&scope)
                 {
                     urls.push(scope);
@@ -8543,6 +8540,100 @@ mod tests {
                 .any(|(key, _)| key == "GIT_CONFIG_PARAMETERS")
         );
         assert_eq!(op.profile().as_deref(), Some("default"));
+    }
+
+    #[tokio::test]
+    async fn bitbucket_git_auth_preserves_clone_and_repository_account_choices() {
+        use crate::forge::fake::{FakeConnector, FakeProvider, MemTokens};
+        use crate::forge::{ForgeKind, TokenStorage};
+        let host = "code.example.com:8443";
+        let base = format!("https://{host}/bitbucket");
+        let url = format!("{base}/scm/ORBIT/widget.git");
+        let conn = Arc::new(FakeConnector::default());
+        for (token, id) in [("FAKE-bitbucket-first", 1), ("FAKE-bitbucket-second", 2)] {
+            let mut provider = FakeProvider::new(ForgeKind::Bitbucket, host);
+            provider.user.id = id.into();
+            conn.add(token, provider);
+        }
+        let api = api().with_forge(conn, MemTokens::new(TokenStorage::File));
+        let mut selected = String::new();
+        for token in ["FAKE-bitbucket-first", "FAKE-bitbucket-second"] {
+            let account = api
+                .dispatch(req(
+                    serde_json::json!({"method":"addForgeAccount","params":{
+                        "host":host,"kind":"bitbucket","token":token,"baseUrl":base
+                    }}),
+                ))
+                .await
+                .unwrap();
+            selected = account["account"]["id"].as_str().unwrap().to_string();
+        }
+        let dir = tempfile::tempdir().unwrap();
+        api.start_askpass(dir.path(), "/bin/false".into())
+            .await
+            .unwrap();
+        let r = TestRepo::new();
+        r.commit("base");
+        r.git(&["remote", "add", "origin", &url]);
+        let id = open(&api, &r).await as u32;
+        let mut profile = api.store().active_profile();
+        profile.repos.insert(
+            crate::platform::fs::canonicalize(r.path())
+                .unwrap()
+                .display()
+                .to_string(),
+            crate::settings::RepoSettings {
+                forge_account: Some(selected.clone()),
+                ..Default::default()
+            },
+        );
+        api.store().save_profile(profile).unwrap();
+        for (kind, repo, interactive) in [
+            (crate::events::OpKind::Clone, None, true),
+            (crate::events::OpKind::Fetch, Some(id), false),
+            (crate::events::OpKind::Push, Some(id), true),
+        ] {
+            let op = api.ops().begin(kind, repo, interactive);
+            op.set_remotes(vec![crate::ops::OpRemote {
+                name: "origin".into(),
+                url: url.clone(),
+                settable: repo.is_some(),
+                account: repo.is_none().then(|| selected.clone()),
+            }]);
+            let env = api.net_env(op.id);
+            assert_eq!(op.remotes()[0].account.as_deref(), Some(selected.as_str()));
+            let parameters = env
+                .iter()
+                .find(|(key, _)| key == "GIT_CONFIG_PARAMETERS")
+                .unwrap()
+                .1
+                .to_string_lossy();
+            assert!(parameters.contains(&format!("credential.{url}.helper=")));
+            assert!(parameters.contains(&format!("credential.{url}.useHttpPath=true")));
+            assert!(parameters.contains(&format!("http.{url}.followRedirects=false")));
+            assert!(!parameters.contains("FAKE-bitbucket"));
+        }
+        for other in [
+            "https://code.example.com:8443/other/scm/ORBIT/widget.git",
+            "https://code.example.com/bitbucket/scm/ORBIT/widget.git",
+            "ssh://git@code.example.com:7999/ORBIT/widget.git",
+        ] {
+            let op = api
+                .ops()
+                .begin(crate::events::OpKind::Fetch, Some(id), false);
+            op.set_remotes(vec![crate::ops::OpRemote {
+                name: "origin".into(),
+                url: other.into(),
+                settable: true,
+                account: None,
+            }]);
+            assert!(
+                !api.net_env(op.id)
+                    .iter()
+                    .any(|(key, _)| key == "GIT_CONFIG_PARAMETERS"),
+                "{other}"
+            );
+        }
     }
 
     #[tokio::test]

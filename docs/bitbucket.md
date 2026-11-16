@@ -18,8 +18,13 @@ GitNexia supports self-hosted Bitbucket Data Center / Server, not Bitbucket Clou
 
 Use user personal access tokens, also called user HTTP access tokens. OAuth, app passwords,
 and project/repository service tokens are not substitutes for a user account in this
-integration. Tokens are not copied into git configuration or clone URLs: git fetch/push
-continues using your normal terminal credentials.
+integration. HTTPS clone, fetch, pull and push use the selected Bitbucket account in the active
+profile (the host's first account unless the repository or clone selects another). Git receives
+the account's username and PAT through a temporary, repository-URL-scoped credential helper,
+ahead of system credential helpers. Tokens are never copied into git configuration or clone
+URLs. Missing or rejected tokens do not silently select another account; without a matching
+configured account, Git uses your normal terminal credentials. SSH continues to use your
+existing keys and agent, not the PAT.
 
 Custom HTTPS ports and installation context paths are preserved separately from project
 identities. An HTTPS clone such as
@@ -31,6 +36,9 @@ account's HTTPS address rather than inferring it from the SSH port.
 One installation context is supported per HTTPS authority in a profile. Accounts on that
 authority share its installation base; a conflicting context is rejected rather than silently
 routing a token to a different installation.
+Git authentication is restricted to HTTPS clone URLs under that base's `/scm/` path, including
+personal repositories. It does not send the PAT to another port or installation context, and
+redirects are disabled for authenticated Git operations.
 
 ## Supported workflows and limits
 

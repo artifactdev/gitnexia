@@ -957,6 +957,25 @@ impl FakeConnector {
 }
 
 impl ForgeConnector for FakeConnector {
+    fn connect_account(
+        &self,
+        kind: ForgeKind,
+        host: &str,
+        base_url: Option<&str>,
+        token: Secret,
+    ) -> Result<Arc<dyn ForgeProvider>, GbError> {
+        if let Some(base) = base_url {
+            if kind != ForgeKind::Bitbucket {
+                return Err(GbError::new(
+                    GbErrorKind::InvalidInput,
+                    "An installation URL is only supported for Bitbucket",
+                ));
+            }
+            crate::forge::accounts::normalize_bitbucket_base_url(base, host)?;
+        }
+        self.connect(kind, host, token)
+    }
+
     fn connect(
         &self,
         kind: ForgeKind,

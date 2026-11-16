@@ -40,6 +40,11 @@ core.
   No PAT is sent to another organization, a non-default port or an SSH remote. Redirects are
   disabled for these authenticated URLs; no credentials are saved in git configuration or by
   another helper.
+- Matching Bitbucket Data Center / Server HTTPS clone URLs use the active profile's selected
+  account username and PAT through the same temporary helper, including for background fetch.
+  Only repositories under the configured installation's `/scm/` path and exact HTTPS authority
+  (including port) are covered. Redirects are disabled; no credentials are saved in Git
+  configuration or by other helpers. SSH still uses your existing keys and agent.
 - Turn off: Settings › Fetch and push › **Background fetch interval: Off**. "Prune deleted remote branches
   on fetch" chooses between `--prune` and `--no-prune`.
 

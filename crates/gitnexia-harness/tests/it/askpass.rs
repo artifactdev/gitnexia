@@ -62,7 +62,19 @@ async fn forge_pats_reach_real_git_without_a_prompt_or_persistent_helper() {
         assert_eq!(remote.account.as_deref(), Some("chosen-account"));
         counted.fetch_add(1, Ordering::SeqCst);
         let token = provided.clone();
-        Box::pin(async move { Ok(Some(token)) })
+        let username = if remote.url.contains("code.example.com") {
+            "nova"
+        } else if gitnexia_core::askpass::azure_credential_scope(&remote.url).is_some() {
+            "gitnexia"
+        } else {
+            "oauth2"
+        };
+        Box::pin(async move {
+            Ok(Some(gitnexia_core::askpass::ForgeGitCredential {
+                username: username.into(),
+                token,
+            }))
+        })
     }));
     let repo = gitnexia_core::testing::TestRepo::new();
     repo.git(&[
@@ -104,6 +116,16 @@ async fn forge_pats_reach_real_git_without_a_prompt_or_persistent_helper() {
             "oauth2",
         ),
         ("https://github.com/group/project.git", true, "oauth2"),
+        (
+            "https://code.example.com:8443/bitbucket/scm/ORBIT/widget.git",
+            true,
+            "nova",
+        ),
+        (
+            "https://other@code.example.com:8443/bitbucket/scm/~nova/widget.git",
+            false,
+            "nova",
+        ),
     ] {
         let op = ops.begin(OpKind::Fetch, Some(1), interactive);
         op.set_remotes(vec![OpRemote {
@@ -178,7 +200,7 @@ async fn forge_pats_reach_real_git_without_a_prompt_or_persistent_helper() {
     }
     assert_eq!(
         calls.load(Ordering::SeqCst),
-        7,
+        9,
         "store/erase must neither read nor delete the account token"
     );
     assert!(std::fs::read(repo.path().join(".git/config")).unwrap() == before);

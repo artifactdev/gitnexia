@@ -474,7 +474,10 @@ impl ForgeHub {
         url: &str,
         selected: Option<&str>,
     ) -> Result<Option<Secret>, GbError> {
-        self.git_token_for_profile(store, url, selected, None).await
+        Ok(self
+            .git_token_for_profile(store, url, selected, None)
+            .await?
+            .map(|c| c.token))
     }
 
     pub(crate) async fn git_token_for_profile(
@@ -483,13 +486,7 @@ impl ForgeHub {
         url: &str,
         selected: Option<&str>,
         expected_profile: Option<&str>,
-    ) -> Result<Option<Secret>, GbError> {
-        let Some(scope) = crate::askpass::git_credential_scope(url) else {
-            return Ok(None);
-        };
-        let Some(host) = crate::remotes::forge_host(&scope) else {
-            return Ok(None);
-        };
+    ) -> Result<Option<crate::askpass::ForgeGitCredential>, GbError> {
         let profile = store.active_profile();
         if expected_profile.is_some_and(|id| id != profile.id) {
             return Err(GbError::new(
@@ -497,24 +494,20 @@ impl ForgeHub {
                 "The profile changed during this Git operation. Retry it with the intended profile active.",
             ));
         }
-        let Some(account) = account_for_selected(&profile.forge_accounts, &host, selected)
-            .filter(|a| {
-                a.host == host
-                    && if crate::askpass::azure_credential_scope(&scope).is_some() {
-                        a.kind == ForgeKind::AzureDevOps
-                    } else {
-                        matches!(a.kind, ForgeKind::GitLab | ForgeKind::GitHub)
-                    }
-            })
-            .cloned()
+        let Some(account) = git_account_for_url(&profile.forge_accounts, url, selected).cloned()
         else {
             return Ok(None);
         };
         let key = Self::key_for(&profile.id, &account);
         let lock = self.lock_for(&key);
         let _held = lock.lock().await;
-        let (_, token) = self.account_token(store, &key, account).await?;
-        Ok(Some(token))
+        let (account, token) = self.account_token(store, &key, account).await?;
+        let username = match account.kind {
+            ForgeKind::Bitbucket => account.user.username,
+            ForgeKind::AzureDevOps => "gitnexia".into(),
+            _ => "oauth2".into(),
+        };
+        Ok(Some(crate::askpass::ForgeGitCredential { username, token }))
     }
 
     async fn account_token(
@@ -878,6 +871,33 @@ pub fn account_for_selected<'a>(
     selected
         .and_then(|id| accounts.iter().find(|a| a.id == id && a.host == host))
         .or_else(|| accounts.iter().find(|a| a.host == host))
+}
+
+pub(crate) fn git_account_for_url<'a>(
+    accounts: &'a [ForgeAccount],
+    url: &str,
+    selected: Option<&str>,
+) -> Option<&'a ForgeAccount> {
+    let scope = crate::askpass::git_credential_scope(url)?;
+    let host = crate::remotes::forge_host(&scope)?;
+    let account = account_for_selected(accounts, &host, selected).filter(|a| a.host == host)?;
+    let matches = match account.kind {
+        ForgeKind::AzureDevOps => crate::askpass::azure_credential_scope(&scope).is_some(),
+        ForgeKind::GitHub | ForgeKind::GitLab => {
+            crate::askpass::azure_credential_scope(&scope).is_none()
+        }
+        ForgeKind::Bitbucket => {
+            let base = account
+                .base_url
+                .clone()
+                .unwrap_or_else(|| format!("https://{host}"));
+            let base = crate::forge::accounts::normalize_bitbucket_base_url(&base, &host).ok()?;
+            let path = scope.strip_prefix(&format!("{base}/scm/"))?;
+            path.split('/').count() == 2
+        }
+        ForgeKind::Forgejo => false,
+    };
+    matches.then_some(account)
 }
 
 /// The account a provider key belongs to.
@@ -1836,6 +1856,112 @@ mod tests {
         assert_eq!(
             hub.git_token(&store, url, None).await.unwrap(),
             Some(Secret::new(TOKEN))
+        );
+    }
+
+    #[tokio::test]
+    async fn bitbucket_git_credentials_are_scoped_to_the_installation_account_and_profile() {
+        let host = "code.example.com:8443";
+        let base = format!("https://{host}/bitbucket");
+        let conn = Arc::new(FakeConnector::default());
+        for (token, id, name) in [(TOKEN, 1, "Nova"), (TOKEN2, 2, "Robin")] {
+            let mut provider = FakeProvider::new(ForgeKind::Bitbucket, host);
+            provider.user = user(name);
+            provider.user.id = id.into();
+            conn.add(token, provider);
+        }
+        let tokens = MemTokens::new(TokenStorage::File);
+        let hub = hub(conn, tokens.clone());
+        let store = SettingsStore::in_memory();
+        let mut accounts = Vec::new();
+        for token in [TOKEN, TOKEN2] {
+            accounts.push(
+                hub.add_account_with_base(
+                    &store,
+                    host,
+                    ForgeKind::Bitbucket,
+                    Secret::new(token),
+                    None,
+                    Some(base.clone()),
+                )
+                .await
+                .unwrap()
+                .account,
+            );
+        }
+        let url = format!("{base}/scm/ORBIT/widget.git");
+        for (selected, username, token) in [
+            (None, "nova", TOKEN),
+            (Some(accounts[1].id.as_str()), "robin", TOKEN2),
+        ] {
+            let credential = hub
+                .git_token_for_profile(&store, &url, selected, Some("default"))
+                .await
+                .unwrap()
+                .unwrap();
+            assert_eq!(credential.username, username);
+            assert_eq!(credential.token, Secret::new(token));
+        }
+        assert!(
+            hub.git_token(&store, &format!("{base}/scm/~nova/widget.git"), None)
+                .await
+                .unwrap()
+                .is_some()
+        );
+        for other in [
+            "http://code.example.com:8443/bitbucket/scm/ORBIT/widget.git",
+            "https://code.example.com/bitbucket/scm/ORBIT/widget.git",
+            "https://other.example.com:8443/bitbucket/scm/ORBIT/widget.git",
+            "https://code.example.com:8443/other/scm/ORBIT/widget.git",
+            "https://code.example.com:8443/bitbucket-other/scm/ORBIT/widget.git",
+            "https://code.example.com:8443/bitbucket/projects/ORBIT/repos/widget",
+            "https://code.example.com:8443/bitbucket/scm/ORBIT/widget.git/../other.git",
+            "https://code.example.com:8443/bitbucket/scm/ORBIT/widget.git/extra",
+            "ssh://git@code.example.com:7999/ORBIT/widget.git",
+        ] {
+            assert!(
+                hub.git_token(&store, other, None).await.unwrap().is_none(),
+                "{other}"
+            );
+        }
+        let work = store.create_profile("Work", "#00f").unwrap();
+        store.switch_profile(&work.id).unwrap();
+        assert!(hub.git_token(&store, &url, None).await.unwrap().is_none());
+        hub.add_account_with_base(
+            &store,
+            host,
+            ForgeKind::Bitbucket,
+            Secret::new(TOKEN2),
+            None,
+            Some(base),
+        )
+        .await
+        .unwrap();
+        assert_eq!(
+            hub.git_token(&store, &url, None).await.unwrap(),
+            Some(Secret::new(TOKEN2))
+        );
+        assert_eq!(
+            hub.git_token_for_profile(&store, &url, None, Some("default"))
+                .await
+                .unwrap_err()
+                .kind,
+            GbErrorKind::AuthFailed
+        );
+        store.switch_profile("default").unwrap();
+        assert_eq!(
+            hub.git_token(&store, &url, None).await.unwrap(),
+            Some(Secret::new(TOKEN))
+        );
+        tokens
+            .delete(&ForgeHub::key_for("default", &accounts[1]))
+            .unwrap();
+        assert_eq!(
+            hub.git_token(&store, &url, Some(&accounts[1].id))
+                .await
+                .unwrap_err()
+                .kind,
+            GbErrorKind::AuthFailed
         );
     }
 

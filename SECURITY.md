@@ -98,8 +98,13 @@ They install with a separate identity/profile and have no automatic update chann
   registered with the redaction filter for the operation's lifetime. SSH still uses normal
   SSH credentials.
 - Bitbucket Data Center / Server uses user personal access tokens (also called user HTTP access
-  tokens), not browser session cookies. Account setup does not install a git credential helper,
-  change git credentials or override merge checks. Merges restricted by token authentication
+  tokens), not browser session cookies. Matching HTTPS Git operations use the selected account's
+  username and PAT through the temporary repository-URL-scoped credential helper. Both the
+  authority (including port) and the configured installation's `/scm/` path must match.
+  Tokens and their Basic-auth encodings are redacted during the operation; tokens are never
+  saved in Git configuration or passed to other helpers. Redirects are disabled. SSH keeps its
+  normal credentials. Account setup does not install a persistent helper or override merge checks.
+  Merges restricted by token authentication
   open the PR's page in the system browser; GitNexia never substitutes a local merge and push.
 
 ### Credential prompts

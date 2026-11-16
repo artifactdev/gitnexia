@@ -75,14 +75,19 @@ pub struct SshOffer {
 pub type ForgeSshUrl =
     Arc<dyn Fn(String) -> futures_util::future::BoxFuture<'static, Option<String>> + Send + Sync>;
 
+#[derive(Debug)]
+pub struct ForgeGitCredential {
+    pub username: String,
+    pub token: crate::redact::Secret,
+}
+
 pub type ForgeGitToken = Arc<
     dyn Fn(
             OpRemote,
             Option<String>,
-        ) -> futures_util::future::BoxFuture<
-            'static,
-            Result<Option<crate::redact::Secret>, GbError>,
-        > + Send
+        )
+            -> futures_util::future::BoxFuture<'static, Result<Option<ForgeGitCredential>, GbError>>
+        + Send
         + Sync,
 >;
 
@@ -609,30 +614,31 @@ impl AskpassServer {
         let Some(get) = self.forge_git_token.get() else {
             return Ok(None);
         };
-        let token = tokio::select! {
+        let credential = tokio::select! {
             result = get(remote, entry.profile()) => result?,
             _ = entry.cancel.cancelled() => return Ok(None),
         };
         if self.ops.get(op).is_none() || entry.cancel.is_cancelled() {
             return Ok(None);
         }
-        match token {
-            Some(token) if token.is_empty() || token.expose().contains(['\r', '\n', '\0']) => {
+        match credential {
+            Some(c)
+                if c.token.is_empty()
+                    || c.token.expose().contains(['\r', '\n', '\0'])
+                    || c.username.is_empty()
+                    || c.username.contains(['\r', '\n', '\0']) =>
+            {
                 Err(GbError::new(
                     GbErrorKind::AuthFailed,
                     "The forge token is not a valid Git credential: replace it in Settings > Accounts.",
                 ))
             }
-            Some(token) => {
-                entry.protect_secret(&token);
-                let username = if azure_credential_scope(url).is_some() {
-                    "gitnexia"
-                } else {
-                    "oauth2"
-                };
+            Some(c) => {
+                entry.protect_credential(&c.token, &c.username);
                 Ok(Some(format!(
-                    "username={username}\npassword={}\n",
-                    token.expose()
+                    "username={}\npassword={}\n",
+                    c.username,
+                    c.token.expose()
                 )))
             }
             None => Ok(None),
@@ -828,7 +834,12 @@ mod tests {
             assert_eq!(remote.account.as_deref(), Some("chosen-account"));
             counted.fetch_add(1, Ordering::SeqCst);
             let token = provided.clone();
-            Box::pin(async move { Ok(Some(token)) })
+            Box::pin(async move {
+                Ok(Some(ForgeGitCredential {
+                    username: "gitnexia".into(),
+                    token,
+                }))
+            })
         }));
         let url = "https://dev.azure.com/orbital/Space/_git/Orbit";
         for interactive in [true, false] {
@@ -895,6 +906,30 @@ mod tests {
                 .await
                 .unwrap();
         assert_eq!(exit, 1);
+    }
+
+    #[tokio::test]
+    async fn malformed_account_credentials_never_reach_git() {
+        let (_dir, s, ops, _bus) = server().await;
+        s.set_forge_git_token(Arc::new(|remote, _| {
+            Box::pin(async move {
+                Ok(Some(ForgeGitCredential {
+                    username: remote.account.unwrap(),
+                    token: crate::redact::Secret::new("FAKE-bitbucket"),
+                }))
+            })
+        }));
+        let url = "https://code.example.com/bitbucket/scm/ORBIT/widget.git";
+        for username in ["", "nova\npassword=injected", "nova\r", "nova\0"] {
+            let op = ops.begin(OpKind::Fetch, None, true);
+            let mut remote = op_remote("origin", url, true);
+            remote.account = Some(username.into());
+            op.set_remotes(vec![remote]);
+            assert_eq!(
+                s.credential(op.id, url).await.unwrap_err().kind,
+                GbErrorKind::AuthFailed
+            );
+        }
     }
 
     #[tokio::test]

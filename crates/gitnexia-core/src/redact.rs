@@ -9,10 +9,10 @@ static ACTIVE_SECRETS: LazyLock<Mutex<HashMap<String, usize>>> = LazyLock::new(M
 pub(crate) struct RedactionGuard(Vec<String>);
 
 impl RedactionGuard {
-    pub(crate) fn new(secret: &Secret) -> Self {
+    pub(crate) fn with_username(secret: &Secret, username: &str) -> Self {
         use base64::Engine;
         let mut values = vec![secret.expose().to_string()];
-        for user in ["", "gitnexia"] {
+        for user in ["", "gitnexia", username] {
             values.push(
                 base64::engine::general_purpose::STANDARD
                     .encode(format!("{user}:{}", secret.expose())),
@@ -126,19 +126,23 @@ mod tests {
         use base64::Engine;
         let token = super::Secret::new(format!("FAKE-azure-{}", crate::random::random_hex(16)));
         let (one, two) = (
-            super::RedactionGuard::new(&token),
-            super::RedactionGuard::new(&token),
+            super::RedactionGuard::with_username(&token, "nova"),
+            super::RedactionGuard::with_username(&token, "nova"),
         );
         let encoded = base64::engine::general_purpose::STANDARD
             .encode(format!("gitnexia:{}", token.expose()));
+        let account_encoded =
+            base64::engine::general_purpose::STANDARD.encode(format!("nova:{}", token.expose()));
         assert_eq!(
             redact(&format!("remote: {} {encoded}", token.expose())),
             "remote: *** ***"
         );
+        assert_eq!(redact(&account_encoded), "***");
         drop(one);
         assert_eq!(redact(token.expose()), "***");
         drop(two);
         assert!(redact(token.expose()) == token.expose());
+        assert!(redact(&account_encoded) == account_encoded);
     }
 
     #[test]
