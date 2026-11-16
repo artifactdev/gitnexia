@@ -5,6 +5,8 @@ All notable changes to GitNexia (GitNex before this release, GitVolt before 1.5.
 
 ## [Unreleased]
 
+## [1.8.0] - 2026-11-16
+
 ### Added
 
 - **Per-account SSH management.** Each profile can select an existing SSH key or generate
